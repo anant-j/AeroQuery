@@ -58,8 +58,8 @@ See each folder's README for setup and run instructions.
 - [x] RAG query pipeline (retrieve, rerank, generate with citations)
 - [x] Eval pipeline (LLM-as-judge, multi-model comparison)
 - [x] Cohere Reranking
-- [x] Azure Functions API (`/ask` and `/retrieve` endpoints)
-- [x] Next.js frontend (search + RAG toggle + eval table)
+- [x] Azure Functions API (`/compare`, `/ask`, `/retrieve` endpoints)
+- [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
 - [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
 - [ ] LangGraph agentic layer
 - [ ] WebLLM client-side model option

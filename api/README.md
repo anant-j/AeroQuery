@@ -1,6 +1,8 @@
 # API — Azure Functions Backend
 
-Python Azure Functions serving the RAG pipeline over HTTP. Two endpoints for the frontend.
+Python Azure Functions serving the RAG pipeline over HTTP. Three endpoints for the frontend.
+
+Optimized with module-level client reuse (OpenAI, Pinecone, Cohere) and parallel LLM calls.
 
 ## Setup
 
@@ -36,6 +38,34 @@ Python Azure Functions serving the RAG pipeline over HTTP. Two endpoints for the
    ```
 
 ## Endpoints
+
+### `POST /api/compare` (primary — used by frontend)
+
+Runs RAG and bare LLM in parallel, returns both results. Embeds query once, shares retrieval.
+
+**Request:**
+```json
+{
+  "query": "What are the fuel requirements for VFR flight?"
+}
+```
+
+**Response:**
+```json
+{
+  "query": "...",
+  "model": "gpt-5.4-mini",
+  "rag": {
+    "answer": "...",
+    "tokens": 2322,
+    "sources": [{"section": "3.12", "title": "Fuel Requirements"}]
+  },
+  "bare": {
+    "answer": "...",
+    "tokens": 850
+  }
+}
+```
 
 ### `POST /api/ask`
 
