@@ -6,7 +6,8 @@ from generation.rag import ask
 
 load_dotenv()
 
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
+LLM_MODEL = "gpt-3.5-turbo"  # Change this to run eval with a different model
+JUDGE_MODEL = "gpt-5.4-mini"  # Always use a strong model for judging
 
 
 def load_test_set():
@@ -31,7 +32,7 @@ def judge_faithfulness(answer, contexts, client):
     """LLM-as-judge: is the answer grounded in the provided context?"""
     context_text = "\n---\n".join(contexts)
     response = client.chat.completions.create(
-        model=LLM_MODEL,
+        model=JUDGE_MODEL,
         messages=[
             {"role": "system", "content": "You are an evaluation judge. Score whether the answer is fully grounded in the provided context. Return ONLY a JSON object with 'score' (0.0 to 1.0) and 'reason' (one sentence)."},
             {"role": "user", "content": f"Context:\n{context_text}\n\nAnswer:\n{answer}"},
@@ -48,7 +49,7 @@ def judge_faithfulness(answer, contexts, client):
 def judge_correctness(answer, ground_truth, client):
     """LLM-as-judge: does the answer match the ground truth?"""
     response = client.chat.completions.create(
-        model=LLM_MODEL,
+        model=JUDGE_MODEL,
         messages=[
             {"role": "system", "content": "You are an evaluation judge. Score whether the answer correctly addresses the key points in the ground truth. Return ONLY a JSON object with 'score' (0.0 to 1.0) and 'reason' (one sentence)."},
             {"role": "user", "content": f"Ground Truth:\n{ground_truth}\n\nAnswer:\n{answer}"},
@@ -77,7 +78,7 @@ def run_eval():
         print(f"[{i+1}/{len(test_set)}] {q[:60]}...")
 
         # RAG pipeline
-        rag = ask(q)
+        rag = ask(q, model=LLM_MODEL)
         rag_contexts = [c["text"] for c in rag["chunks"]]
         rag_faith = judge_faithfulness(rag["answer"], rag_contexts, client)
         rag_correct = judge_correctness(rag["answer"], gt, client)
@@ -116,11 +117,13 @@ def run_eval():
     print(f"{'Faithfulness':<25} {rag_faith_avg:>10.2f} {'N/A':>10}")
     print()
 
-    # Save detailed results
-    os.makedirs("eval/results", exist_ok=True)
-    with open("eval/results/rag_results.json", "w") as f:
+    # Save detailed results per model
+    model_slug = LLM_MODEL.replace("/", "-")
+    results_dir = f"eval/results/{model_slug}"
+    os.makedirs(results_dir, exist_ok=True)
+    with open(f"{results_dir}/rag_results.json", "w") as f:
         json.dump(rag_results, f, indent=2)
-    with open("eval/results/bare_results.json", "w") as f:
+    with open(f"{results_dir}/bare_results.json", "w") as f:
         json.dump(bare_results, f, indent=2)
 
     summary = {
@@ -130,10 +133,10 @@ def run_eval():
         "rag_faithfulness": round(rag_faith_avg, 3),
         "bare_correctness": round(bare_correct_avg, 3),
     }
-    with open("eval/results/summary.json", "w") as f:
+    with open(f"{results_dir}/summary.json", "w") as f:
         json.dump(summary, f, indent=2)
 
-    print(f"Detailed results saved to eval/results/")
+    print(f"Detailed results saved to {results_dir}/")
 
 
 if __name__ == "__main__":

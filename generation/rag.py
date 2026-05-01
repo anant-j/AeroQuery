@@ -9,7 +9,7 @@ load_dotenv()
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 
 
-def ask(query, top_k=10, namespace="canada"):
+def ask(query, top_k=10, namespace="canada", model=None):
     # 1. Retrieve relevant chunks
     chunks = search(query, top_k=top_k, namespace=namespace)
 
@@ -19,7 +19,7 @@ def ask(query, top_k=10, namespace="canada"):
     # 3. Generate answer
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.chat.completions.create(
-        model=LLM_MODEL,
+        model=model or LLM_MODEL,
         messages=messages,
         temperature=0,
     )
