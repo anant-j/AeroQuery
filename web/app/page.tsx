@@ -73,6 +73,7 @@ type ModelOption = "openai" | "webllm";
 interface Source {
   section: string;
   title: string;
+  text?: string;
 }
 
 interface AskResponse {
@@ -243,7 +244,7 @@ export default function Home() {
         // RAG with streaming (WebLLM is single-threaded, run sequentially)
         setRagResult({
           query, answer: "", model: webllmModel, tokens: 0, use_rag: true,
-          sources: chunks.map((c) => ({ section: c.section, title: c.title })),
+          sources: chunks.map((c) => ({ section: c.section, title: c.title, text: c.text })),
         });
         setRagStreaming(true);
 
@@ -286,6 +287,30 @@ export default function Home() {
     }
   };
 
+  const SourceItem = ({ source }: { source: Source }) => {
+    const [expanded, setExpanded] = useState(false);
+    return (
+      <div>
+        <button
+          onClick={() => source.text && setExpanded(!expanded)}
+          className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 ${source.text ? "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700" : "cursor-default"} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
+        >
+          §{source.section}
+          {source.text && (
+            <svg className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
+        {expanded && source.text && (
+          <div className="mt-1 ml-1 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+            {source.text}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const ResultCard = ({ result, label, accent, streaming }: { result: AskResponse; label: string; accent: string; streaming?: boolean }) => (
     <div className={`border rounded-lg p-5 ${accent}`}>
       <div className="flex items-center gap-2 mb-3">
@@ -312,11 +337,9 @@ export default function Home() {
       {result.sources && result.sources.length > 0 && (
         <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-col gap-1.5">
             {result.sources.map((s, i) => (
-              <span key={i} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">
-                §{s.section}
-              </span>
+              <SourceItem key={i} source={s} />
             ))}
           </div>
         </div>

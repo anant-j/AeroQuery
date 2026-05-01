@@ -1,6 +1,6 @@
 # AeroQuery
 
-Production-grade RAG system over Canadian aviation regulations (TC AIM), with hybrid retrieval, Cohere reranking, automated eval pipelines, and a live demo — built to answer questions a pilot actually asks.
+Production-grade RAG system over Canadian aviation regulations (TC AIM), with dense retrieval, Cohere reranking, automated eval pipelines, and a live demo — built to answer questions a pilot actually asks.
 
 ## Why This Project
 
@@ -84,6 +84,7 @@ See each folder's README for setup and run instructions.
 - [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
 - [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
 - [x] Streaming responses (SSE for OpenAI, SDK streaming for WebLLM)
+- [x] Expandable source citations (click §section to see retrieved chunk text)
 - [ ] LangGraph agentic layer
 
 

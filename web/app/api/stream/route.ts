@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     const data = await res.json();
     const chunks: RetrievedChunk[] = data.chunks;
 
-    sources = chunks.map((c) => ({ section: c.section, title: c.title }));
+    sources = chunks.map((c) => ({ section: c.section, title: c.title, text: c.text }));
 
     const context = chunks
       .map((c) => `[Section ${c.section}]\n${c.text}`)
