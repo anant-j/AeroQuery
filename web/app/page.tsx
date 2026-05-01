@@ -15,11 +15,20 @@ Rules:
 4. Be precise and concise.`;
 
 const EVAL_DATA = [
-  { config: "GPT-5.4-mini + RAG + Rerank", correctness: 0.92, faithfulness: 0.95 },
-  { config: "GPT-5.4-mini + RAG (no rerank)", correctness: 0.91, faithfulness: 0.98 },
-  { config: "GPT-5.4-mini Bare", correctness: 0.81, faithfulness: null },
-  { config: "GPT-3.5 + RAG (no rerank)", correctness: 0.84, faithfulness: 0.87 },
-  { config: "GPT-3.5 Bare", correctness: 0.68, faithfulness: null },
+  {
+    model: "GPT-5.4-mini",
+    bare: 0.81,
+    rag: 0.92,
+    faithfulness: 0.95,
+    note: "with Cohere rerank",
+  },
+  {
+    model: "GPT-3.5-turbo",
+    bare: 0.68,
+    rag: 0.84,
+    faithfulness: 0.87,
+    note: "without rerank",
+  },
 ];
 
 type ModelOption = "openai" | "webllm";
@@ -290,31 +299,60 @@ export default function Home() {
       )}
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">Eval Benchmark</h2>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
-          25 questions, judged by GPT-5.4-mini. Reranking via Cohere rerank-v4.0-pro.
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark</h2>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
+          25 questions, judged by GPT-5.4-mini. How much does RAG improve correctness?
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-2 pr-4 font-medium text-gray-500 dark:text-gray-400">Configuration</th>
-                <th className="text-right py-2 px-4 font-medium text-gray-500 dark:text-gray-400">Correctness</th>
-                <th className="text-right py-2 pl-4 font-medium text-gray-500 dark:text-gray-400">Faithfulness</th>
-              </tr>
-            </thead>
-            <tbody>
-              {EVAL_DATA.map((row, i) => (
-                <tr key={i} className="border-b border-gray-50 dark:border-gray-800">
-                  <td className="py-2 pr-4 text-gray-600 dark:text-gray-300">{row.config}</td>
-                  <td className="text-right py-2 px-4 font-mono text-gray-600 dark:text-gray-300">{row.correctness.toFixed(2)}</td>
-                  <td className="text-right py-2 pl-4 font-mono text-gray-600 dark:text-gray-300">
-                    {row.faithfulness !== null ? row.faithfulness.toFixed(2) : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {EVAL_DATA.map((row, i) => {
+            const delta = Math.round((row.rag - row.bare) * 100);
+            return (
+              <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{row.model}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{row.note}</span>
+                </div>
+
+                <div className="flex items-end gap-6 mb-4">
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Without RAG</p>
+                    <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-yellow-400/60 dark:bg-yellow-500/40 rounded"
+                        style={{ width: `${row.bare * 100}%` }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-medium text-gray-700 dark:text-gray-200">
+                        {row.bare.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">With RAG</p>
+                    <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-green-400/60 dark:bg-green-500/40 rounded"
+                        style={{ width: `${row.rag * 100}%` }}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-medium text-gray-700 dark:text-gray-200">
+                        {row.rag.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
+                    +{delta}% correctness with RAG
+                  </span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                    Faithfulness: {row.faithfulness.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

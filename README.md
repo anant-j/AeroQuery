@@ -34,7 +34,7 @@ See each folder's README for setup and run instructions.
 | Embeddings | OpenAI text-embedding-3-large (3072 dims) |
 | Vector DB | Pinecone (serverless, cosine, namespaces) |
 | Reranking | Cohere rerank-v4.0-pro |
-| LLM | OpenAI GPT-5.4-mini |
+| LLM | OpenAI GPT-5.4-mini (server), WebLLM Llama 3.2 1B (browser) |
 | Eval | LLM-as-judge (custom pipeline) |
 | API | Azure Functions (Python) |
 | Frontend | Next.js + Tailwind CSS |
@@ -61,7 +61,7 @@ See each folder's README for setup and run instructions.
 - [x] Azure Functions API (`/compare`, `/ask`, `/retrieve` endpoints)
 - [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
 - [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
+- [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
 - [ ] LangGraph agentic layer
-- [ ] WebLLM client-side model option
 
 
