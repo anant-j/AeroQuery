@@ -1,7 +1,9 @@
 PROJECT.md
 PLAN.md
 CONSIDERATIONS.md
+pipeline/.env
 .env
 venv/
 __pycache__/
 .DS_Store
+pipeline/data/raw/

@@ -1,0 +1,7 @@
+{
+  "num_questions": 25,
+  "model": "gpt-3.5-turbo",
+  "rag_correctness": 0.835,
+  "rag_faithfulness": 0.873,
+  "bare_correctness": 0.678
+}

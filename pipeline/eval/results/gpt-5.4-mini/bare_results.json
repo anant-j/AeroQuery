@@ -1,0 +1,152 @@
+[
+  {
+    "question": "What are the fuel requirements for VFR flight in Canada?",
+    "ground_truth": "For an aircraft other than a helicopter in VFR flight: during the day, enough fuel to fly to the destination plus 30 minutes at normal cruising speed; at night, enough fuel to fly to the destination plus 45 minutes at normal cruising speed. For a helicopter: enough fuel to fly to the destination plus 20 minutes at normal cruising speed.",
+    "answer": "For **VFR flight in Canada**, the fuel requirement is set out in the **Canadian Aviation Regulations (CARs), section 602.88**.\n\n### Basic rule\nYou must carry enough fuel to fly:\n\n1. **To the destination aerodrome**, and then\n2. **For at least 30 minutes at normal cruising speed** after arrival.\n\n### If you are flying at night\nFor **VFR at night**, the requirement is more conservative:\n\n- Fuel must be sufficient to fly to the destination aerodrome, and then\n- **For at least 45 minutes at normal cruising speed**.\n\n### Practical note\nThis is the **minimum legal requirement**. In practice, pilots should plan for additional fuel for:\n- taxi,\n- climb,\n- headwinds,\n- reroutes,\n- delays,\n- and any alternate or diversion planning.\n\nIf you want, I can also give you the **IFR fuel requirements in Canada** or the exact **CARs wording**.",
+    "correctness": 0.72
+  },
+  {
+    "question": "What are the fuel requirements for IFR flight in Canada?",
+    "ground_truth": "For a propeller-driven aeroplane in IFR flight: enough fuel to fly to the destination, then to the alternate aerodrome, then for 45 minutes at normal cruising speed.",
+    "answer": "For **IFR flight in Canada**, the fuel requirement is set out in the **Canadian Aviation Regulations (CARs), section 602.88**.\n\n### Minimum fuel required\nAn aircraft operating under IFR must carry enough fuel to:\n\n1. **Fly to the destination aerodrome**, and then\n2. **Fly from that aerodrome to the alternate aerodrome** if an alternate is required, and then\n3. **Fly for 45 minutes at normal cruising speed**.\n\n### If no alternate is required\nIf an alternate aerodrome is **not required**, the aircraft must still carry enough fuel to:\n\n- Fly to the destination aerodrome, and\n- Then fly for **45 minutes at normal cruising speed**.\n\n### Practical note\nThis is the **legal minimum**. In practice, operators often carry more fuel to account for:\n- ATC delays,\n- weather deviations,\n- holding,\n- icing or turbulence,\n- and company SOPs.\n\nIf you want, I can also give you the **VFR fuel requirements in Canada** or the **exact CARs wording**.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What is the emergency frequency that pilots should monitor?",
+    "ground_truth": "121.5 MHz is the emergency frequency.",
+    "answer": "The emergency frequency pilots should monitor is **121.5 MHz**.\n\nIt\u2019s commonly called the **international emergency frequency** or **guard frequency**. In Canada, as elsewhere, pilots are expected to monitor it when practicable, especially when operating on or near emergency situations.",
+    "correctness": 1.0
+  },
+  {
+    "question": "In which airspace classes are transponders required in Canada?",
+    "ground_truth": "Transponders are required in all Class A, B, and C airspace as well as some Class D and Class E airspace.",
+    "answer": "In Canada, a transponder is generally required in **Class A, B, and C airspace**.\n\nMore specifically:\n\n- **Class A**: Transponder required, and aircraft must be operating under IFR.\n- **Class B**: Transponder required.\n- **Class C**: Transponder required.\n- **Class D and E**: A transponder is **not universally required**, but may be required by a **special airspace designation, ATC instruction, or local procedures**.\n- **Class F**: Depends on the specific restricted or advisory area and any published requirements.\n- **Class G**: Generally no transponder requirement unless otherwise specified.\n\nAlso, in many cases, **Mode C or Mode S altitude-reporting capability** is required where a transponder is required.\n\nIf you want, I can also give you the **exact CARs references** and a quick table by airspace class.",
+    "correctness": 0.92
+  },
+  {
+    "question": "What is a NOTAM?",
+    "ground_truth": "A NOTAM is a notice to airman that contains information concerning the establishment or condition of, or any changes in, any aeronautical facility, service, procedure or hazard, the timely knowledge of which is essential to personnel involved in flight operations.",
+    "answer": "A **NOTAM** is a **Notice to Air Missions** \u2014 historically called a **Notice to Airmen**.\n\nIt\u2019s an official notice issued to alert pilots, dispatchers, and other aviation personnel about **temporary or important changes to aeronautical information** that could affect flight safety or operations. Examples include:\n\n- runway closures\n- navigation aid outages\n- airspace restrictions\n- obstacles\n- changes to airport services or lighting\n- military or special activity in an area\n\nIn Canada, NOTAMs are part of the pre-flight information pilots are expected to review before flight. They help ensure crews are aware of current conditions that may not yet be reflected in charts or publications.\n\nIf you want, I can also explain **how to read a Canadian NOTAM** or give a **sample NOTAM decoded line by line**.",
+    "correctness": 0.95
+  },
+  {
+    "question": "What are the right-of-way rules when two aircraft are converging?",
+    "ground_truth": "When two aircraft are converging at approximately the same altitude, the pilot-in-command of the aircraft that has the other on its right shall give way.",
+    "answer": "Under Canadian aviation rules, when **two aircraft are converging at approximately the same altitude**, the **aircraft that has the other on its right must give way**.\n\n### In practical terms:\n- **Each aircraft should alter course to the right** to avoid the other, **if possible**.\n- The aircraft that **sees the other aircraft on its right side** is the one that must yield.\n\n### Important exceptions:\n- **Power-driven aircraft must give way to airships, gliders, and balloons.**\n- **Airships must give way to gliders and balloons.**\n- **Gliders must give way to balloons.**\n- **An aircraft being overtaken has the right-of-way**, and the overtaking aircraft must keep clear.\n\nIf you want, I can also give you the full Canadian right-of-way hierarchy, including head-on and overtaking situations.",
+    "correctness": 0.98
+  },
+  {
+    "question": "Can aerobatic manoeuvres be performed with passengers on board?",
+    "ground_truth": "No person operating an aircraft with a passenger on board shall conduct aerobatic manoeuvres unless the pilot-in-command of the aircraft has engaged in at least 10 hours dual flight instruction in aerobatic manoeuvres.",
+    "answer": "In Canada, **generally no** \u2014 aerobatic manoeuvres are **not permitted with passengers on board**.\n\nUnder the **Canadian Aviation Regulations (CARs)**, aerobatics may only be conducted when the aircraft is **certified and operated in accordance with the applicable rules**, and **passengers cannot be carried during aerobatic flight** unless a very specific regulatory exception applies. In normal operations, aerobatics are treated as a specialized activity intended for **solo flight or properly authorized training**, not passenger carriage.\n\nA few important points:\n\n- The aircraft must be **approved for aerobatic flight**.\n- The pilot must comply with the **aerobatic flight rules** in CARs.\n- **Passengers are prohibited** during aerobatic manoeuvres in ordinary operations.\n- Aerobatics are also restricted from being conducted in certain airspace and conditions.\n\nIf you want, I can point you to the specific CARs provisions that govern this.",
+    "correctness": 0.2
+  },
+  {
+    "question": "When is supplemental oxygen required in an unpressurized aircraft?",
+    "ground_truth": "Supplemental oxygen is required for unpressurized aircraft operating at pressure-altitudes above 13,000 feet ASL.",
+    "answer": "In Canada, for an **unpressurized aircraft**, supplemental oxygen is required when the aircraft is operated at altitudes where the available oxygen becomes insufficient for the occupants.\n\nThe practical Transport Canada rule of thumb is:\n\n- **Above 10,000 feet ASL**: the **pilot must use supplemental oxygen** if the flight is at that altitude for **more than 30 minutes**.\n- **Above 13,000 feet ASL**: **supplemental oxygen must be provided to each occupant**.\n- **Above 14,000 feet ASL**: **each occupant must use supplemental oxygen**.\n\nThese requirements are set out in the Canadian Aviation Regulations under the oxygen provisions for unpressurized aircraft.\n\nIf you want, I can also give you the exact CARs references and a simple altitude/time table.",
+    "correctness": 0.95
+  },
+  {
+    "question": "What minimum flight time is required for a Private Pilot Licence (Aeroplane)?",
+    "ground_truth": "A minimum of 45 hours total flight time is required, including 17 hours dual instruction and 12 hours solo.",
+    "answer": "For a **Canadian Private Pilot Licence (Aeroplane)**, the **minimum flight time** required is **45 hours total flight time**.\n\nThat 45 hours must include, at minimum:\n\n- **17 hours dual instruction**\n- **12 hours solo flight time**\n- **5 hours cross-country flight time**\n- **3 hours night flight time**\n- **5 hours instrument time**  \n  - of which **at least 3 hours must be dual instrument instruction**\n\nIf you want, I can also break down the full PPL(A) training requirements under the Canadian Aviation Regulations.",
+    "correctness": 0.98
+  },
+  {
+    "question": "What medical category is required for a Private Pilot Licence?",
+    "ground_truth": "A Category 1 or Category 3 medical is required for a Private Pilot Licence.",
+    "answer": "For a **Private Pilot Licence (PPL)** in Canada, the required medical is **Category 3 or Category 1**.\n\n- **Category 3** is the standard medical requirement for a PPL.\n- **Category 1** is also acceptable and is a higher medical standard.\n\nIf you want, I can also give you the medical category requirements for the other Canadian pilot licences.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What equipment is required for night VFR flight in a power-driven aircraft?",
+    "ground_truth": "Equipment includes a sensitive altimeter adjustable for barometric pressure, a turn and slip indicator or turn coordinator, an adequate source of electrical energy, spare fuses if applicable, a stabilized magnetic direction indicator or gyroscopic direction indicator, radiocommunication equipment for two-way communication, and position and anti-collision lights.",
+    "answer": "For **night VFR** in a **power-driven aircraft** in Canada, the aircraft must be equipped with the items required by **CAR 605.16** and the applicable equipment standards.\n\nAt a minimum, you need:\n\n- **A sensitive altimeter**\n- **A magnetic compass**\n- **A means of illuminating all required instruments and equipment**\n- **Position lights**\n- **Anti-collision light system**  \n  - unless the aircraft is exempt or the system is inoperative under the applicable rules\n- **Landing light**  \n  - required for aircraft operated for hire or where required by the type of operation\n- **A clock** displaying hours, minutes, and seconds\n- **A means of measuring and displaying airspeed**\n- **A means of measuring and displaying altitude**\n- **A means of indicating direction**\n- **A means of indicating attitude** if required by the aircraft category/operation\n- **A radio communication system** if required for the airspace or route being flown\n- **Current aeronautical charts and publications** appropriate to the route\n\nAlso, for night VFR you must comply with the **VFR weather minima** and be able to maintain **visual reference to the surface** and avoid cloud as required.\n\nIf you want, I can give you the **exact CAR references** or a **simple checklist version** for night VFR equipment.",
+    "correctness": 0.42
+  },
+  {
+    "question": "What position lights are required on an aircraft at night?",
+    "ground_truth": "A red light on the port (left) side, a green light on the starboard (right) side, and a white light on the tail.",
+    "answer": "At night, an aircraft is generally required to display **navigation/position lights** so other aircraft can determine its direction of travel.\n\nUnder Canadian rules, the standard position lights are:\n\n- **Red light on the left wing**\n- **Green light on the right wing**\n- **White light at the rear**\n\nThese lights must be visible from the appropriate sectors around the aircraft.\n\nIn addition, aircraft operating at night are typically also required to have:\n- an **anti-collision light system** (unless exempted), and\n- any other lights required for the specific operation or aircraft type.\n\nIf you want, I can also give you the exact Canadian regulation reference for the night lighting requirement.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What is a full emergency standby?",
+    "ground_truth": "Full emergency standby means the level of response when an aircraft has, or is suspected to have, an operational defect that affects normal flight operations to the extent that there is possibility of an accident.",
+    "answer": "In Canadian aviation operations, a **full emergency standby** generally means the aircraft is being held in a **highest-alert emergency response posture** because a serious emergency is expected or has been declared.\n\nIn practical terms, it usually means:\n\n- **Emergency services are fully alerted and positioned**\n  - airport fire/rescue, medical, and other response units are ready to respond immediately\n- **The aircraft is prepared for an emergency landing or arrival**\n  - runway, access routes, and response equipment are arranged\n- **Passengers and crew may be instructed to brace or prepare**\n  - depending on the situation and operator procedures\n- **Normal operations are suspended or restricted**\n  - the focus is on immediate response if the emergency develops\n\nIn Canadian aviation usage, the exact meaning can vary by:\n- airport emergency procedures,\n- airline SOPs,\n- ATC/airport terminology,\n- and whether the emergency is on the ground or in flight.\n\nIf you want, I can also explain the difference between **full emergency standby**, **local standby**, and **distress/emergency declarations** in Canadian aviation.",
+    "correctness": 0.72
+  },
+  {
+    "question": "What is the minimum age for a small RPA basic operations pilot certificate?",
+    "ground_truth": "A pilot certificate for small RPA (VLOS) basic operations is issued to those that are at least 14 years of age.",
+    "answer": "In Canada, the **minimum age for a Small RPA Basic Operations Pilot Certificate is 14 years old**.\n\nIf you want, I can also tell you the other basic eligibility requirements, like knowledge test and registration rules.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What should a pilot do if they experience a communication failure?",
+    "ground_truth": "The pilot should attempt to contact any ATC facility or another aircraft, inform them of the difficulty, and request they relay the information to the ATC facility with whom communications are intended.",
+    "answer": "If a pilot experiences a communication failure in Canada, they should follow the standard lost-communications procedures under the Canadian Aviation Regulations and applicable ATC procedures.\n\nIn general, the pilot should:\n\n1. **Acknowledge the failure**\n   - Try the radio on the current frequency, then alternate frequencies if available.\n   - Check volume, squelch, headset, microphone, and audio panel settings.\n   - Try another radio if installed.\n\n2. **Use all available means to restore communication**\n   - Transponder code **7600** to indicate radio failure.\n   - Use light signals from ATC if in controlled airspace.\n   - Try relaying through another aircraft, FSS, or company frequency if appropriate.\n\n3. **Continue in accordance with the applicable lost-com procedures**\n   - **IFR:** Continue the flight in accordance with the last assigned clearance, expected clearance, or filed flight plan, depending on the situation and the rules applicable to the route and airspace.\n   - **VFR:** Generally remain clear of controlled airspace unless you can safely and legally continue under the applicable procedures and any ATC instructions already received.\n\n4. **Land as soon as practicable/safe**\n   - If conditions permit, land at the nearest suitable aerodrome where a safe landing can be made.\n\n5. **Maintain vigilance**\n   - Watch for ATC light signals, traffic, and any other indications of instructions.\n\nIf you want, I can give you the **specific Canadian IFR lost-communications procedure** step by step, or the **VFR procedure**.",
+    "correctness": 0.86
+  },
+  {
+    "question": "What is the minimum visibility for VFR flight in uncontrolled airspace below 1,000 feet AGL during the day?",
+    "ground_truth": "The minimum visibility is 2 statute miles during the day for aircraft other than helicopters. For helicopters, the minimum is 1 statute mile.",
+    "answer": "In **Canadian uncontrolled airspace**, the **minimum flight visibility for VFR during the day below 1,000 feet AGL** is **2 statute miles**.\n\nIf you want, I can also give you the full VFR visibility minima table for Canadian airspace.",
+    "correctness": 0.7
+  },
+  {
+    "question": "What is the minimum visibility for VFR flight in controlled airspace?",
+    "ground_truth": "The minimum visibility for VFR flight in controlled airspace is 3 statute miles.",
+    "answer": "In **Canadian controlled airspace**, the **minimum flight visibility for VFR** is generally:\n\n- **3 statute miles** for **fixed-wing aircraft**\n- **1 statute mile** for **helicopters**\n\nThis is subject to any **special VFR** clearance or more restrictive local airspace requirements.\n\nIf you want, I can also give you the full Canadian VFR minima table for **controlled vs. uncontrolled airspace** and **day vs. night**.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What is the purpose of anti-collision lights?",
+    "ground_truth": "Anti-collision lights must be turned on to warn other aircraft. The pilot-in-command may turn them off if they determine that turning them off is in the interest of aviation safety.",
+    "answer": "Anti-collision lights are used to **make an aircraft more visible to other aircraft and people on the ground**, helping to **prevent collisions**.\n\nIn practical terms, they:\n- **Alert others that the aircraft is operating**\n- **Increase conspicuity** in flight and on the ground\n- Help indicate that the aircraft is **about to move, is moving, or is in flight**\n\nOn most aircraft, these are the **red or white flashing/beacon lights** and are part of the aircraft\u2019s safety lighting system.",
+    "correctness": 0.2
+  },
+  {
+    "question": "What are the classifications of emergency conditions?",
+    "ground_truth": "Emergency conditions are classified as: Distress \u2014 a condition of being threatened by serious and/or imminent danger and requiring immediate assistance; and Urgency \u2014 a condition concerning the safety of an aircraft or its occupants.",
+    "answer": "In Canadian aviation, emergency conditions are generally classified by **severity and urgency**. The common classifications are:\n\n1. **Distress**\n   - A condition of **grave and imminent danger** requiring immediate assistance.\n   - Example: engine failure with no safe landing option.\n\n2. **Urgency**\n   - A condition concerning the safety of an aircraft or person on board, but **not immediately life-threatening**.\n   - Example: low fuel, minor system malfunction, or a medical issue that may worsen.\n\n3. **Alert phase**\n   - A situation where there is **uncertainty** about the safety of an aircraft or persons on board.\n   - Example: an aircraft overdue or communications lost, but no confirmed distress.\n\nThese terms are used in Canadian aviation emergency procedures and align with ICAO-style emergency classifications.",
+    "correctness": 0.92
+  },
+  {
+    "question": "What aircraft are exempt from carrying an emergency locator transmitter (ELT)?",
+    "ground_truth": "Gliders, balloons, airships, and ultralight aeroplanes are exempt from carrying an ELT.",
+    "answer": "Under Canadian aviation rules, the main ELT requirement is in **CAR 605.38**. Aircraft are generally required to carry an ELT, but there are several **exemptions**.\n\nAircraft **exempt from carrying an ELT** include, in general:\n\n- **Gliders**\n- **Balloons**\n- **Ultra-light aeroplanes**\n- **Amateur-built aircraft**\n- **Aircraft operated under a special certificate of airworthiness in the limited category**\n- **Aircraft operated in certain specific flight conditions or areas where the regulations provide an exemption**, such as some **flights within a local area** or **certain ferry/maintenance flights**, depending on the exact circumstances and authorization\n\nAlso, some aircraft may be exempt if they are equipped and operated under an approved **alternative survival/emergency equipment arrangement** permitted by the regulations.\n\nIf you want, I can give you the **exact CAR 605.38 exemption list** in regulatory wording, or summarize it by **type of aircraft and operation**.",
+    "correctness": 0.78
+  },
+  {
+    "question": "What is a control area extension?",
+    "ground_truth": "Control area extensions are designated around aerodromes where the controlled airspace provided is insufficient to permit the required separation between IFR arrivals and departures and to contain IFR aircraft within controlled airspace.",
+    "answer": "A **control area extension** is an **airspace area that extends upward from the surface or from a specified altitude to provide controlled airspace beyond the lateral limits of a control zone**, usually to protect arriving and departing IFR traffic.\n\nIn Canadian aviation terms, it\u2019s essentially a **controlled airspace \u201cextension\u201d attached to an airport control zone** so that aircraft can be safely vectored, climbed, or descended in the terminal area.\n\n### In practical terms\n- It is **not a separate airport** or a runway.\n- It is **controlled airspace** associated with an aerodrome.\n- It helps ATC manage traffic where aircraft need protected airspace during **approach, departure, or missed approach** procedures.\n\n### Typical purpose\n- To provide **additional controlled airspace** around an airport where terrain, traffic, or instrument procedures require it.\n- To support **IFR operations** outside the normal control zone boundaries.\n\n### Canadian context\nIn Canada, control area extensions are published in the **Designated Airspace Handbook (DAH)** and depicted on aeronautical charts. They are part of the controlled airspace structure around certain aerodromes.\n\nIf you want, I can also explain the difference between a **control zone**, **control area**, and **control area extension** in a simple diagram-style way.",
+    "correctness": 0.86
+  },
+  {
+    "question": "Can an RPAS enter transponder-required airspace without a transponder?",
+    "ground_truth": "ANSPs may allow an RPAS to enter transponder-required airspace without a transponder if the pilot requests permission prior to entering the area and aviation safety is not likely to be affected.",
+    "answer": "Generally, **no** \u2014 an RPAS cannot enter **transponder-required airspace** without meeting the applicable equipment and authorization requirements.\n\nIn Canada, if the airspace requires a transponder, then an RPAS operation there would normally need:\n\n- a **transponder-equipped aircraft**, or\n- a **specific authorization/exemption** from NAV CANADA / Transport Canada, depending on the operation and airspace.\n\nFor most RPAS operations, this means:\n\n- **small RPAS** typically **cannot** just fly into transponder-required airspace without approval and the required equipment;\n- **advanced operations** may be possible only if the RPAS is equipped and authorized appropriately;\n- in controlled or restricted airspace, you usually also need the proper **airspace authorization** in addition to any transponder requirement.\n\nSo the practical answer is: **not legally, unless you have explicit authorization and comply with the applicable conditions.**\n\nIf you want, I can also explain how this works under the Canadian RPAS rules for:\n1. **basic vs advanced operations**, or  \n2. **controlled airspace vs transponder-required airspace**.",
+    "correctness": 0.2
+  },
+  {
+    "question": "What is the passing mark for the PPL written examination?",
+    "ground_truth": "The passing mark is 60%.",
+    "answer": "For the Canadian **Private Pilot Licence (PPL) written examination**, the **passing mark is 60%**.\n\nIf you want, I can also tell you:\n- how many questions are on the exam,\n- the subject areas covered, or\n- the difference between the PPL written and flight test requirements.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What is the rule when two aircraft are approaching head-on?",
+    "ground_truth": "When two aircraft are approaching head-on or approximately so, each pilot shall alter heading to the right.",
+    "answer": "Under Canadian aviation rules, when two aircraft are approaching each other head-on, **each aircraft must alter its heading to the right** so that they pass **to the left of each other**.\n\nThis is the standard **right-of-way rule** for a head-on situation. If you want, I can also give you the related rules for **converging** and **overtaking** aircraft.",
+    "correctness": 1.0
+  },
+  {
+    "question": "What does the Canada Water Aerodrome Supplement (CWAS) contain?",
+    "ground_truth": "The CWAS provides tabulated data and graphical information in support of Canadian VFR charts. It contains an aerodrome/facilities directory of all water aerodromes shown on Canadian VFR charts and lists communications station data, radio aids and other supplemental data.",
+    "answer": "The **Canada Water Aerodrome Supplement (CWAS)** contains **information on Canadian water aerodromes** that are published for aviation use.\n\nIn general, it includes details such as:\n\n- **Location and identification** of the water aerodrome\n- **Operating information** and hours, if applicable\n- **Runway/waterway or landing area details**\n- **Communications and radio frequencies**\n- **Services available** and facilities\n- **Remarks or special procedures**\n- **Charts or diagrams** where applicable\n\nIt is essentially the **reference publication for water aerodrome information in Canada**, similar in purpose to the Canada Flight Supplement, but for **water aerodromes**.",
+    "correctness": 0.86
+  }
+]

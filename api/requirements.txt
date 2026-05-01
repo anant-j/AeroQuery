@@ -1,0 +1,4 @@
+azure-functions
+openai
+pinecone
+cohere
