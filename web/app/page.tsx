@@ -64,7 +64,7 @@ const METRIC_INSIGHTS: Record<string, string> = {
   faithfulness: "GPT models stay grounded. Llama often ignores context.",
   context_precision: "Cohere rerank: 0.78 → 0.92. Right chunks, right order.",
   context_recall: "94% recall — retrieval finds the right information.",
-  answer_relevancy: "Bare LLM sounds relevant but hallucinates. RAG is precise.",
+  answer_relevancy: "Bare LLM scores higher by confidently hallucinating relevant-sounding answers. RAG correctly refuses when unsure — for aviation safety, faithfulness > relevancy.",
   semantic_similarity: "RAG answers are consistently closer to ground truth.",
 };
 
@@ -231,7 +231,7 @@ export default function Home() {
         <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
           {label}
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
           {result.model} · {result.tokens} tokens
         </span>
       </div>
@@ -242,7 +242,7 @@ export default function Home() {
 
       {result.sources && result.sources.length > 0 && (
         <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-500 mb-2">Sources</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
           <div className="flex flex-wrap gap-1.5">
             {result.sources.map((s, i) => (
               <span key={i} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">
@@ -298,7 +298,8 @@ export default function Home() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. What are the fuel requirements for VFR flight?"
-            className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-300 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Search Canadian aviation regulations"
+            className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
@@ -310,8 +311,9 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-4">
-          <label className="text-xs text-gray-500 dark:text-gray-400">Model:</label>
+          <label htmlFor="model-select" className="text-xs text-gray-500 dark:text-gray-400">Model:</label>
           <select
+            id="model-select"
             value={modelOption}
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
@@ -327,12 +329,12 @@ export default function Home() {
             </option>
           </select>
           {webllmLoading && (
-            <span className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
-              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+            <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              {webllmStatus.length > 50 ? webllmStatus.slice(0, 50) + "..." : webllmStatus}
+              <span aria-live="polite">{webllmStatus.length > 50 ? webllmStatus.slice(0, 50) + "..." : webllmStatus}</span>
             </span>
           )}
           {webllmReady && modelOption === "webllm" && (
@@ -340,13 +342,13 @@ export default function Home() {
           )}
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-600 mt-2">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
       </form>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
+        <div role="alert" className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
           {error}
         </div>
       )}
@@ -364,7 +366,7 @@ export default function Home() {
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           50 questions · 6 metrics · 3 models · Judged by GPT-5.4-mini via Azure AI Foundry
         </p>
 
@@ -383,9 +385,9 @@ export default function Home() {
                 <th></th>
                 {EVAL_DATA.map((_, i) => (
                   <React.Fragment key={i}>
-                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-500 border-l border-gray-100 dark:border-gray-800">Bare</th>
-                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-500">RAG</th>
-                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-500">+Rerank</th>
+                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-400 border-l border-gray-100 dark:border-gray-800">Bare</th>
+                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-400">RAG</th>
+                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-400">+Rerank</th>
                   </React.Fragment>
                 ))}
               </tr>
@@ -418,10 +420,17 @@ export default function Home() {
 
                     const cellClass = (val: number | null | undefined, isFirst: boolean, isBare: boolean) => {
                       const border = isFirst ? " border-l border-gray-100 dark:border-gray-800" : "";
-                      if (val === null || val === undefined) return `text-gray-400 dark:text-gray-700${border}`;
-                      if (val === maxVal && vals.length > 1) return `text-gray-800 dark:text-gray-100 font-bold bg-emerald-50 dark:bg-emerald-950/30${border}`;
-                      if (!isBare && val === minVal && vals.length > 1 && bare !== null && bare !== undefined && val < bare) return `text-gray-800 dark:text-gray-100 font-bold bg-red-50 dark:bg-red-950/30${border}`;
+                      if (val === null || val === undefined) return `text-gray-400 dark:text-gray-600${border}`;
+                      if (val === maxVal && vals.length > 1) return `text-gray-800 dark:text-gray-100 font-bold${border}`;
+                      if (!isBare && val === minVal && vals.length > 1 && bare !== null && bare !== undefined && val < bare) return `text-gray-800 dark:text-gray-100 font-bold${border}`;
                       return `text-gray-600 dark:text-gray-400${border}`;
+                    };
+
+                    const cellBg = (val: number | null | undefined, isBare: boolean): string | undefined => {
+                      if (val === null || val === undefined) return undefined;
+                      if (val === maxVal && vals.length > 1) return isDark ? "rgba(16, 185, 129, 0.15)" : "rgba(16, 185, 129, 0.08)";
+                      if (!isBare && val === minVal && vals.length > 1 && bare !== null && bare !== undefined && val < bare) return isDark ? "rgba(239, 68, 68, 0.15)" : "rgba(239, 68, 68, 0.08)";
+                      return undefined;
                     };
 
                     const renderCell = (val: number | null | undefined, isFirst: boolean, isBare: boolean) => {
@@ -429,8 +438,9 @@ export default function Home() {
                       const isMax = val === maxVal && vals.length > 1;
                       const isRegression = !isBare && bare !== null && bare !== undefined && val < bare;
                       const regressionDelta = isRegression && bare ? Math.round(((bare - val) / bare) * 100) : 0;
+                      const bg = cellBg(val, isBare);
                       return (
-                        <td className={`text-center py-2 px-2 font-mono ${cellClass(val, isFirst, isBare)}`}>
+                        <td className={`text-center py-2 px-2 font-mono ${cellClass(val, isFirst, isBare)}`} style={bg ? { background: bg } : undefined}>
                           {val.toFixed(2)}
                           {isMax && delta > 0 && (
                             <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">↑{delta}%</span>
@@ -452,7 +462,7 @@ export default function Home() {
                   })}
                 </tr>
                 <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <td colSpan={1 + EVAL_DATA.length * 3} className="py-1.5 px-1 text-xs text-gray-500 dark:text-gray-500 italic">
+                  <td colSpan={1 + EVAL_DATA.length * 3} className="py-1.5 px-1 text-xs text-gray-500 dark:text-gray-400 italic">
                     {METRIC_INSIGHTS[metric]}
                   </td>
                 </tr>
@@ -463,14 +473,57 @@ export default function Home() {
           </table>
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-600 mt-4">
-          <span className="text-emerald-600">↑ Green</span> = best score (improvement). <span className="text-red-500">↓ Red</span> = worst score (regression). Retrieval metrics are model-independent.
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+          <span className="text-emerald-600 dark:text-emerald-400">↑ Green</span> = best score (improvement). <span className="text-red-500 dark:text-red-400">↓ Red</span> = worst score (regression). Retrieval metrics are model-independent.
         </p>
       </div>
 
-      <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-600">
+      <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mt-8">
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Built With</h2>
+        {[
+          { label: "AI & Retrieval", items: [
+            { name: "OpenAI", desc: "Embeddings & LLM", url: "https://platform.openai.com" },
+            { name: "Pinecone", desc: "Vector DB", url: "https://www.pinecone.io" },
+            { name: "Cohere Rerank", desc: "Reranking", url: "https://cohere.com" },
+            { name: "WebLLM", desc: "In-browser LLM", url: "https://webllm.mlc.ai" },
+            { name: "Ollama", desc: "Local inference", url: "https://ollama.com" },
+          ]},
+          { label: "Eval & Ops", items: [
+            { name: "RAGAS", desc: "6 metrics", url: "https://docs.ragas.io" },
+            { name: "LiteLLM", desc: "Multi-provider", url: "https://docs.litellm.ai" },
+            { name: "Azure AI Foundry", desc: "Judge model", url: "https://ai.azure.com" },
+          ]},
+          { label: "Infra", items: [
+            { name: "Azure Functions", desc: "API", url: "https://azure.microsoft.com/en-us/products/functions" },
+            { name: "Next.js", desc: "Frontend", url: "https://nextjs.org" },
+            { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
+            { name: "Netlify", desc: "Hosting", url: "https://www.netlify.com" },
+            { name: "Docker", desc: "Pipeline", url: "https://www.docker.com" },
+            { name: "PyMuPDF", desc: "PDF parsing", url: "https://pymupdf.readthedocs.io" },
+          ]},
+        ].map((section) => (
+          <div key={section.label} className="mb-2">
+            <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mr-2">{section.label}:</span>
+            {section.items.map((tech, i) => (
+              <React.Fragment key={tech.name}>
+                <span className="relative inline-block group">
+                  <a href={tech.url} target="_blank" rel="noopener noreferrer" className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">
+                    {tech.name}
+                  </a>
+                  <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-[10px] text-white bg-gray-800 dark:bg-gray-700 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-100">
+                    {tech.desc}
+                  </span>
+                </span>
+                {i < section.items.length - 1 && <span className="text-gray-300 dark:text-gray-600 mx-1">·</span>}
+              </React.Fragment>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
         Built by Anant Jain · AI Engineer · Canadian pilot ·{" "}
-        <a href="https://github.com/anant-j" className="underline hover:text-gray-500" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/anant-j" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a>
       </footer>
     </main>
   );
