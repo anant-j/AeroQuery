@@ -1,0 +1,6 @@
+PROJECT.md
+PLAN.md
+.env
+venv/
+data/raw/
+__pycache__/
