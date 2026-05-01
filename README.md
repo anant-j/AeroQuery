@@ -14,6 +14,18 @@ Production-grade RAG system over FAA and Nav Canada aviation regulations, with h
 ## Project Structure
 
 ```
-ingestion/     — PDF parsing and chunking pipeline
-data/raw/      — Source aviation regulation PDFs
+ingestion/     — PDF parsing, cleaning, and chunking pipeline
+data/raw/      — Source aviation regulation PDFs (Canada AIM)
 ```
+
+## Current Status
+
+- [x] Project scaffold (Docker-based dev environment)
+- [x] PDF parsing & cleaning
+- [x] Section-aware chunking (1,518 chunks, avg 317 tokens)
+- [ ] Embeddings & Pinecone upsert
+- [ ] RAG query pipeline
+- [ ] Eval pipeline (RAGAS)
+- [ ] Hybrid search & reranking
+- [ ] Agentic layer (LangGraph)
+- [ ] API & frontend
