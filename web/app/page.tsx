@@ -606,6 +606,10 @@ export default function Home() {
             { name: "WebLLM", desc: "In-browser LLM", url: "https://webllm.mlc.ai" },
             { name: "Ollama", desc: "Local inference", url: "https://ollama.com" },
           ]},
+          { label: "Agentic", items: [
+            { name: "LangGraph", desc: "Agent state machine", url: "https://langchain-ai.github.io/langgraph/" },
+            { name: "LangChain", desc: "LLM orchestration", url: "https://www.langchain.com" },
+          ]},
           { label: "Eval & Ops", items: [
             { name: "RAGAS", desc: "6 metrics", url: "https://docs.ragas.io" },
             { name: "LiteLLM", desc: "Multi-provider", url: "https://docs.litellm.ai" },
