@@ -24,7 +24,7 @@ data/raw/      — Source aviation regulation PDFs (Canada AIM)
 - [x] PDF parsing & cleaning
 - [x] Section-aware chunking (1,518 chunks, avg 317 tokens)
 - [x] Embeddings & Pinecone upsert (1,518 vectors)
-- [ ] RAG query pipeline
+- [x] RAG query pipeline (retrieval + GPT-4o generation with citations)
 - [ ] Eval pipeline (RAGAS)
 - [ ] Hybrid search & reranking
 - [ ] Agentic layer (LangGraph)
