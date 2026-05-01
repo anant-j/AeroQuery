@@ -2,6 +2,7 @@ import azure.functions as func
 import json
 import logging
 import os
+import concurrent.futures
 from openai import OpenAI
 from pinecone import Pinecone
 import cohere
@@ -11,6 +12,33 @@ app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 EMBEDDING_MODEL = "text-embedding-3-large"
 RERANK_MODEL = "rerank-v4.0-pro"
 NAMESPACE = "canada"
+
+# Module-level clients — reused across requests, no re-init overhead
+openai_client = None
+pinecone_index = None
+cohere_client = None
+
+
+def get_openai():
+    global openai_client
+    if openai_client is None:
+        openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    return openai_client
+
+
+def get_pinecone_index():
+    global pinecone_index
+    if pinecone_index is None:
+        pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+        pinecone_index = pc.Index(os.environ.get("PINECONE_INDEX_NAME", "aeroquery"))
+    return pinecone_index
+
+
+def get_cohere():
+    global cohere_client
+    if cohere_client is None:
+        cohere_client = cohere.ClientV2(api_key=os.environ["COHERE_API_KEY"])
+    return cohere_client
 
 SYSTEM_PROMPT = """You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
 
@@ -23,14 +51,12 @@ Rules:
 
 
 def embed_query(query):
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    response = client.embeddings.create(model=EMBEDDING_MODEL, input=[query])
+    response = get_openai().embeddings.create(model=EMBEDDING_MODEL, input=[query])
     return response.data[0].embedding
 
 
 def search_pinecone(query_vector, top_k=10):
-    pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-    index = pc.Index(os.environ.get("PINECONE_INDEX_NAME", "aeroquery"))
+    index = get_pinecone_index()
 
     results = index.query(
         vector=query_vector,
@@ -51,7 +77,7 @@ def search_pinecone(query_vector, top_k=10):
 
 
 def rerank_chunks(query, chunks, top_n=5):
-    co = cohere.ClientV2(api_key=os.environ["COHERE_API_KEY"])
+    co = get_cohere()
     docs = [c["text"] for c in chunks]
 
     response = co.rerank(
@@ -84,8 +110,7 @@ def build_prompt(query, chunks):
 
 
 def generate_answer(messages, model):
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    response = client.chat.completions.create(
+    response = get_openai().chat.completions.create(
         model=model,
         messages=messages,
         temperature=0,
@@ -160,6 +185,57 @@ def retrieve(req: func.HttpRequest) -> func.HttpResponse:
         json.dumps({
             "query": query,
             "chunks": [{"section": c["section"], "title": c["title"], "text": c["text"]} for c in chunks],
+        }),
+        mimetype="application/json",
+    )
+
+
+@app.route(route="compare", methods=["POST"])
+def compare(req: func.HttpRequest) -> func.HttpResponse:
+    """Run RAG and bare LLM in parallel, return both results. Shares embedding."""
+    try:
+        body = req.get_json()
+    except ValueError:
+        return func.HttpResponse(json.dumps({"error": "Invalid JSON"}), status_code=400)
+
+    query = body.get("query", "")
+    model = body.get("model", os.environ.get("LLM_MODEL", "gpt-5.4-mini"))
+
+    if not query:
+        return func.HttpResponse(json.dumps({"error": "query is required"}), status_code=400)
+
+    # Embed once, reuse for RAG
+    query_vector = embed_query(query)
+    chunks = search_pinecone(query_vector)
+    chunks = rerank_chunks(query, chunks)
+    rag_messages = build_prompt(query, chunks)
+
+    bare_messages = [
+        {"role": "system", "content": "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations."},
+        {"role": "user", "content": query},
+    ]
+
+    # Run both LLM calls in parallel
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        rag_future = executor.submit(generate_answer, rag_messages, model)
+        bare_future = executor.submit(generate_answer, bare_messages, model)
+
+        rag_answer, rag_tokens = rag_future.result()
+        bare_answer, bare_tokens = bare_future.result()
+
+    return func.HttpResponse(
+        json.dumps({
+            "query": query,
+            "model": model,
+            "rag": {
+                "answer": rag_answer,
+                "tokens": rag_tokens,
+                "sources": [{"section": c["section"], "title": c["title"]} for c in chunks],
+            },
+            "bare": {
+                "answer": bare_answer,
+                "tokens": bare_tokens,
+            },
         }),
         mimetype="application/json",
     )

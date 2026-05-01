@@ -1,10 +1,10 @@
 # AeroQuery
 
-Production-grade RAG system over Canadian aviation regulations (TC AIM), with hybrid retrieval, Cohere reranking, automated eval pipelines, and a live demo — built to answer questions a student pilot actually asks.
+Production-grade RAG system over Canadian aviation regulations (TC AIM), with hybrid retrieval, Cohere reranking, automated eval pipelines, and a live demo — built to answer questions a pilot actually asks.
 
 ## Why This Project
 
-I'm a Canadian student pilot building my PPL. Aviation regulations are dense, hierarchical, and full of cross-references — a harder RAG problem than most tutorials tackle. The eval pipeline proves the system works with numbers, not vibes.
+I'm a Canadian pilot building my PPL. Aviation regulations are dense, hierarchical, and full of cross-references — a harder RAG problem than most tutorials tackle. The eval pipeline proves the system works with numbers, not vibes.
 
 ## Architecture
 
@@ -60,7 +60,7 @@ See each folder's README for setup and run instructions.
 - [x] Cohere Reranking
 - [x] Azure Functions API (`/ask` and `/retrieve` endpoints)
 - [x] Next.js frontend (search + RAG toggle + eval table)
-- [ ] Deploy to Azure + Netlify
+- [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
 - [ ] LangGraph agentic layer
 - [ ] WebLLM client-side model option
 

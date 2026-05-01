@@ -44,24 +44,30 @@ export default function Home() {
     setBareResult(null);
 
     try {
-      const [ragRes, bareRes] = await Promise.all([
-        fetch(`${API_URL}/ask`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, use_rag: true }),
-        }),
-        fetch(`${API_URL}/ask`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, use_rag: false }),
-        }),
-      ]);
+      const res = await fetch(`${API_URL}/compare`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
 
-      if (!ragRes.ok || !bareRes.ok) throw new Error("API error");
+      if (!res.ok) throw new Error("API error");
 
-      const [ragData, bareData] = await Promise.all([ragRes.json(), bareRes.json()]);
-      setRagResult(ragData);
-      setBareResult(bareData);
+      const data = await res.json();
+      setRagResult({
+        query: data.query,
+        answer: data.rag.answer,
+        model: data.model,
+        tokens: data.rag.tokens,
+        use_rag: true,
+        sources: data.rag.sources,
+      });
+      setBareResult({
+        query: data.query,
+        answer: data.bare.answer,
+        model: data.model,
+        tokens: data.bare.tokens,
+        use_rag: false,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
