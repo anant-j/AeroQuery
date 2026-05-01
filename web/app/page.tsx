@@ -343,11 +343,11 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
                     +{delta}% with RAG
                   </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                  <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
                     Faith: {row.faithfulness.toFixed(2)}
                   </span>
                 </div>
