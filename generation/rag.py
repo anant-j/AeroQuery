@@ -6,7 +6,7 @@ from generation.prompt import build_prompt
 
 load_dotenv()
 
-LLM_MODEL = "gpt-4o"
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 
 
 def ask(query, top_k=10, namespace="canada"):
