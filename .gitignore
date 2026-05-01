@@ -1,5 +1,6 @@
 PROJECT.md
 PLAN.md
+CONSIDERATIONS.md
 .env
 venv/
 __pycache__/
