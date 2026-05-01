@@ -4,8 +4,9 @@ import time
 import litellm
 from openai import OpenAI, AsyncOpenAI
 
-# Increase LiteLLM max tokens to prevent truncation on long RAGAS judgments
-litellm.max_tokens = 4096
+# LiteLLM config
+litellm.max_tokens = 4096  # Prevent truncation on long RAGAS judgments
+litellm.drop_params = True  # Drop unsupported params (e.g., top_p for Azure)
 from dotenv import load_dotenv
 from ragas.llms import llm_factory
 from ragas.embeddings import OpenAIEmbeddings
@@ -22,15 +23,16 @@ from generation.prompt import build_prompt
 
 load_dotenv()
 
-# Models to evaluate
+# Models to evaluate: (model_name, base_url, provider)
+# provider: "openai" (default), "ollama", "azure"
 LLM_MODELS = [
-    # ("gpt-5.4-mini", None),
-    # ("gpt-3.5-turbo", None),
-    ("llama3.2:1b", "http://host.docker.internal:11434/v1"),
+    ("gpt-5.4-mini", None, "azure"),        # Azure Foundry — free
+    ("gpt-3.5-turbo", None, "openai"),       # OpenAI — cheap
+    ("llama3.2:1b", "http://host.docker.internal:11434/v1", "ollama"),  # Ollama — free
 ]
 
-# RAGAS judge — GPT-5.4-mini via LiteLLM (handles max_tokens -> max_completion_tokens)
-JUDGE_MODEL = "gpt-5.4-mini"
+# RAGAS judge — Azure AI Foundry (free unlimited tokens)
+JUDGE_MODEL = "azure/gpt-5.4-mini"
 
 # Metric categories by required kwargs
 CONTEXT_METRICS = ["faithfulness", "context_precision", "context_recall"]  # need retrieved_contexts
@@ -49,8 +51,20 @@ def get_llm_client(base_url=None):
     return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
-def generate(messages, model, base_url=None):
-    client = get_llm_client(base_url)
+def generate(messages, model, base_url=None, provider="openai"):
+    """Generate a response from any model via OpenAI, Ollama, or Azure."""
+    if provider == "azure":
+        from openai import AzureOpenAI
+        client = AzureOpenAI(
+            api_key=os.getenv("AZURE_API_KEY"),
+            azure_endpoint=os.getenv("AZURE_API_BASE"),
+            api_version=os.getenv("AZURE_API_VERSION", "2025-04-01-preview"),
+        )
+    elif provider == "ollama":
+        client = OpenAI(base_url=base_url, api_key="ollama")
+    else:
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
     response = client.chat.completions.create(
         model=model, messages=messages, temperature=0,
     )
@@ -118,8 +132,13 @@ def run_eval():
     all_summaries = []
 
     # Set up RAGAS scorers with judge model
-    print(f"Setting up RAGAS metrics (judge: {JUDGE_MODEL} via LiteLLM)...\n")
-    llm = llm_factory(JUDGE_MODEL, provider="litellm", client=litellm.acompletion)
+    print(f"Setting up RAGAS metrics (judge: {JUDGE_MODEL} via Azure AI Foundry)...\n")
+    llm = llm_factory(
+        JUDGE_MODEL, provider="litellm", client=litellm.acompletion,
+        api_key=os.getenv("AZURE_API_KEY"),
+        api_base=os.getenv("AZURE_API_BASE"),
+        api_version=os.getenv("AZURE_API_VERSION", "2025-04-01-preview"),
+    )
     emb = OpenAIEmbeddings(client=AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY")), model="text-embedding-3-small")
 
     scorers = {
@@ -134,7 +153,7 @@ def run_eval():
     # Cache retrieval once
     retrieval_cache = cache_retrieval(test_set)
 
-    for llm_model, base_url in LLM_MODELS:
+    for llm_model, base_url, provider in LLM_MODELS:
         model_slug = llm_model.replace("/", "-").replace(":", "-")
         results_dir = f"eval/results/{model_slug}"
         os.makedirs(results_dir, exist_ok=True)
@@ -175,7 +194,7 @@ def run_eval():
                 {"role": "system", "content": "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations."},
                 {"role": "user", "content": q},
             ]
-            bare_answer, bare_tokens = generate(bare_messages, llm_model, base_url)
+            bare_answer, bare_tokens = generate(bare_messages, llm_model, base_url, provider)
             bare_scores = score_ragas(
                 {k: v for k, v in scorers.items() if k in REFERENCE_METRICS + ANSWER_METRICS},
                 user_input=q, response=bare_answer, reference=gt, retrieved_contexts=[],
@@ -188,7 +207,7 @@ def run_eval():
             # --- RAG (no rerank) ---
             rag_chunks = cached["no_rerank"]
             rag_messages = build_prompt(q, rag_chunks)
-            rag_answer, rag_tokens = generate(rag_messages, llm_model, base_url)
+            rag_answer, rag_tokens = generate(rag_messages, llm_model, base_url, provider)
             rag_contexts = [c["text"] for c in rag_chunks]
             rag_scores = score_ragas(
                 scorers, user_input=q, response=rag_answer,
@@ -202,7 +221,7 @@ def run_eval():
             # --- RAG + Rerank ---
             rr_chunks = cached["rerank"]
             rr_messages = build_prompt(q, rr_chunks)
-            rr_answer, rr_tokens = generate(rr_messages, llm_model, base_url)
+            rr_answer, rr_tokens = generate(rr_messages, llm_model, base_url, provider)
             rr_contexts = [c["text"] for c in rr_chunks]
             rr_scores = score_ragas(
                 scorers, user_input=q, response=rr_answer,

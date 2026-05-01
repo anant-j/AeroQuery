@@ -35,23 +35,42 @@ See each folder's README for setup and run instructions.
 | Vector DB | Pinecone (serverless, cosine, namespaces) |
 | Reranking | Cohere rerank-v4.0-pro |
 | LLM | OpenAI GPT-5.4-mini (server), WebLLM Llama 3.2 1B (browser) |
-| Eval | LLM-as-judge (custom pipeline) |
+| Eval | RAGAS v0.4 (6 metrics), Azure AI Foundry (judge) |
+| Orchestration | LiteLLM (multi-provider routing) |
 | API | Azure Functions (Python) |
 | Frontend | Next.js + Tailwind CSS |
-| Deployment | Azure (API) + Netlify (frontend) |
+| Deployment | Azure (API + AI Foundry) + Netlify (frontend) |
 
-## Eval Benchmark
+## Eval Benchmark (RAGAS v0.4 — 6 Industry-Standard Metrics)
 
-| Model | Bare LLM | RAG | RAG + Rerank | Faithfulness |
+**Factual Correctness** (does the answer match ground truth?):
+
+| Model | Bare LLM | RAG | RAG + Rerank | Improvement |
 |---|---|---|---|---|
-| GPT-5.4-mini | 0.76 | **0.83** | 0.82 | 0.90 |
-| GPT-3.5-turbo | 0.69 | **0.79** | 0.78 | 0.91 |
-| Llama 3.2 1B (WebLLM) | 0.18 | 0.36 | **0.47** | 0.49 |
+| GPT-5.4-mini | 0.32 | 0.40 | **0.43** | +34% |
+| GPT-3.5-turbo | 0.23 | **0.44** | 0.44 | +91% |
+| Llama 3.2 1B | 0.07 | 0.18 | **0.22** | +203% |
 
-*50 questions, judged by GPT-5.4-mini. Key findings:*
-- *RAG improves Llama 3.2 1B by +170% (0.18 → 0.47 with rerank)*
-- *Reranking helps small models most (+32% for Llama) but slightly hurts GPT models*
-- *Strong models use more context better; weak models need cleaner, focused context*
+**Retrieval Quality** (same across models — retrieval is model-independent):
+
+| Metric | RAG | RAG + Rerank |
+|---|---|---|
+| Context Precision | 0.78 | **0.92** |
+| Context Recall | **0.92** | 0.92 |
+
+**Generation Quality:**
+
+| Metric | GPT-5.4-mini | GPT-3.5 | Llama 1B |
+|---|---|---|---|
+| Faithfulness (RAG+Rerank) | **0.88** | 0.85 | 0.55 |
+| Answer Relevancy (RAG+Rerank) | 0.79 | **0.87** | 0.62 |
+| Semantic Similarity (RAG+Rerank) | 0.77 | **0.79** | 0.69 |
+
+*50 questions, 6 RAGAS metrics, judged by GPT-5.4-mini via Azure AI Foundry. Key findings:*
+- *RAG improves factual correctness for every model — Llama by +203%, GPT-3.5 by +91%*
+- *Cohere reranking boosts context precision from 0.78 to 0.92 (+18%)*
+- *Retrieval quality is strong (0.92 recall/precision) — generation capability is the bottleneck*
+- *Bare Llama 1B hallucinates confidently (0.07 factual correctness); with RAG it triples to 0.22*
 
 ## Current Status
 

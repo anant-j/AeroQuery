@@ -1,0 +1,25 @@
+{
+  "num_questions": 50,
+  "model": "gpt-5.4-mini",
+  "bare": {
+    "answer_relevancy": 0.839,
+    "factual_correctness": 0.321,
+    "semantic_similarity": 0.688
+  },
+  "rag": {
+    "faithfulness": 0.824,
+    "context_precision": 0.784,
+    "context_recall": 0.88,
+    "answer_relevancy": 0.783,
+    "factual_correctness": 0.399,
+    "semantic_similarity": 0.766
+  },
+  "rag_rerank": {
+    "faithfulness": 0.884,
+    "context_precision": 0.921,
+    "context_recall": 0.92,
+    "answer_relevancy": 0.788,
+    "factual_correctness": 0.427,
+    "semantic_similarity": 0.772
+  }
+}

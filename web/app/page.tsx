@@ -17,24 +17,24 @@ Rules:
 const EVAL_DATA = [
   {
     model: "GPT-5.4-mini",
-    bare: 0.76,
-    rag: 0.83,
-    ragRerank: 0.82,
-    faithfulness: 0.90,
+    bare: 0.32,
+    rag: 0.40,
+    ragRerank: 0.43,
+    faithfulness: 0.88,
   },
   {
     model: "GPT-3.5-turbo",
-    bare: 0.69,
-    rag: 0.79,
-    ragRerank: 0.78,
-    faithfulness: 0.91,
+    bare: 0.23,
+    rag: 0.44,
+    ragRerank: 0.44,
+    faithfulness: 0.85,
   },
   {
     model: "Llama 3.2 1B (WebLLM)",
-    bare: 0.18,
-    rag: 0.36,
-    ragRerank: 0.47,
-    faithfulness: 0.49,
+    bare: 0.07,
+    rag: 0.18,
+    ragRerank: 0.22,
+    faithfulness: 0.55,
   },
 ];
 
@@ -306,9 +306,9 @@ export default function Home() {
       )}
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark</h2>
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS)</h2>
         <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
-          50 questions, judged by GPT-5.4-mini. How much does RAG improve correctness?
+          50 questions · 6 RAGAS metrics · Judged by GPT-5.4-mini via Azure AI Foundry. Showing factual correctness.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
