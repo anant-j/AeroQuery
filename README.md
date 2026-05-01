@@ -8,13 +8,53 @@ I'm a Canadian pilot building my PPL. Aviation regulations are dense, hierarchic
 
 ## Architecture
 
+### Ingestion Pipeline
+```mermaid
+flowchart LR
+    A["📄 PDF"] --> B["Parse\nPyMuPDF"] --> C["Chunk\n512 tokens"] --> D["Embed\n3072-dim"] --> E[("Pinecone\n1,614 vectors")]
+
+    style E fill:#fff3e0,stroke:#ff9800
 ```
-User question
-  → LangGraph agent (classify query → route)
-    → [simple]  → embed → Pinecone top-10 → Cohere rerank top-5
-    → [complex] → decompose into sub-queries → retrieve each → merge & deduplicate
-  → Guard (check context sufficiency)
-  → GPT-5.4-mini (stream cited answer via SSE)
+
+### Eval Pipeline
+```mermaid
+flowchart LR
+    A["50 Questions"] --> B["Generate Answers\n3 models × 3 configs"]
+    B --> C["RAGAS Judge\nGPT-5.4-mini via Azure"]
+    C --> D["6 Metrics\nper question"]
+    D --> E["Error Analysis\nclassify failures"]
+
+    style C fill:#e3f2fd,stroke:#2196f3
+    style E fill:#fce4ec,stroke:#e91e63
+```
+
+### Query Flow — OpenAI + LangGraph
+```mermaid
+flowchart LR
+    A["📝 Question"] --> B["LangGraph\nAgent"]
+    B --> C{Route}
+    C -->|simple| D["Retrieve\n1 query"]
+    C -->|complex| E["Decompose\n→ Retrieve N"]
+    D & E --> F["Guard"]
+    F --> G["Stream\nGPT-5.4-mini"]
+    G --> H["💬 Answer\nwith citations"]
+
+    style B fill:#e3f2fd,stroke:#2196f3
+    style G fill:#fff3e0,stroke:#ff9800
+    style F fill:#fce4ec,stroke:#e91e63
+```
+
+### Query Flow — WebLLM (in-browser)
+```mermaid
+flowchart LR
+    A["📝 Question"] --> B["Azure\n/retrieve"]
+    B --> C["Embed → Pinecone\n→ Cohere Rerank"]
+    C --> D["Chunks"]
+    D --> E["WebLLM\nLlama 3.2 1B\nin browser"]
+    E --> F["💬 Answer"]
+
+    style B fill:#e3f2fd,stroke:#2196f3
+    style E fill:#e8f5e9,stroke:#4caf50
 ```
 
 ## Project Structure
@@ -83,7 +123,7 @@ See each folder's README for setup and run instructions.
 - [x] RAG query pipeline (retrieve, rerank, generate with citations)
 - [x] Eval pipeline (LLM-as-judge, multi-model comparison)
 - [x] Cohere Reranking
-- [x] Azure Functions API (`/retrieve` endpoint — embed, search, rerank)
+- [x] Azure Functions API (`/agent` + `/retrieve` endpoints)
 - [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
 - [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
 - [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
