@@ -1,0 +1,127 @@
+[
+  {
+    "question": "What are the fuel requirements for VFR flight in Canada?",
+    "ground_truth": "For an aircraft other than a helicopter in VFR flight: during the day, enough fuel to fly to the destination plus 30 minutes at normal cruising speed; at night, enough fuel to fly to the destination plus 45 minutes at normal cruising speed. For a helicopter: enough fuel to fly to the destination plus 20 minutes at normal cruising speed.",
+    "section": "3.12"
+  },
+  {
+    "question": "What are the fuel requirements for IFR flight in Canada?",
+    "ground_truth": "For a propeller-driven aeroplane in IFR flight: enough fuel to fly to the destination, then to the alternate aerodrome, then for 45 minutes at normal cruising speed.",
+    "section": "3.12.2"
+  },
+  {
+    "question": "What is the emergency frequency that pilots should monitor?",
+    "ground_truth": "121.5 MHz is the emergency frequency.",
+    "section": "1.4.2"
+  },
+  {
+    "question": "In which airspace classes are transponders required in Canada?",
+    "ground_truth": "Transponders are required in all Class A, B, and C airspace as well as some Class D and Class E airspace.",
+    "section": "3.2.34.1"
+  },
+  {
+    "question": "What is a NOTAM?",
+    "ground_truth": "A NOTAM is a notice to airman that contains information concerning the establishment or condition of, or any changes in, any aeronautical facility, service, procedure or hazard, the timely knowledge of which is essential to personnel involved in flight operations.",
+    "section": "3.3.2.2"
+  },
+  {
+    "question": "What are the right-of-way rules when two aircraft are converging?",
+    "ground_truth": "When two aircraft are converging at approximately the same altitude, the pilot-in-command of the aircraft that has the other on its right shall give way.",
+    "section": "1.7.3"
+  },
+  {
+    "question": "Can aerobatic manoeuvres be performed with passengers on board?",
+    "ground_truth": "No person operating an aircraft with a passenger on board shall conduct aerobatic manoeuvres unless the pilot-in-command of the aircraft has engaged in at least 10 hours dual flight instruction in aerobatic manoeuvres.",
+    "section": "602.28"
+  },
+  {
+    "question": "When is supplemental oxygen required in an unpressurized aircraft?",
+    "ground_truth": "Supplemental oxygen is required for unpressurized aircraft operating at pressure-altitudes above 13,000 feet ASL.",
+    "section": "605.31"
+  },
+  {
+    "question": "What minimum flight time is required for a Private Pilot Licence (Aeroplane)?",
+    "ground_truth": "A minimum of 45 hours total flight time is required, including 17 hours dual instruction and 12 hours solo.",
+    "section": "1.7.2"
+  },
+  {
+    "question": "What medical category is required for a Private Pilot Licence?",
+    "ground_truth": "A Category 1 or Category 3 medical is required for a Private Pilot Licence.",
+    "section": "1.7.2"
+  },
+  {
+    "question": "What equipment is required for night VFR flight in a power-driven aircraft?",
+    "ground_truth": "Equipment includes a sensitive altimeter adjustable for barometric pressure, a turn and slip indicator or turn coordinator, an adequate source of electrical energy, spare fuses if applicable, a stabilized magnetic direction indicator or gyroscopic direction indicator, radiocommunication equipment for two-way communication, and position and anti-collision lights.",
+    "section": "605.16"
+  },
+  {
+    "question": "What position lights are required on an aircraft at night?",
+    "ground_truth": "A red light on the port (left) side, a green light on the starboard (right) side, and a white light on the tail.",
+    "section": "3.2.27.2"
+  },
+  {
+    "question": "What is a full emergency standby?",
+    "ground_truth": "Full emergency standby means the level of response when an aircraft has, or is suspected to have, an operational defect that affects normal flight operations to the extent that there is possibility of an accident.",
+    "section": "9.0"
+  },
+  {
+    "question": "What is the minimum age for a small RPA basic operations pilot certificate?",
+    "ground_truth": "A pilot certificate for small RPA (VLOS) basic operations is issued to those that are at least 14 years of age.",
+    "section": "3.2.39.1"
+  },
+  {
+    "question": "What should a pilot do if they experience a communication failure?",
+    "ground_truth": "The pilot should attempt to contact any ATC facility or another aircraft, inform them of the difficulty, and request they relay the information to the ATC facility with whom communications are intended.",
+    "section": "6.2.2"
+  },
+  {
+    "question": "What is the minimum visibility for VFR flight in uncontrolled airspace below 1,000 feet AGL during the day?",
+    "ground_truth": "The minimum visibility is 2 statute miles during the day for aircraft other than helicopters. For helicopters, the minimum is 1 statute mile.",
+    "section": "2.7.2"
+  },
+  {
+    "question": "What is the minimum visibility for VFR flight in controlled airspace?",
+    "ground_truth": "The minimum visibility for VFR flight in controlled airspace is 3 statute miles.",
+    "section": "2.7.2"
+  },
+  {
+    "question": "What is the purpose of anti-collision lights?",
+    "ground_truth": "Anti-collision lights must be turned on to warn other aircraft. The pilot-in-command may turn them off if they determine that turning them off is in the interest of aviation safety.",
+    "section": "605.17"
+  },
+  {
+    "question": "What are the classifications of emergency conditions?",
+    "ground_truth": "Emergency conditions are classified as: Distress — a condition of being threatened by serious and/or imminent danger and requiring immediate assistance; and Urgency — a condition concerning the safety of an aircraft or its occupants.",
+    "section": "4.1"
+  },
+  {
+    "question": "What aircraft are exempt from carrying an emergency locator transmitter (ELT)?",
+    "ground_truth": "Gliders, balloons, airships, and ultralight aeroplanes are exempt from carrying an ELT.",
+    "section": "4.1"
+  },
+  {
+    "question": "What is a control area extension?",
+    "ground_truth": "Control area extensions are designated around aerodromes where the controlled airspace provided is insufficient to permit the required separation between IFR arrivals and departures and to contain IFR aircraft within controlled airspace.",
+    "section": "2.7.2"
+  },
+  {
+    "question": "Can an RPAS enter transponder-required airspace without a transponder?",
+    "ground_truth": "ANSPs may allow an RPAS to enter transponder-required airspace without a transponder if the pilot requests permission prior to entering the area and aviation safety is not likely to be affected.",
+    "section": "3.2.34.2"
+  },
+  {
+    "question": "What is the passing mark for the PPL written examination?",
+    "ground_truth": "The passing mark is 60%.",
+    "section": "1.7.2"
+  },
+  {
+    "question": "What is the rule when two aircraft are approaching head-on?",
+    "ground_truth": "When two aircraft are approaching head-on or approximately so, each pilot shall alter heading to the right.",
+    "section": "602.24"
+  },
+  {
+    "question": "What does the Canada Water Aerodrome Supplement (CWAS) contain?",
+    "ground_truth": "The CWAS provides tabulated data and graphical information in support of Canadian VFR charts. It contains an aerodrome/facilities directory of all water aerodromes shown on Canadian VFR charts and lists communications station data, radio aids and other supplemental data.",
+    "section": "2.5.4"
+  }
+]

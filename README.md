@@ -18,6 +18,7 @@ Production-grade RAG system over FAA and Nav Canada aviation regulations, with h
 ingestion/     — PDF parsing, cleaning, chunking, and embedding pipeline
 retrieval/     — Query embedding and Pinecone vector search
 generation/    — Prompt template and LLM generation with citations
+eval/          — QA test set and eval pipeline
 data/raw/      — Source aviation regulation PDFs (Canada AIM)
 ```
 
@@ -28,7 +29,7 @@ data/raw/      — Source aviation regulation PDFs (Canada AIM)
 - [x] Section-aware chunking (1,614 chunks, avg 295 tokens)
 - [x] Embeddings & Pinecone upsert (1,614 vectors)
 - [x] RAG query pipeline (retrieval + GPT-5.4-mini generation with citations)
-- [ ] Eval pipeline (RAGAS)
+- [ ] Eval pipeline (GPT-5.4-mini baseline + offline model comparison)
 - [ ] Hybrid search & reranking
 - [ ] Agentic layer (LangGraph)
-- [ ] API & frontend
+- [ ] Next.js frontend on Netlify (search + RAG toggle + eval display)

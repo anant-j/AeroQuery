@@ -2,3 +2,4 @@ pymupdf
 python-dotenv
 openai
 pinecone
+ragas
