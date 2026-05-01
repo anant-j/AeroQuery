@@ -8,23 +8,26 @@ Production-grade RAG system over FAA and Nav Canada aviation regulations, with h
 2. Build and run:
    ```bash
    docker compose build
-   docker compose run app python -m ingestion.parse
+   docker compose run --rm app python -m ingestion.embed    # Parse, chunk, embed, upsert
+   docker compose run --rm app python -m generation.rag     # Ask questions
    ```
 
 ## Project Structure
 
 ```
-ingestion/     — PDF parsing, cleaning, and chunking pipeline
+ingestion/     — PDF parsing, cleaning, chunking, and embedding pipeline
+retrieval/     — Query embedding and Pinecone vector search
+generation/    — Prompt template and LLM generation with citations
 data/raw/      — Source aviation regulation PDFs (Canada AIM)
 ```
 
 ## Current Status
 
 - [x] Project scaffold (Docker-based dev environment)
-- [x] PDF parsing & cleaning
-- [x] Section-aware chunking (1,518 chunks, avg 317 tokens)
-- [x] Embeddings & Pinecone upsert (1,518 vectors)
-- [x] RAG query pipeline (retrieval + GPT-4o generation with citations)
+- [x] PDF parsing & cleaning (PyMuPDF)
+- [x] Section-aware chunking (1,614 chunks, avg 295 tokens)
+- [x] Embeddings & Pinecone upsert (1,614 vectors)
+- [x] RAG query pipeline (retrieval + GPT-5.4-mini generation with citations)
 - [ ] Eval pipeline (RAGAS)
 - [ ] Hybrid search & reranking
 - [ ] Agentic layer (LangGraph)
