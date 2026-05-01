@@ -1,9 +1,0 @@
-{
-  "num_questions": 50,
-  "model": "gpt-5.4-mini",
-  "bare_correctness": 0.759,
-  "rag_correctness": 0.834,
-  "rag_faithfulness": 0.882,
-  "rag_rerank_correctness": 0.823,
-  "rag_rerank_faithfulness": 0.897
-}

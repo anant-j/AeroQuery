@@ -2,5 +2,6 @@ pymupdf
 python-dotenv
 openai
 pinecone
-ragas
+ragas>=0.4
 cohere
+litellm

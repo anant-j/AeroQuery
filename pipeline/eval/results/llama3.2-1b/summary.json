@@ -1,9 +1,0 @@
-{
-  "num_questions": 50,
-  "model": "llama3.2:1b",
-  "bare_correctness": 0.176,
-  "rag_correctness": 0.357,
-  "rag_faithfulness": 0.434,
-  "rag_rerank_correctness": 0.472,
-  "rag_rerank_faithfulness": 0.485
-}
