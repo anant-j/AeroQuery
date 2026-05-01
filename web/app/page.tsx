@@ -92,6 +92,7 @@ interface Chunk {
 }
 
 export default function Home() {
+  const defaultQuery = "What is the minimum amount of time I need to wait after drinking alcohol before flying VFR?";
   const [query, setQuery] = useState("");
   const [modelOption, setModelOption] = useState<ModelOption>("openai");
   const [loading, setLoading] = useState(false);
@@ -182,7 +183,7 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    const effectiveQuery = query.trim() || defaultQuery;
 
     setLoading(true);
     setError("");
@@ -194,21 +195,21 @@ export default function Home() {
     try {
       if (modelOption === "openai") {
         // Initialize results with empty answers for streaming
-        setRagResult({ query, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
-        setBareResult({ query, answer: "", model: "", tokens: 0, use_rag: false });
+        setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
+        setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
         setRagStreaming(true);
         setBareStreaming(true);
 
         // Stream both RAG and bare LLM in parallel
         await Promise.all([
           readSSEStream(
-            { query, use_rag: true },
+            { query: effectiveQuery, use_rag: true },
             (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             (sources, agent) => setRagResult(prev => prev ? { ...prev, sources, agent } : null),
             (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
           ).finally(() => setRagStreaming(false)),
           readSSEStream(
-            { query, use_rag: false },
+            { query: effectiveQuery, use_rag: false },
             (token) => setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             undefined,
             (meta) => setBareResult(prev => prev ? { ...prev, ...meta } : null),
@@ -219,7 +220,7 @@ export default function Home() {
         const retrieveRes = await fetch(`${API_URL}/retrieve`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ query: effectiveQuery }),
         });
 
         if (!retrieveRes.ok) throw new Error("Retrieval API error");
@@ -232,18 +233,18 @@ export default function Home() {
 
         const ragMessages = [
           { role: "system" as const, content: RAG_SYSTEM_PROMPT },
-          { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}` },
+          { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${effectiveQuery}` },
         ];
         const bareMessages = [
           { role: "system" as const, content: BARE_SYSTEM_PROMPT },
-          { role: "user" as const, content: query },
+          { role: "user" as const, content: effectiveQuery },
         ];
 
         const webllmModel = `WebLLM (${WEBLLM_MODEL})`;
 
         // RAG with streaming (WebLLM is single-threaded, run sequentially)
         setRagResult({
-          query, answer: "", model: webllmModel, tokens: 0, use_rag: true,
+          query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: true,
           sources: chunks.map((c) => ({ section: c.section, title: c.title, text: c.text })),
         });
         setRagStreaming(true);
@@ -262,7 +263,7 @@ export default function Home() {
         setRagStreaming(false);
 
         // Bare LLM with streaming
-        setBareResult({ query, answer: "", model: webllmModel, tokens: 0, use_rag: false });
+        setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: false });
         setBareStreaming(true);
 
         const bareStream = await engineRef.current!.chat.completions.create({
@@ -415,13 +416,13 @@ export default function Home() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. What are the fuel requirements for VFR flight?"
+            placeholder={defaultQuery}
             aria-label="Search Canadian aviation regulations"
             className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
-            disabled={loading || !query.trim() || (modelOption === "webllm" && !webllmReady)}
+            disabled={loading || (modelOption === "webllm" && !webllmReady)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Searching..." : "Compare"}
