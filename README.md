@@ -13,7 +13,7 @@ User question
   → OpenAI text-embedding-3-large (query → 3072-dim vector)
     → Pinecone (cosine similarity, top-10 chunks)
       → Cohere rerank-v4.0-pro (re-score, return top-5)
-        → GPT-5.4-mini (generate cited answer from context)
+        → GPT-5.4-mini (stream cited answer via SSE)
 ```
 
 ## Project Structure
@@ -36,8 +36,9 @@ See each folder's README for setup and run instructions.
 | Reranking | Cohere rerank-v4.0-pro |
 | LLM | OpenAI GPT-5.4-mini (server), WebLLM Llama 3.2 1B (browser) |
 | Eval | RAGAS v0.4 (6 metrics), Azure AI Foundry (judge) |
+| Streaming | SSE via Next.js API route (OpenAI), WebLLM SDK (browser) |
 | Orchestration | LiteLLM (multi-provider routing) |
-| API | Azure Functions (Python) |
+| API | Azure Functions (retrieval), Next.js API route (generation) |
 | Frontend | Next.js + Tailwind CSS |
 | Deployment | Azure (API + AI Foundry) + Netlify (frontend) |
 
@@ -82,6 +83,7 @@ See each folder's README for setup and run instructions.
 - [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
 - [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
 - [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
+- [x] Streaming responses (SSE for OpenAI, SDK streaming for WebLLM)
 - [ ] LangGraph agentic layer
 
 
