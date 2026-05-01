@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from openai import OpenAI
 from dotenv import load_dotenv
 from retrieval.search import search
@@ -74,14 +75,17 @@ def judge_correctness(answer, ground_truth, client):
 def cache_retrieval(test_set):
     """Run retrieval once per question, cache chunks for reuse across models."""
     print(">> Caching retrieval results (embed + Pinecone + Cohere)...")
+    print("   (Rate-limited to ~8 Cohere calls/min on free tier)\n")
     cache = {}
     for i, item in enumerate(test_set):
         q = item["question"]
         print(f"  [{i+1}/{len(test_set)}] {q[:55]}...")
         no_rerank = search(q, top_k=10, use_rerank=False)
+        time.sleep(7)  # Cohere free tier: 10 calls/min
         reranked = search(q, top_k=10, use_rerank=True, rerank_top_n=5)
+        time.sleep(7)
         cache[q] = {"no_rerank": no_rerank, "rerank": reranked}
-    print(f"  Cached {len(cache)} questions\n")
+    print(f"\n  Cached {len(cache)} questions\n")
     return cache
 
 

@@ -1,0 +1,402 @@
+[
+  {
+    "question": "What are the fuel requirements for VFR flight in Canada?",
+    "ground_truth": "For an aircraft other than a helicopter in VFR flight: during the day, enough fuel to fly to the destination plus 30 minutes at normal cruising speed; at night, enough fuel to fly to the destination plus 45 minutes at normal cruising speed. For a helicopter: enough fuel to fly to the destination plus 20 minutes at normal cruising speed.",
+    "answer": "For VFR flight in Canada, the fuel requirements are as follows:\n- During the day, the aircraft must have enough fuel to fly to the destination aerodrome and then fly for 30 minutes at normal cruising speed.\n- At night, the aircraft must have enough fuel to fly to the destination aerodrome and then fly for 45 minutes at normal cruising speed. (Section 3.11.1)",
+    "faithfulness": 1.0,
+    "correctness": 0.7,
+    "tokens": 2461
+  },
+  {
+    "question": "What are the fuel requirements for IFR flight in Canada?",
+    "ground_truth": "For a propeller-driven aeroplane in IFR flight: enough fuel to fly to the destination, then to the alternate aerodrome, then for 45 minutes at normal cruising speed.",
+    "answer": "The fuel requirements for IFR flight in Canada are as follows:\n1. For propeller-driven aeroplanes:\n   - Fly to the destination aerodrome, then to the alternate aerodrome (if specified), and then fly for an additional 45 minutes (Section 3.12.2).\n2. For turbojet powered aeroplanes or helicopters:\n   - Fly to the destination aerodrome, then to the alternate aerodrome (if specified) (Section 3.12.2).\n3. Carry an amount of fuel that is sufficient to meet the SAR time specified in the flight itinerary or 24 hours after the last reported ETA if no SAR time was specified (Section 3.12).\n4. Carry contingency fuel equal to at least 10 percent of the fuel required to complete the flight to the destination aerodrome (Section 12.3).",
+    "faithfulness": 0.86,
+    "correctness": 0.98,
+    "tokens": 2199
+  },
+  {
+    "question": "What is the emergency frequency that pilots should monitor?",
+    "ground_truth": "121.5 MHz is the emergency frequency.",
+    "answer": "Pilots should continuously monitor the VHF aeronautical emergency frequency 121.5 MHz as per Section 1.9, Section 121.5, and Section 243.0 of the TC AIM.",
+    "faithfulness": 0.86,
+    "correctness": 1.0,
+    "tokens": 954
+  },
+  {
+    "question": "In which airspace classes are transponders required in Canada?",
+    "ground_truth": "Transponders are required in all Class A, B, and C airspace as well as some Class D and Class E airspace.",
+    "answer": "Transponders are required in all Class A, B, and C airspace as well as some Class D and Class E airspace. The requirement for a transponder in Class D and E airspace can be found in the DAH (CAR 601.03) and COM subpart 8.2 of the TC AIM (Section 3.2.34.1, Section 8.2, Section 2.8.1, Section 2.8.2).",
+    "faithfulness": 0.98,
+    "correctness": 1.0,
+    "tokens": 2202
+  },
+  {
+    "question": "What is a NOTAM?",
+    "ground_truth": "A NOTAM is a notice to airman that contains information concerning the establishment or condition of, or any changes in, any aeronautical facility, service, procedure or hazard, the timely knowledge of which is essential to personnel involved in flight operations.",
+    "answer": "A NOTAM is a notice to airman that contains information concerning the establishment or condition of, or any changes in, any aeronautical facility, service, procedure, or hazard, the timely knowledge of which is essential to personnel involved in flight operations. NOTAMs are originated and issued promptly whenever the information to be distributed is of a temporary nature and of short duration, or when operationally significant permanent changes or temporary changes of long duration are made at short notice. NOTAMs can be used to advertise changes to the information on aeronautical charts or in aeronautical information publications (Section 3.3.2.2, Section 2.5.4, Section 3.6, Section 3.1).",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 2000
+  },
+  {
+    "question": "What are the right-of-way rules when two aircraft are converging?",
+    "ground_truth": "When two aircraft are converging at approximately the same altitude, the pilot-in-command of the aircraft that has the other on its right shall give way.",
+    "answer": "When two aircraft are converging at approximately the same altitude, the pilot-in-command of the aircraft that has the other on its right shall give way, except as follows:\n- Section 1.7.3\n- Section 602.24",
+    "faithfulness": 0.98,
+    "correctness": 0.98,
+    "tokens": 1352
+  },
+  {
+    "question": "Can aerobatic manoeuvres be performed with passengers on board?",
+    "ground_truth": "No person operating an aircraft with a passenger on board shall conduct aerobatic manoeuvres unless the pilot-in-command of the aircraft has engaged in at least 10 hours dual flight instruction in aerobatic manoeuvres.",
+    "answer": "Aerobatic manoeuvres cannot be performed with passengers on board unless the pilot-in-command has met specific requirements outlined in Section 602.28, which include at least 10 hours of dual flight instruction in conducting aerobatic manoeuvres or 20 hours conducting aerobatic manoeuvres, and at least one hour of conducting aerobatic manoeuvres in the preceding six months. (Section 602.28)",
+    "faithfulness": 1.0,
+    "correctness": 0.78,
+    "tokens": 1374
+  },
+  {
+    "question": "When is supplemental oxygen required in an unpressurized aircraft?",
+    "ground_truth": "Supplemental oxygen is required for unpressurized aircraft operating at pressure-altitudes above 13,000 feet ASL.",
+    "answer": "Supplemental oxygen is required in an unpressurized aircraft for all crew members and 10 percent of passengers, and in any case, no less than one passenger, for the entire period of flight exceeding 30 minutes at cabin-pressure-altitudes above 10,000 feet ASL but not exceeding 13,000 feet ASL, as per Section 605.31.",
+    "faithfulness": 1.0,
+    "correctness": 0.2,
+    "tokens": 1880
+  },
+  {
+    "question": "What minimum flight time is required for a Private Pilot Licence (Aeroplane)?",
+    "ground_truth": "A minimum of 45 hours total flight time is required, including 17 hours dual instruction and 12 hours solo.",
+    "answer": "For a Private Pilot Licence (Aeroplane), the minimum flight time required is a total of 45 hours, including dual instruction for 17 hours and solo flight for 12 hours, as outlined in Section 1.7.2.",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1874
+  },
+  {
+    "question": "What medical category is required for a Private Pilot Licence?",
+    "ground_truth": "A Category 1 or Category 3 medical is required for a Private Pilot Licence.",
+    "answer": "For a Private Pilot Licence (PPL), a Category 1 or 3 Medical Certificate is required, as stated in Section 1.7.2.",
+    "faithfulness": 0.0,
+    "correctness": 1.0,
+    "tokens": 1711
+  },
+  {
+    "question": "What equipment is required for night VFR flight in a power-driven aircraft?",
+    "ground_truth": "Equipment includes a sensitive altimeter adjustable for barometric pressure, a turn and slip indicator or turn coordinator, an adequate source of electrical energy, spare fuses if applicable, a stabilized magnetic direction indicator or gyroscopic direction indicator, radiocommunication equipment for two-way communication, and position and anti-collision lights.",
+    "answer": "For night VFR flight in a power-driven aircraft, the following equipment is required as per the Canadian Aviation Regulations:\n\n1. Equipment referred to in paragraphs 605.16(1)(a) to (k) [Section 605.16]\n2. A sensitive altimeter adjustable for barometric pressure [Section 605.16]\n3. A turn and slip indicator or turn coordinator [Section 605.16]\n4. Radiocommunication system adequate for two-way communication in specific airspaces [Section 605.16]\n5. An adequate source of electrical energy for all electrical and radio equipment [Section 605.16]\n6. Spare fuses [Section 605.16]\n7. Radio navigation equipment [Section 605.16]\n8. A means of establishing direction not dependent on a magnetic source in certain airspaces [Section 605.16]\n9. Position and anti-collision lights [Section 605.15]\n10. A landing light when carrying passengers [Section 605.15]\n11. A gyroscopic direction indicator or stabilized magnetic direction indicator [Section 605.15]\n12. Attitude indicator [Section 605.15]\n13. Radio navigation equipment adequate for safe navigation [Section 605.15]",
+    "faithfulness": 0.2,
+    "correctness": 0.86,
+    "tokens": 2058
+  },
+  {
+    "question": "What position lights are required on an aircraft at night?",
+    "ground_truth": "A red light on the port (left) side, a green light on the starboard (right) side, and a white light on the tail.",
+    "answer": "At night, traditional aircraft are required to have position lights, which include a red light on the port side (left side when sitting in the pilot\u2019s seat), a green light on the starboard side (right side when sitting in the pilot\u2019s seat), and a white light on the tail (Section 3.2.27.2).",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1641
+  },
+  {
+    "question": "What is a full emergency standby?",
+    "ground_truth": "Full emergency standby means the level of response when an aircraft has, or is suspected to have, an operational defect that affects normal flight operations to the extent that there is possibility of an accident.",
+    "answer": "A full emergency standby is the level of response when an aircraft has, or is suspected to have, an operational defect that affects normal flight operations to the extent that there is a possibility of an accident. This is outlined in Section 9.0 of the Canadian Aviation Regulations.",
+    "faithfulness": 0.98,
+    "correctness": 0.98,
+    "tokens": 1418
+  },
+  {
+    "question": "What is the minimum age for a small RPA basic operations pilot certificate?",
+    "ground_truth": "A pilot certificate for small RPA (VLOS) basic operations is issued to those that are at least 14 years of age.",
+    "answer": "The minimum age for a small RPA basic operations pilot certificate is 14 years old, as stated in Section 3.2.39.1 of the Canadian Aviation Regulations.",
+    "faithfulness": 0.98,
+    "correctness": 1.0,
+    "tokens": 1484
+  },
+  {
+    "question": "What should a pilot do if they experience a communication failure?",
+    "ground_truth": "The pilot should attempt to contact any ATC facility or another aircraft, inform them of the difficulty, and request they relay the information to the ATC facility with whom communications are intended.",
+    "answer": "If a pilot experiences a communication failure, they should adjust the transponder to reply on Code 7600 to alert air traffic control (ATC) of the situation (Section 8.7). Additionally, the pilot should follow the appropriate communications failure procedures for instrument flight rules (IFR) flight, which include continuing the flight along a route that would permit the aircraft to conduct a straight-in approach and landing without unexpected maneuvering, maintaining altitude as specified, and attempting to establish communication using alternative methods such as CPDLC, SATVOICE, or VHF (Section 6.3.2.1, Section 1.18).",
+    "faithfulness": 0.96,
+    "correctness": 0.2,
+    "tokens": 2291
+  },
+  {
+    "question": "What is the minimum visibility for VFR flight in uncontrolled airspace below 1,000 feet AGL during the day?",
+    "ground_truth": "The minimum visibility is 2 statute miles during the day for aircraft other than helicopters. For helicopters, the minimum is 1 statute mile.",
+    "answer": "In uncontrolled airspace below 1,000 feet AGL during the day, the minimum visibility for VFR flight is not less than 2 miles (day) as per Table 2.2 in the TC AIM. [Section 2.7.2]",
+    "faithfulness": 0.98,
+    "correctness": 0.4,
+    "tokens": 2255
+  },
+  {
+    "question": "What is the minimum visibility for VFR flight in controlled airspace?",
+    "ground_truth": "The minimum visibility for VFR flight in controlled airspace is 3 statute miles.",
+    "answer": "The minimum visibility for VFR flight within a control zone is not less than 3 miles as per Section 4.1.",
+    "faithfulness": 1.0,
+    "correctness": 0.95,
+    "tokens": 2157
+  },
+  {
+    "question": "What is the purpose of anti-collision lights?",
+    "ground_truth": "Anti-collision lights must be turned on to warn other aircraft. The pilot-in-command may turn them off if they determine that turning them off is in the interest of aviation safety.",
+    "answer": "The purpose of anti-collision lights, such as omnidirectional rotating or flashing red beacons, strobe lights, landing lights, and recognition lights, is to make an aircraft more visible, especially at night, aiding in the detection and identification of aircraft during night operations (Section 3.2.27.1).",
+    "faithfulness": 1.0,
+    "correctness": 0.2,
+    "tokens": 2124
+  },
+  {
+    "question": "What are the classifications of emergency conditions?",
+    "ground_truth": "Emergency conditions are classified as: Distress \u2014 a condition of being threatened by serious and/or imminent danger and requiring immediate assistance; and Urgency \u2014 a condition concerning the safety of an aircraft or its occupants.",
+    "answer": "The classifications of emergency conditions are distress and urgency as outlined in Section 4.1. \n\n- Distress is a condition of being threatened by serious and/or imminent danger requiring immediate assistance.\n- Urgency is a condition concerning the safety of an aircraft or persons on board that does not require immediate assistance.",
+    "faithfulness": 1.0,
+    "correctness": 0.92,
+    "tokens": 1779
+  },
+  {
+    "question": "What aircraft are exempt from carrying an emergency locator transmitter (ELT)?",
+    "ground_truth": "Gliders, balloons, airships, and ultralight aeroplanes are exempt from carrying an ELT.",
+    "answer": "Gilders, balloons, airships, ultralight aeroplanes, and gyroplanes are exempt from carrying an emergency locator transmitter (ELT) as per Section 4.1. Additionally, aircraft operated by the holder of a flight training unit operating certificate that are engaged in flight training and operated within 25 NM of the departure aerodrome are also exempt from carrying an ELT.",
+    "faithfulness": 1.0,
+    "correctness": 0.86,
+    "tokens": 1888
+  },
+  {
+    "question": "What is a control area extension?",
+    "ground_truth": "Control area extensions are designated around aerodromes where the controlled airspace provided is insufficient to permit the required separation between IFR arrivals and departures and to contain IFR aircraft within controlled airspace.",
+    "answer": "A control area extension is designated airspace around aerodromes to provide additional controlled airspace for IFR control, either to permit required separation between IFR arrivals and departures or to connect a control zone with the en route structure. Control area extensions are based at 2,200 ft AGL unless otherwise specified and extend up to, but not including, 18,000 ft ASL. The base of a Control Area Extension shall not extend lower than 700 ft AGL (Section 2.7.2).",
+    "faithfulness": 1.0,
+    "correctness": 0.78,
+    "tokens": 2131
+  },
+  {
+    "question": "Can an RPAS enter transponder-required airspace without a transponder?",
+    "ground_truth": "ANSPs may allow an RPAS to enter transponder-required airspace without a transponder if the pilot requests permission prior to entering the area and aviation safety is not likely to be affected.",
+    "answer": "An RPAS may be allowed to enter transponder-required airspace without a transponder if the pilot requests permission from the ANSP prior to entering the area and aviation safety is not likely to be affected (CAR 901.46(2)). However, unless permitted by the ANSP, all aircraft, including RPAS, flying in transponder-required airspace are required to have transponders (CAR 901.46(1)). Flexibility and patience on the part of the pilot will be required in such situations (Section 3.2.34.2).",
+    "faithfulness": 0.98,
+    "correctness": 1.0,
+    "tokens": 1698
+  },
+  {
+    "question": "What is the passing mark for the PPL written examination?",
+    "ground_truth": "The passing mark is 60%.",
+    "answer": "The passing mark for the Private Pilot Licence\u2014Aeroplane (PPL-A) written examination is 60%. This information is found in [Section 1.7.2].",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1876
+  },
+  {
+    "question": "What is the rule when two aircraft are approaching head-on?",
+    "ground_truth": "When two aircraft are approaching head-on or approximately so, each pilot shall alter heading to the right.",
+    "answer": "When two aircraft are approaching head-on or approximately so and there is a risk of collision, the pilot-in-command of each aircraft shall alter its heading to the right, as per Section 602.24.",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1184
+  },
+  {
+    "question": "What does the Canada Water Aerodrome Supplement (CWAS) contain?",
+    "ground_truth": "The CWAS provides tabulated data and graphical information in support of Canadian VFR charts. It contains an aerodrome/facilities directory of all water aerodromes shown on Canadian VFR charts and lists communications station data, radio aids and other supplemental data.",
+    "answer": "The Canada Water Aerodrome Supplement (CWAS) contains an aerodrome/facilities directory of all water aerodromes shown on Canadian VFR charts, lists communications station data, radio aids, and other supplemental data. This information is provided in support of Canadian VFR charts (Section 2.5.4).",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1439
+  },
+  {
+    "question": "How many hours before flying must a crew member abstain from alcohol?",
+    "ground_truth": "No person shall act as a crew member of an aircraft within 12 hours after consuming an alcoholic beverage. The AIM also recommends at least 24 hours between the last drink and take-off time as best practice.",
+    "answer": "A crew member must abstain from alcohol within 12 hours before flying, as stated in Section 602.03 and Section 123.2 of the Canadian Aviation Regulations.",
+    "faithfulness": 0.98,
+    "correctness": 0.78,
+    "tokens": 1631
+  },
+  {
+    "question": "How long must pilots abstain from cannabis before flying?",
+    "ground_truth": "All aircraft pilots and flight crew members must abstain from cannabis use for at least 28 days when conducting operations.",
+    "answer": "Pilots, flight engineers, and air traffic controllers must abstain from cannabis use for at least 28 days before reporting for duty (Section 3.14).",
+    "faithfulness": 1.0,
+    "correctness": 0.72,
+    "tokens": 2325
+  },
+  {
+    "question": "What is ATIS?",
+    "ground_truth": "ATIS (Automatic Terminal Information Service) is a continuous broadcast of recorded non-control aeronautical information at busy terminal areas, containing current weather, active runways, and other operational information.",
+    "answer": "ATIS stands for Automatic Terminal Information Service. It is the continuous broadcasting of recorded information for arriving and departing aircraft on a discrete VHF/UHF frequency. Its purpose is to improve controller and flight service specialist effectiveness and to relieve frequency congestion by automating the repetitive transmission of essential but routine information. Pilots should use ATIS to obtain basic arrival or departure and aerodrome information as soon as practicable (Section 9.1).",
+    "faithfulness": 0.98,
+    "correctness": 0.9,
+    "tokens": 1520
+  },
+  {
+    "question": "What are the VFR cruising altitudes for eastbound flights?",
+    "ground_truth": "For VFR flights on tracks from 000 to 179 degrees magnetic, the cruising altitude is odd thousands plus 500 feet ASL (e.g., 3,500, 5,500, 7,500).",
+    "answer": "Based on the provided regulations, for eastbound flights operating under Visual Flight Rules (VFR), the aircraft should be operated at altitudes appropriate to the direction of flight when in level cruising flight above 3,000 feet AGL. Specific VFR cruising altitudes for eastbound flights are not explicitly mentioned in the available regulations. Therefore, I don't have enough information in the available regulations to answer this question.",
+    "faithfulness": 0.95,
+    "correctness": 0.2,
+    "tokens": 1793
+  },
+  {
+    "question": "What are the VFR cruising altitudes for westbound flights?",
+    "ground_truth": "For VFR flights on tracks from 180 to 359 degrees magnetic, the cruising altitude is even thousands plus 500 feet ASL (e.g., 4,500, 6,500, 8,500).",
+    "answer": "Based on the provided regulations, for westbound VFR flights, the cruising altitudes should be at even thousands plus 500 feet ASL (e.g., 4,500, 6,500, 8,500, etc.) as per Section 2.3.1.",
+    "faithfulness": 0.98,
+    "correctness": 1.0,
+    "tokens": 1670
+  },
+  {
+    "question": "What is Class F restricted airspace?",
+    "ground_truth": "Class F restricted airspace is airspace of defined dimensions within which flight is restricted in accordance with certain specified conditions. It may be designated by NOTAM for a specified period of relative short duration.",
+    "answer": "Class F restricted airspace is airspace of defined dimensions above land areas or territorial waters within which the flight of aircraft is restricted in accordance with certain specified conditions. It is designated for safety purposes when the level or type of aerial activity, surface activity, or protection of a ground installation requires restrictions within that airspace. Class F restricted airspace can be designated by NOTAM if certain prerequisites are met, such as being required for a short duration and issuing the appropriate NOTAM at least 24 hours in advance (Section 2.8.6.4).",
+    "faithfulness": 1.0,
+    "correctness": 0.9,
+    "tokens": 2135
+  },
+  {
+    "question": "What is wake turbulence and when is it most dangerous?",
+    "ground_truth": "Wake turbulence is caused by wingtip vortices generated by aircraft in flight. It has its greatest impact on departure and arrival procedures, and caution should be exercised whenever a flight is conducted anywhere behind and below another aircraft.",
+    "answer": "Wake turbulence is caused by wing-tip vortices and is a by-product of lift. It consists of two counter-rotating cylindrical vortices (Section 2.9). Wake turbulence is most dangerous when an aircraft is operating under conditions of heavy weight, clean configuration, and slow speed (Section 2.9).",
+    "faithfulness": 1.0,
+    "correctness": 0.6,
+    "tokens": 2567
+  },
+  {
+    "question": "What are the standard circuit heights?",
+    "ground_truth": "Standard circuit heights are: 500 feet for rotorcraft and slow/low-performing aircraft, 1,000 feet for the standard circuit, and 1,500 feet for high-performance aircraft.",
+    "answer": "The standard circuit heights are as follows:\n- 500 ft circuit on the final leg\n- 1000 ft circuit on the downwind leg\n- 1000 ft on the base leg\n- 1500 ft for large and turbine-powered aeroplanes\n\nThese heights are depicted in Figure 4.9 of Section 4.5.2.",
+    "faithfulness": 0.86,
+    "correctness": 0.7,
+    "tokens": 2656
+  },
+  {
+    "question": "What light signal means 'cleared to taxi' for aircraft on the ground?",
+    "ground_truth": "A series of green flashes from the tower means cleared to taxi for aircraft on the ground.",
+    "answer": "The light signal that means 'cleared to taxi' for aircraft on the ground is a series of green flashes, as outlined in Section 4.2.9.",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 2048
+  },
+  {
+    "question": "When must an IFR flight plan be filed?",
+    "ground_truth": "The timely filing of IFR flight plans is essential to allow ATC personnel time to extract and record the relevant content, correlate data with other traffic, coordinate, and determine how the flight can be accommodated.",
+    "answer": "An IFR flight plan must be filed before operating an aircraft in IFR flight, as per CAR 602.73. It is essential to file an IFR flight plan to allow ATC personnel to coordinate and integrate the flight with other traffic (Section 3.5.1).",
+    "faithfulness": 0.98,
+    "correctness": 0.86,
+    "tokens": 2285
+  },
+  {
+    "question": "What are the departure procedures for a NORDO (no radio) aircraft?",
+    "ground_truth": "Before proceeding to the runway, the pilot of a NORDO aircraft must watch for light signals from the tower to receive clearance.",
+    "answer": "For a NORDO (no radio) aircraft, the departure procedures are as follows:\n1. Before moving onto the take-off surface, the pilot-in-command must report departure intentions on the MF or ATF frequency. If a delay is encountered, intentions and expected length of delay should be broadcasted, followed by rebroadcasting departure intentions prior to moving onto the take-off surface (Section 4.5.7(c)).\n2. Departure procedures for NORDO aircraft include reporting the pilot-in-command's departure intentions on the MF or ATF frequency just prior to the aircraft departing until ten minutes after the departure, or until the aircraft is observed/reported clear of the MF area (Section 4.5.7(c)).\n\nTherefore, the departure procedures for a NORDO aircraft involve communicating departure intentions on the appropriate frequency before moving onto the take-off surface and while departing from the aerodrome.",
+    "faithfulness": 0.93,
+    "correctness": 0.2,
+    "tokens": 1801
+  },
+  {
+    "question": "What is cold soaking and how does it affect aircraft?",
+    "ground_truth": "Cold soaking occurs when fuel tanks in the wings cool the wing surface. After a flight, the temperature of the aircraft and fuel can cause frost or ice to form on the wing surface, which can be hazardous for takeoff.",
+    "answer": "Cold soaking is a phenomenon where the temperature of an aircraft and the fuel carried in the wing tanks may be considerably colder than the ambient temperature, leading to the formation of clear ice on wing areas above the fuel tanks. This clear ice is difficult to see and can cause dangerous situations during flight. Cold soaking affects aircraft by conducting heat away from precipitation, causing ice to form on critical surfaces, which can lead to decreased thrust, decreased lift, increased drag, increased stall speed, trim changes, altered stall characteristics, and handling qualities (Section 2.12.1).",
+    "faithfulness": 0.97,
+    "correctness": 0.78,
+    "tokens": 2556
+  },
+  {
+    "question": "What are the passenger briefing requirements for pilots?",
+    "ground_truth": "The pilot-in-command of an aircraft shall ensure that each crew member has been instructed on safety procedures before acting as a crew member on board the aircraft.",
+    "answer": "The passenger briefing requirements for pilots include briefing passengers on:\n1. The location and means of operation of emergency and normal exits (Section 602.89(1)(a)).\n2. The location and means of operation of safety belts, shoulder harnesses, and restraint devices (Section 602.89(1)(b)).\n3. The positioning of seats, securing of seat backs and chair tables, and stowage of carry-on baggage (Section 602.89(1)(c) and (e)).\n4. Any prohibition against smoking (Section 602.89(1)(f)).\n5. The location and means of operation of oxygen equipment if the flight will require the use of oxygen by passengers (Section 602.89(1)(c)(i)).\n6. Ensuring that passengers are provided with information respecting the location and use of first aid kits, survival equipment, ELT, and life raft (Section 602.89(3)(a)-(c)).",
+    "faithfulness": 0.86,
+    "correctness": 0.0,
+    "tokens": 2291
+  },
+  {
+    "question": "What does METAR stand for and what does it report?",
+    "ground_truth": "METAR is an aerodrome routine meteorological report. It contains information about wind, visibility, cloud, temperature, dew point, and altimeter setting at an aerodrome.",
+    "answer": "METAR stands for \"Meteorological Aerodrome Report.\" It describes the actual weather conditions at a specified location and time as observed from the ground. METAR reports include information such as wind direction, speed, gusts, visibility, cloud cover, temperature, dew point, and altimeter setting. (Section 29.92, Section 1.2.5.1, Section 1.2.3)",
+    "faithfulness": 0.2,
+    "correctness": 0.98,
+    "tokens": 1987
+  },
+  {
+    "question": "How often are TAFs issued and for how long are they valid?",
+    "ground_truth": "TAFs are prepared for approximately 200 aerodromes across Canada. They are generally prepared four times daily with periods of validity up to a maximum duration.",
+    "answer": "TAFs are generally prepared four times daily with periods of validity up to a maximum of 30 hours. Some TAFs have staggered issue times and more frequent update cycles, which can affect their periods of validity (Section 1.3.7).",
+    "faithfulness": 1.0,
+    "correctness": 0.98,
+    "tokens": 2134
+  },
+  {
+    "question": "What is the IM SAFE checklist?",
+    "ground_truth": "The IM SAFE checklist covers: Illness, Medication, Stress, Alcohol (consumed within previous 12 hours), Fatigue (sufficient rest in previous 24 hours), and Eating and drinking (adequately nourished and hydrated).",
+    "answer": "The IM SAFE checklist is a tool used to assess a crew member's fitness to fly. It stands for:\nI - Illness\nM - Medication\nS - Stress\nA - Alcohol\nF - Fatigue\nE - Eating and drinking\n\nThis checklist helps crew members determine if they are fit to perform their duties before a flight. (Section 3.2.8)",
+    "faithfulness": 0.98,
+    "correctness": 0.86,
+    "tokens": 2241
+  },
+  {
+    "question": "What should a pilot do about wildlife hazards at airports?",
+    "ground_truth": "Many airports throughout Canada are equipped with wildlife management programs. Pilots should be aware that wildlife, particularly birds, present a hazard especially during departure and arrival.",
+    "answer": "Pilots should monitor ATIS for information concerning wildlife hazards at airports (Section 1.1.5). Additionally, in the interest of conserving wildlife, pilots must not fly at an altitude of less than 2,000 ft AGL when in the vicinity of herds of wildlife animals or above wildlife refuges/bird sanctuaries (Section 2.1).",
+    "faithfulness": 1.0,
+    "correctness": 0.2,
+    "tokens": 1465
+  },
+  {
+    "question": "What does a steady green light from the tower mean for aircraft in flight?",
+    "ground_truth": "A steady green light from the tower means the aircraft is cleared to land.",
+    "answer": "A steady green light from the tower means \"Cleared to land\" for aircraft in flight (Section 4.4.9).",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 2227
+  },
+  {
+    "question": "What does a steady red light from the tower mean for aircraft in flight?",
+    "ground_truth": "A steady red light from the tower means give way to other aircraft and continue circling.",
+    "answer": "A steady red light from the tower means \"Give way to other aircraft and continue circling\" for aircraft in flight (Section 4.4.9).",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1318
+  },
+  {
+    "question": "What is the purpose of an ADIZ (Air Defence Identification Zone)?",
+    "ground_truth": "An ADIZ is airspace of defined dimensions within which the ready identification, location, and control of aircraft is required in the interest of national security.",
+    "answer": "The purpose of an Air Defence Identification Zone (ADIZ) is to establish an airspace of defined dimensions within which certain rules for the security control of air traffic apply, as outlined in Section 5.1 and Section 3.8 of the Canadian Aviation Regulations.",
+    "faithfulness": 0.98,
+    "correctness": 0.86,
+    "tokens": 1835
+  },
+  {
+    "question": "What must a pilot report if they experience a bird strike?",
+    "ground_truth": "Pilots should report bird strikes and wildlife hazards to ATC or the appropriate authority to help maintain safety at aerodromes.",
+    "answer": "If a pilot experiences a bird strike, they must report the incident to the facility with which they are maintaining radio contact, providing details such as the time, location, and intensity of the strike as per Section 4.15.2.2.1. Additionally, pilots should monitor ATIS for information on wildlife hazards as mentioned in Section 1.1.5.",
+    "faithfulness": 0.86,
+    "correctness": 0.9,
+    "tokens": 1414
+  },
+  {
+    "question": "What type of aircraft has the right-of-way over all others?",
+    "ground_truth": "An aircraft in distress has the right-of-way over all other air traffic. Additionally, when a pilot is aware that another aircraft is in an emergency, the pilot shall give way to that aircraft.",
+    "answer": "Remotely Piloted Aircraft (RPA) pilots must give way to all other aircraft, including balloons, gliders, airships, and hang gliders, as per CAR 901.17 mentioned in Section 3.2.5.",
+    "faithfulness": 1.0,
+    "correctness": 0.0,
+    "tokens": 1341
+  },
+  {
+    "question": "Can a pilot fly into Class A airspace under VFR?",
+    "ground_truth": "No, Class A airspace is restricted to IFR flight only. VFR flight is not permitted in Class A airspace.",
+    "answer": "No, a pilot cannot fly into Class A airspace under VFR. All operations in Class A airspace must be conducted under IFR (Instrument Flight Rules) as per Section 2.8.1.",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 2280
+  },
+  {
+    "question": "What is the recommended best practice for alcohol and flying?",
+    "ground_truth": "It is best to allow at least 24 hours between the last drink and take-off time. Even small amounts of alcohol (0.05 percent) have been shown to reduce piloting skills. Alcohol and flying do not mix.",
+    "answer": "The recommended best practice for alcohol and flying is to never fly while under the influence of alcohol. It is best to allow at least 24 hours between the last drink and take-off time. Alcohol and flying do not mix, as even small amounts of alcohol can impair piloting skills. (Section 3.9)",
+    "faithfulness": 1.0,
+    "correctness": 1.0,
+    "tokens": 1864
+  },
+  {
+    "question": "What happens if you cannot answer a question about aviation regulations from the provided context?",
+    "ground_truth": "The system should respond with 'I don't have enough information in the available regulations to answer this question' rather than guessing or hallucinating.",
+    "answer": "I don't have enough information in the available regulations to answer this question.",
+    "faithfulness": 0.0,
+    "correctness": 1.0,
+    "tokens": 1794
+  }
+]
