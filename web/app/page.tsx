@@ -77,6 +77,12 @@ interface AskResponse {
   tokens: number;
   use_rag: boolean;
   sources?: Source[];
+  agent?: {
+    query_type?: string;
+    sub_queries?: string[];
+    context_sufficient?: boolean;
+    steps?: string[];
+  };
 }
 
 interface Chunk {
@@ -135,7 +141,7 @@ export default function Home() {
   async function readSSEStream(
     body: { query: string; use_rag: boolean },
     onToken: (token: string) => void,
-    onSources?: (sources: Source[]) => void,
+    onSources?: (sources: Source[], agent?: AskResponse["agent"]) => void,
     onMeta?: (meta: { tokens?: number; model?: string }) => void,
   ) {
     const res = await fetch("/api/stream", {
@@ -164,7 +170,7 @@ export default function Home() {
           try {
             const data = JSON.parse(line.slice(6));
             if (data.type === "token") onToken(data.token);
-            else if (data.type === "sources" && onSources) onSources(data.sources);
+            else if (data.type === "sources" && onSources) onSources(data.sources, data.agent);
             else if (data.type === "usage" && onMeta) onMeta({ tokens: data.tokens, model: data.model });
           } catch {
             // Skip malformed SSE events
@@ -198,7 +204,7 @@ export default function Home() {
           readSSEStream(
             { query, use_rag: true },
             (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
-            (sources) => setRagResult(prev => prev ? { ...prev, sources } : null),
+            (sources, agent) => setRagResult(prev => prev ? { ...prev, sources, agent } : null),
             (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
           ).finally(() => setRagStreaming(false)),
           readSSEStream(
@@ -336,6 +342,32 @@ export default function Home() {
               <SourceItem key={i} source={s} />
             ))}
           </div>
+        </div>
+      )}
+
+      {result.agent && result.agent.steps && result.agent.steps.length > 0 && (
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Agent Trace</p>
+          <div className="flex items-center gap-1 flex-wrap">
+            {result.agent.steps.map((step, i) => (
+              <span key={i} className="flex items-center gap-1">
+                <span className="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                  {step}
+                </span>
+                {i < result.agent!.steps!.length - 1 && (
+                  <span className="text-gray-300 dark:text-gray-600 text-[10px]">→</span>
+                )}
+              </span>
+            ))}
+          </div>
+          {result.agent.sub_queries && result.agent.sub_queries.length > 0 && (
+            <div className="mt-1.5">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">Sub-queries:</p>
+              {result.agent.sub_queries.map((sq, i) => (
+                <p key={i} className="text-[10px] text-gray-500 dark:text-gray-400 ml-2">• {sq}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

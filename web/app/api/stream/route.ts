@@ -39,11 +39,12 @@ export async function POST(req: Request) {
 
   let messages: OpenAI.ChatCompletionMessageParam[];
   let sources: { section: string; title: string; text: string }[] = [];
+  let agentMeta: Record<string, unknown> | undefined;
 
   if (useRag) {
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
 
-    const res = await fetch(`${apiUrl}/retrieve`, {
+    const res = await fetch(`${apiUrl}/agent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
@@ -51,22 +52,28 @@ export async function POST(req: Request) {
 
     if (!res.ok) {
       return new Response(
-        JSON.stringify({ error: "Retrieval failed" }),
+        JSON.stringify({ error: "Agent retrieval failed" }),
         { status: 502, headers: { "Content-Type": "application/json" } },
       );
     }
 
     const data = await res.json();
     const chunks: RetrievedChunk[] = data.chunks;
+    const agent = data.agent;
 
     sources = chunks.map((c) => ({ section: c.section, title: c.title, text: c.text }));
+    agentMeta = agent;
 
     const context = chunks
       .map((c) => `[Section ${c.section}]\n${c.text}`)
       .join("\n\n---\n\n");
 
+    const systemContent = agent?.context_sufficient === false
+      ? RAG_SYSTEM_PROMPT + "\n\nIMPORTANT: The retrieval system flagged low confidence for this query. If the context does not clearly answer the question, say so."
+      : RAG_SYSTEM_PROMPT;
+
     messages = [
-      { role: "system", content: RAG_SYSTEM_PROMPT },
+      { role: "system", content: systemContent },
       {
         role: "user",
         content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}`,
@@ -94,7 +101,7 @@ export async function POST(req: Request) {
       if (useRag && sources.length > 0) {
         controller.enqueue(
           encoder.encode(
-            `data: ${JSON.stringify({ type: "sources", sources, model })}\n\n`,
+            `data: ${JSON.stringify({ type: "sources", sources, model, agent: agentMeta })}\n\n`,
           ),
         );
       }

@@ -4,6 +4,7 @@ import os
 from openai import OpenAI
 from pinecone import Pinecone
 import cohere
+from agent import build_graph
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -104,6 +105,58 @@ def retrieve(req: func.HttpRequest) -> func.HttpResponse:
         json.dumps({
             "query": query,
             "chunks": [{"section": c["section"], "title": c["title"], "text": c["text"]} for c in chunks],
+        }),
+        mimetype="application/json",
+    )
+
+
+# ---------------------------------------------------------------------------
+# LangGraph agent — lazy init (compiled once, reused across requests)
+# ---------------------------------------------------------------------------
+_agent_graph = None
+
+
+def get_agent_graph():
+    global _agent_graph
+    if _agent_graph is None:
+        _agent_graph = build_graph(embed_query, search_pinecone, rerank_chunks)
+    return _agent_graph
+
+
+@app.route(route="agent", methods=["POST"])
+def agent(req: func.HttpRequest) -> func.HttpResponse:
+    """LangGraph agent: classify → route → retrieve (with optional decomposition) → guard."""
+    try:
+        body = req.get_json()
+    except ValueError:
+        return func.HttpResponse(json.dumps({"error": "Invalid JSON"}), status_code=400)
+
+    query = body.get("query", "")
+    if not query:
+        return func.HttpResponse(json.dumps({"error": "query is required"}), status_code=400)
+
+    graph = get_agent_graph()
+    result = graph.invoke({
+        "query": query,
+        "query_type": "",
+        "sub_queries": [],
+        "chunks": [],
+        "context_sufficient": True,
+        "guard_reason": "",
+        "steps": [],
+    })
+
+    return func.HttpResponse(
+        json.dumps({
+            "query": query,
+            "chunks": [{"section": c["section"], "title": c["title"], "text": c["text"]} for c in result["chunks"]],
+            "agent": {
+                "query_type": result["query_type"],
+                "sub_queries": result["sub_queries"],
+                "context_sufficient": result["context_sufficient"],
+                "guard_reason": result["guard_reason"],
+                "steps": result["steps"],
+            },
         }),
         mimetype="application/json",
     )

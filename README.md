@@ -10,10 +10,11 @@ I'm a Canadian pilot building my PPL. Aviation regulations are dense, hierarchic
 
 ```
 User question
-  → OpenAI text-embedding-3-large (query → 3072-dim vector)
-    → Pinecone (cosine similarity, top-10 chunks)
-      → Cohere rerank-v4.0-pro (re-score, return top-5)
-        → GPT-5.4-mini (stream cited answer via SSE)
+  → LangGraph agent (classify query → route)
+    → [simple]  → embed → Pinecone top-10 → Cohere rerank top-5
+    → [complex] → decompose into sub-queries → retrieve each → merge & deduplicate
+  → Guard (check context sufficiency)
+  → GPT-5.4-mini (stream cited answer via SSE)
 ```
 
 ## Project Structure
@@ -36,10 +37,11 @@ See each folder's README for setup and run instructions.
 | Embeddings | OpenAI text-embedding-3-large (3072 dims) |
 | Vector DB | Pinecone (serverless, cosine, namespaces) |
 | Reranking | Cohere rerank-v4.0-pro |
+| Agentic Layer | LangGraph (query routing, decomposition, guard) |
 | LLM | OpenAI GPT-5.4-mini (server), WebLLM Llama 3.2 1B (browser) |
 | Eval | RAGAS v0.4 (6 metrics), Azure AI Foundry (judge) |
 | Streaming | SSE via Next.js API route (OpenAI), WebLLM SDK (browser) |
-| Orchestration | LiteLLM (multi-provider routing) |
+| Orchestration | LangChain + LangGraph (agent), LiteLLM (multi-provider routing) |
 | API | Azure Functions (retrieval), Next.js API route (generation) |
 | Frontend | Next.js + Tailwind CSS |
 | Deployment | Azure (API + AI Foundry) + Netlify (frontend) |
@@ -87,6 +89,6 @@ See each folder's README for setup and run instructions.
 - [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
 - [x] Streaming responses (SSE for OpenAI, SDK streaming for WebLLM)
 - [x] Expandable source citations (click §section to see retrieved chunk text)
-- [ ] LangGraph agentic layer
+- [x] LangGraph agentic layer (query classification, decomposition, guard)
 
 

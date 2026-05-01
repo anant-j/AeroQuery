@@ -38,11 +38,36 @@ Generation happens in the Next.js API route (`web/app/api/stream/`), not here. T
    func start
    ```
 
-## Endpoint
+## Endpoints
 
-### `POST /api/retrieve`
+### `POST /api/agent` (primary — used by OpenAI streaming)
 
-Embeds the query, searches Pinecone (top-10), reranks with Cohere (top-5), returns chunks.
+LangGraph agent: classifies query, routes through retrieval strategy, guards result.
+
+**Request:**
+```json
+{ "query": "Compare VFR and IFR fuel requirements" }
+```
+
+**Response:**
+```json
+{
+  "query": "...",
+  "chunks": [
+    { "section": "3.12", "title": "Fuel Requirements", "text": "..." }
+  ],
+  "agent": {
+    "query_type": "complex",
+    "sub_queries": ["VFR fuel requirements", "IFR fuel requirements"],
+    "context_sufficient": true,
+    "steps": ["classify:complex", "decompose:2_sub_queries", "retrieve_multi:8_chunks", "guard:pass"]
+  }
+}
+```
+
+### `POST /api/retrieve` (fallback — used by WebLLM mode)
+
+Direct retrieval without agent overhead. Embeds, searches, reranks.
 
 **Request:**
 ```json
@@ -59,20 +84,20 @@ Embeds the query, searches Pinecone (top-10), reranks with Cohere (top-5), retur
 }
 ```
 
-Called by:
-- `web/app/api/stream/route.ts` — for OpenAI streaming (server-side)
-- `web/app/page.tsx` — for WebLLM mode (client-side, direct fetch)
-
 ## Architecture
 
 ```
 function_app.py
-  ├── embed_query()        → OpenAI text-embedding-3-large
-  ├── search_pinecone()    → Pinecone cosine similarity (top-10)
-  └── rerank_chunks()      → Cohere rerank-v4.0-pro (top-5)
-```
+  ├── /retrieve          → embed → Pinecone → Cohere rerank (direct)
+  └── /agent            → LangGraph (classify → route → retrieve → guard)
 
-Module-level client reuse — OpenAI, Pinecone, and Cohere clients are initialized once and shared across requests.
+agent.py (LangGraph StateGraph)
+  ├── classify          → ChatOpenAI: simple vs complex
+  ├── retrieve          → single retrieval (simple queries)
+  ├── decompose         → ChatOpenAI: break into sub-queries
+  ├── retrieve_multi    → retrieve per sub-query, merge & dedup
+  └── guard             → check rerank scores, flag low confidence
+```
 
 ## Deploy
 
