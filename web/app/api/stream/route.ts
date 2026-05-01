@@ -1,13 +1,5 @@
 import OpenAI from "openai";
-
-const SYSTEM_PROMPT = `You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
-
-Rules:
-1. Answer ONLY based on the provided context. Do not use any outside knowledge.
-2. Cite specific section numbers (e.g., "Section 2.3.1") in your answer.
-3. If the context does not contain enough information to answer the question, say: "I don't have enough information in the available regulations to answer this question."
-4. Be precise and concise. Pilots need clear, unambiguous answers.
-5. If multiple sections are relevant, reference all of them.`;
+import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "../../lib/prompts";
 
 interface RetrievedChunk {
   section: string;
@@ -46,7 +38,7 @@ export async function POST(req: Request) {
   const model = process.env.LLM_MODEL || "gpt-5.4-mini";
 
   let messages: OpenAI.ChatCompletionMessageParam[];
-  let sources: { section: string; title: string }[] = [];
+  let sources: { section: string; title: string; text: string }[] = [];
 
   if (useRag) {
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
@@ -74,7 +66,7 @@ export async function POST(req: Request) {
       .join("\n\n---\n\n");
 
     messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: RAG_SYSTEM_PROMPT },
       {
         role: "user",
         content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}`,
@@ -82,11 +74,7 @@ export async function POST(req: Request) {
     ];
   } else {
     messages = [
-      {
-        role: "system",
-        content:
-          "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations.",
-      },
+      { role: "system", content: BARE_SYSTEM_PROMPT },
       { role: "user", content: query },
     ];
   }

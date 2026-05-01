@@ -3,16 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { CreateMLCEngine, type MLCEngine } from "@mlc-ai/web-llm";
+import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
 const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-
-const SYSTEM_PROMPT = `You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM).
-Rules:
-1. Answer ONLY based on the provided context. Do not use any outside knowledge.
-2. Cite specific section numbers in your answer.
-3. If the context does not contain enough information, say "I don't have enough information."
-4. Be precise and concise.`;
 
 const EVAL_DATA = [
   {
@@ -231,11 +225,11 @@ export default function Home() {
         ).join("\n\n---\n\n");
 
         const ragMessages = [
-          { role: "system" as const, content: SYSTEM_PROMPT },
+          { role: "system" as const, content: RAG_SYSTEM_PROMPT },
           { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}` },
         ];
         const bareMessages = [
-          { role: "system" as const, content: "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations." },
+          { role: "system" as const, content: BARE_SYSTEM_PROMPT },
           { role: "user" as const, content: query },
         ];
 

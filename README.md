@@ -19,10 +19,12 @@ User question
 ## Project Structure
 
 ```
-pipeline/      — Offline Python: PDF ingestion, chunking, embedding, eval
-api/           — Azure Functions: Python API serving the RAG pipeline
-web/           — Next.js + Tailwind: frontend with RAG toggle + eval display
+pipeline/      — Offline: PDF ingestion, chunking, embedding, eval (runs locally in Docker)
+api/           — Live: Azure Function serving retrieval (embed → Pinecone → rerank)
+web/           — Live: Next.js frontend + streaming generation (calls API + OpenAI)
 ```
+
+`pipeline/` *builds* the system (parses docs, fills Pinecone, benchmarks with RAGAS). `api/` + `web/` *serve* it. Once Pinecone is populated, the pipeline only runs again for re-ingestion or eval.
 
 See each folder's README for setup and run instructions.
 
@@ -79,7 +81,7 @@ See each folder's README for setup and run instructions.
 - [x] RAG query pipeline (retrieve, rerank, generate with citations)
 - [x] Eval pipeline (LLM-as-judge, multi-model comparison)
 - [x] Cohere Reranking
-- [x] Azure Functions API (`/compare`, `/ask`, `/retrieve` endpoints)
+- [x] Azure Functions API (`/retrieve` endpoint — embed, search, rerank)
 - [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
 - [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
 - [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
