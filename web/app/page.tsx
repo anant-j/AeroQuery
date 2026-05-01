@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
 
@@ -117,8 +118,8 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="prose prose-sm max-w-none mb-4 whitespace-pre-wrap">
-            {result.answer}
+          <div className="prose prose-sm max-w-none mb-4">
+            <ReactMarkdown>{result.answer}</ReactMarkdown>
           </div>
 
           {result.sources && result.sources.length > 0 && (
