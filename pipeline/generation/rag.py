@@ -9,15 +9,19 @@ load_dotenv()
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 
 
-def ask(query, top_k=10, namespace="canada", model=None):
+def ask(query, top_k=10, namespace="canada", model=None, use_rerank=True, base_url=None):
     # 1. Retrieve relevant chunks
-    chunks = search(query, top_k=top_k, namespace=namespace)
+    chunks = search(query, top_k=top_k, namespace=namespace, use_rerank=use_rerank)
 
     # 2. Build prompt with context
     messages = build_prompt(query, chunks)
 
     # 3. Generate answer
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    client_kwargs = {"api_key": os.getenv("OPENAI_API_KEY")}
+    if base_url:
+        client_kwargs["base_url"] = base_url
+        client_kwargs["api_key"] = "ollama"  # Ollama doesn't need a real key
+    client = OpenAI(**client_kwargs)
     response = client.chat.completions.create(
         model=model or LLM_MODEL,
         messages=messages,
@@ -30,8 +34,8 @@ def ask(query, top_k=10, namespace="canada", model=None):
         "query": query,
         "answer": answer,
         "chunks": chunks,
-        "model": LLM_MODEL,
-        "tokens": response.usage.total_tokens,
+        "model": model or LLM_MODEL,
+        "tokens": response.usage.total_tokens if response.usage else 0,
     }
 
 
