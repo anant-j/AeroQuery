@@ -1,4 +1,4 @@
-import pdfplumber
+import fitz  # PyMuPDF
 from ingestion.clean import clean_canada_page
 from ingestion.chunk import chunk_document
 
@@ -7,11 +7,18 @@ CANADA_PDF = "data/raw/CANADA_AIM.pdf"
 
 def extract_text_from_pdf(pdf_path):
     pages = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text()
-            if text:
-                pages.append((page.page_number, text))
+    doc = fitz.open(pdf_path)
+    for page in doc:
+        # sort=True reorders text blocks by position (top-to-bottom, left-to-right)
+        # This handles two-column layouts correctly
+        blocks = page.get_text("blocks", sort=True)
+        # Each block is (x0, y0, x1, y1, text, block_no, block_type)
+        # block_type 0 = text, 1 = image
+        text_blocks = [b[4] for b in blocks if b[6] == 0]
+        text = "\n".join(text_blocks)
+        if text.strip():
+            pages.append((page.number + 1, text))  # 1-indexed
+    doc.close()
     return pages
 
 

@@ -48,6 +48,10 @@ def run_ingestion():
     openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     index = get_pinecone_index()
 
+    # 0. Clear old vectors
+    print(f"Clearing namespace '{NAMESPACE}'...")
+    index.delete(delete_all=True, namespace=NAMESPACE)
+
     # 1. Extract and clean
     print("Extracting PDF...")
     pages = extract_text_from_pdf(CANADA_PDF)
