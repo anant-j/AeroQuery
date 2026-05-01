@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { CreateMLCEngine, type MLCEngine } from "@mlc-ai/web-llm";
 
@@ -97,6 +97,8 @@ export default function Home() {
   const [ragResult, setRagResult] = useState<AskResponse | null>(null);
   const [bareResult, setBareResult] = useState<AskResponse | null>(null);
   const [error, setError] = useState("");
+  const [ragStreaming, setRagStreaming] = useState(false);
+  const [bareStreaming, setBareStreaming] = useState(false);
 
   // WebLLM state
   const [webllmReady, setWebllmReady] = useState(false);
@@ -135,19 +137,47 @@ export default function Home() {
     return () => { cancelled = true; };
   }, []);
 
-  const generateWithWebLLM = useCallback(async (messages: { role: string; content: string }[]) => {
-    if (!engineRef.current) throw new Error("WebLLM not loaded");
-
-    const reply = await engineRef.current.chat.completions.create({
-      messages: messages as { role: "system" | "user" | "assistant"; content: string }[],
-      temperature: 0,
+  async function readSSEStream(
+    body: { query: string; use_rag: boolean },
+    onToken: (token: string) => void,
+    onSources?: (sources: Source[]) => void,
+    onMeta?: (meta: { tokens?: number; model?: string }) => void,
+  ) {
+    const res = await fetch("/api/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
 
-    return {
-      answer: reply.choices[0].message.content || "",
-      tokens: reply.usage?.total_tokens || 0,
-    };
-  }, []);
+    if (!res.ok) throw new Error("Stream request failed");
+    if (!res.body) throw new Error("No response body");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === "token") onToken(data.token);
+            else if (data.type === "sources" && onSources) onSources(data.sources);
+            else if (data.type === "usage" && onMeta) onMeta({ tokens: data.tokens, model: data.model });
+          } catch {
+            // Skip malformed SSE events
+          }
+        }
+      }
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,29 +187,34 @@ export default function Home() {
     setError("");
     setRagResult(null);
     setBareResult(null);
+    setRagStreaming(false);
+    setBareStreaming(false);
 
     try {
       if (modelOption === "openai") {
-        // Server-side: single /compare call
-        const res = await fetch(`${API_URL}/compare`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query }),
-        });
+        // Initialize results with empty answers for streaming
+        setRagResult({ query, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
+        setBareResult({ query, answer: "", model: "", tokens: 0, use_rag: false });
+        setRagStreaming(true);
+        setBareStreaming(true);
 
-        if (!res.ok) throw new Error("API error");
-
-        const data = await res.json();
-        setRagResult({
-          query: data.query, answer: data.rag.answer, model: data.model,
-          tokens: data.rag.tokens, use_rag: true, sources: data.rag.sources,
-        });
-        setBareResult({
-          query: data.query, answer: data.bare.answer, model: data.model,
-          tokens: data.bare.tokens, use_rag: false,
-        });
+        // Stream both RAG and bare LLM in parallel
+        await Promise.all([
+          readSSEStream(
+            { query, use_rag: true },
+            (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
+            (sources) => setRagResult(prev => prev ? { ...prev, sources } : null),
+            (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
+          ).finally(() => setRagStreaming(false)),
+          readSSEStream(
+            { query, use_rag: false },
+            (token) => setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
+            undefined,
+            (meta) => setBareResult(prev => prev ? { ...prev, ...meta } : null),
+          ).finally(() => setBareStreaming(false)),
+        ]);
       } else {
-        // WebLLM: retrieve chunks from server, generate locally
+        // WebLLM: retrieve chunks from server, generate locally with streaming
         const retrieveRes = await fetch(`${API_URL}/retrieve`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -190,54 +225,88 @@ export default function Home() {
         const retrieveData = await retrieveRes.json();
         const chunks: Chunk[] = retrieveData.chunks;
 
-        // Build context for RAG
         const context = chunks.map((c) =>
           `[Section ${c.section}]\n${c.text}`
         ).join("\n\n---\n\n");
 
         const ragMessages = [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}` },
+          { role: "system" as const, content: SYSTEM_PROMPT },
+          { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}` },
         ];
         const bareMessages = [
-          { role: "system", content: "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations." },
-          { role: "user", content: query },
+          { role: "system" as const, content: "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations." },
+          { role: "user" as const, content: query },
         ];
 
-        // Run both sequentially (WebLLM is single-threaded)
-        const ragReply = await generateWithWebLLM(ragMessages);
+        const webllmModel = `WebLLM (${WEBLLM_MODEL})`;
+
+        // RAG with streaming (WebLLM is single-threaded, run sequentially)
         setRagResult({
-          query, answer: ragReply.answer, model: `WebLLM (${WEBLLM_MODEL})`,
-          tokens: ragReply.tokens, use_rag: true,
+          query, answer: "", model: webllmModel, tokens: 0, use_rag: true,
           sources: chunks.map((c) => ({ section: c.section, title: c.title })),
         });
+        setRagStreaming(true);
 
-        const bareReply = await generateWithWebLLM(bareMessages);
-        setBareResult({
-          query, answer: bareReply.answer, model: `WebLLM (${WEBLLM_MODEL})`,
-          tokens: bareReply.tokens, use_rag: false,
+        const ragStream = await engineRef.current!.chat.completions.create({
+          messages: ragMessages,
+          temperature: 0,
+          stream: true,
         });
+        for await (const chunk of ragStream) {
+          const token = chunk.choices[0]?.delta?.content;
+          if (token) {
+            setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null);
+          }
+        }
+        setRagStreaming(false);
+
+        // Bare LLM with streaming
+        setBareResult({ query, answer: "", model: webllmModel, tokens: 0, use_rag: false });
+        setBareStreaming(true);
+
+        const bareStream = await engineRef.current!.chat.completions.create({
+          messages: bareMessages,
+          temperature: 0,
+          stream: true,
+        });
+        for await (const chunk of bareStream) {
+          const token = chunk.choices[0]?.delta?.content;
+          if (token) {
+            setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null);
+          }
+        }
+        setBareStreaming(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
+      setRagStreaming(false);
+      setBareStreaming(false);
     }
   };
 
-  const ResultCard = ({ result, label, accent }: { result: AskResponse; label: string; accent: string }) => (
+  const ResultCard = ({ result, label, accent, streaming }: { result: AskResponse; label: string; accent: string; streaming?: boolean }) => (
     <div className={`border rounded-lg p-5 ${accent}`}>
       <div className="flex items-center gap-2 mb-3">
         <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
           {label}
         </span>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {result.model} · {result.tokens} tokens
+          {result.model}{result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
         </span>
       </div>
 
       <div className="prose prose-sm prose-gray dark:prose-invert max-w-none mb-3">
+        {streaming && !result.answer && (
+          <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">
+            {label === "RAG" ? "Retrieving context..." : "Generating..."}
+          </span>
+        )}
         <ReactMarkdown>{result.answer}</ReactMarkdown>
+        {streaming && result.answer && (
+          <span className="inline-block w-1.5 h-4 bg-gray-400 dark:bg-gray-500 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
+        )}
       </div>
 
       {result.sources && result.sources.length > 0 && (
@@ -356,10 +425,10 @@ export default function Home() {
       {(ragResult || bareResult) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
           {ragResult && (
-            <ResultCard result={ragResult} label="RAG" accent="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30" />
+            <ResultCard result={ragResult} label="RAG" accent="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30" streaming={ragStreaming} />
           )}
           {bareResult && (
-            <ResultCard result={bareResult} label="Bare LLM" accent="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-950/30" />
+            <ResultCard result={bareResult} label="Bare LLM" accent="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-950/30" streaming={bareStreaming} />
           )}
         </div>
       )}
