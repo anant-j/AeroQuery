@@ -645,7 +645,7 @@ export default function Home() {
 
       <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
         Built by Anant Jain · AI Engineer · Canadian pilot ·{" "}
-        <a href="https://github.com/anant-j" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/anant-j/AeroQuery" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a>
       </footer>
     </main>
   );
