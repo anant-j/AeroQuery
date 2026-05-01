@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { CreateMLCEngine, type MLCEngine } from "@mlc-ai/web-llm";
 
@@ -17,26 +17,56 @@ Rules:
 const EVAL_DATA = [
   {
     model: "GPT-5.4-mini",
-    bare: 0.32,
-    rag: 0.40,
-    ragRerank: 0.43,
-    faithfulness: 0.88,
+    metrics: {
+      factual_correctness: { bare: 0.32, rag: 0.40, rerank: 0.43 },
+      faithfulness: { rag: 0.82, rerank: 0.88 },
+      context_precision: { rag: 0.78, rerank: 0.92 },
+      context_recall: { rag: 0.88, rerank: 0.92 },
+      answer_relevancy: { bare: 0.84, rag: 0.78, rerank: 0.79 },
+      semantic_similarity: { bare: 0.69, rag: 0.77, rerank: 0.77 },
+    },
   },
   {
     model: "GPT-3.5-turbo",
-    bare: 0.23,
-    rag: 0.44,
-    ragRerank: 0.44,
-    faithfulness: 0.85,
+    metrics: {
+      factual_correctness: { bare: 0.23, rag: 0.44, rerank: 0.44 },
+      faithfulness: { rag: 0.82, rerank: 0.85 },
+      context_precision: { rag: 0.78, rerank: 0.92 },
+      context_recall: { rag: 0.93, rerank: 0.93 },
+      answer_relevancy: { bare: 0.83, rag: 0.86, rerank: 0.87 },
+      semantic_similarity: { bare: 0.74, rag: 0.80, rerank: 0.79 },
+    },
   },
   {
     model: "Llama 3.2 1B (WebLLM)",
-    bare: 0.07,
-    rag: 0.18,
-    ragRerank: 0.22,
-    faithfulness: 0.55,
+    metrics: {
+      factual_correctness: { bare: 0.07, rag: 0.18, rerank: 0.22 },
+      faithfulness: { rag: 0.52, rerank: 0.55 },
+      context_precision: { rag: 0.78, rerank: 0.93 },
+      context_recall: { rag: 0.94, rerank: 0.90 },
+      answer_relevancy: { bare: 0.79, rag: 0.58, rerank: 0.62 },
+      semantic_similarity: { bare: 0.66, rag: 0.67, rerank: 0.69 },
+    },
   },
 ];
+
+const METRIC_LABELS: Record<string, string> = {
+  factual_correctness: "Factual Correctness",
+  faithfulness: "Faithfulness",
+  context_precision: "Context Precision",
+  context_recall: "Context Recall",
+  answer_relevancy: "Answer Relevancy",
+  semantic_similarity: "Semantic Similarity",
+};
+
+const METRIC_INSIGHTS: Record<string, string> = {
+  factual_correctness: "RAG triples Llama accuracy. Reranking adds another boost.",
+  faithfulness: "GPT models stay grounded. Llama often ignores context.",
+  context_precision: "Cohere rerank: 0.78 → 0.92. Right chunks, right order.",
+  context_recall: "94% recall — retrieval finds the right information.",
+  answer_relevancy: "Bare LLM sounds relevant but hallucinates. RAG is precise.",
+  semantic_similarity: "RAG answers are consistently closer to ground truth.",
+};
 
 type ModelOption = "openai" | "webllm";
 
@@ -201,7 +231,7 @@ export default function Home() {
         <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
           {label}
         </span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+        <span className="text-xs text-gray-500 dark:text-gray-500">
           {result.model} · {result.tokens} tokens
         </span>
       </div>
@@ -212,7 +242,7 @@ export default function Home() {
 
       {result.sources && result.sources.length > 0 && (
         <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-          <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2">Sources</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-500 mb-2">Sources</p>
           <div className="flex flex-wrap gap-1.5">
             {result.sources.map((s, i) => (
               <span key={i} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded">
@@ -225,13 +255,40 @@ export default function Home() {
     </div>
   );
 
+  // Theme toggle
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
   return (
-    <main className="max-w-5xl mx-auto px-4 py-12">
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">AeroQuery</h1>
-        <p className="text-gray-400 dark:text-gray-500">
-          Ask questions about Canadian aviation regulations. Powered by RAG over the TC AIM.
-        </p>
+    <main className="w-full max-w-[1400px] mx-auto px-8 py-12">
+      <div className="flex items-start justify-between mb-10">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">AeroQuery</h1>
+          <p className="text-gray-500 dark:text-gray-400">
+            Ask questions about Canadian aviation regulations. Powered by RAG over the TC AIM.
+          </p>
+        </div>
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          aria-label="Toggle theme"
+        >
+          {isDark ? (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+          )}
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="mb-8">
@@ -270,7 +327,7 @@ export default function Home() {
             </option>
           </select>
           {webllmLoading && (
-            <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+            <span className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-1">
               <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -283,7 +340,7 @@ export default function Home() {
           )}
         </div>
 
-        <p className="text-xs text-gray-300 dark:text-gray-600 mt-2">
+        <p className="text-xs text-gray-500 dark:text-gray-600 mt-2">
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
       </form>
@@ -306,58 +363,112 @@ export default function Home() {
       )}
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS)</h2>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
-          50 questions · 6 RAGAS metrics · Judged by GPT-5.4-mini via Azure AI Foundry. Showing factual correctness.
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+          50 questions · 6 metrics · 3 models · Judged by GPT-5.4-mini via Azure AI Foundry
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {EVAL_DATA.map((row, i) => {
-            const bestRag = Math.max(row.rag, row.ragRerank);
-            const delta = Math.round((bestRag - row.bare) * 100);
-            const bars = [
-              { label: "Bare LLM", value: row.bare, color: "bg-red-400/60 dark:bg-red-500/40" },
-              { label: "RAG", value: row.rag, color: "bg-yellow-400/60 dark:bg-yellow-500/40" },
-              { label: "RAG + Rerank", value: row.ragRerank, color: "bg-green-400/60 dark:bg-green-500/40" },
-            ];
-            return (
-              <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                <div className="mb-4">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{row.model}</span>
-                </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-2 pr-3 font-medium text-gray-500 dark:text-gray-400">Metric</th>
+                {EVAL_DATA.map((row, i) => (
+                  <th key={i} colSpan={3} className="text-center py-2 px-1 font-medium text-gray-500 dark:text-gray-400 border-l border-gray-100 dark:border-gray-800">
+                    {row.model}
+                  </th>
+                ))}
+              </tr>
+              <tr className="border-b border-gray-100 dark:border-gray-800">
+                <th></th>
+                {EVAL_DATA.map((_, i) => (
+                  <React.Fragment key={i}>
+                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-500 border-l border-gray-100 dark:border-gray-800">Bare</th>
+                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-500">RAG</th>
+                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-500">+Rerank</th>
+                  </React.Fragment>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(METRIC_LABELS).map((metric) => {
+                // Calculate best improvement across all models for this metric
+                const allBare = EVAL_DATA.map(r => {
+                  const m = r.metrics[metric as keyof typeof r.metrics];
+                  return "bare" in m ? m.bare : null;
+                }).filter(v => v !== null) as number[];
+                const allRerank = EVAL_DATA.map(r => {
+                  const m = r.metrics[metric as keyof typeof r.metrics];
+                  return "rerank" in m ? m.rerank : null;
+                }).filter(v => v !== null) as number[];
 
-                <div className="space-y-3 mb-4">
-                  {bars.map((bar, j) => (
-                    <div key={j}>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{bar.label}</p>
-                      <div className="relative h-7 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                        <div
-                          className={`absolute inset-y-0 left-0 ${bar.color} rounded`}
-                          style={{ width: `${bar.value * 100}%` }}
-                        />
-                        <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-medium text-gray-700 dark:text-gray-200">
-                          {bar.value.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                return (
+                <React.Fragment key={metric}>
+                <tr className="border-b border-gray-50 dark:border-gray-800">
+                  <td className="py-2 pr-3 text-gray-700 dark:text-gray-300 whitespace-nowrap font-medium">{METRIC_LABELS[metric]}</td>
+                  {EVAL_DATA.map((row, i) => {
+                    const m = row.metrics[metric as keyof typeof row.metrics];
+                    const bare = "bare" in m ? m.bare : null;
+                    const rag = "rag" in m ? m.rag : null;
+                    const rerank = "rerank" in m ? m.rerank : null;
+                    const vals = [bare, rag, rerank].filter((v) => v !== null && v !== undefined) as number[];
+                    const maxVal = vals.length > 0 ? Math.max(...vals) : 0;
+                    const minVal = vals.length > 0 ? Math.min(...vals) : 0;
+                    const delta = minVal > 0 ? Math.round(((maxVal - minVal) / minVal) * 100) : 0;
 
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
-                    +{delta}% with RAG
-                  </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                    Faith: {row.faithfulness.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+                    const cellClass = (val: number | null | undefined, isFirst: boolean, isBare: boolean) => {
+                      const border = isFirst ? " border-l border-gray-100 dark:border-gray-800" : "";
+                      if (val === null || val === undefined) return `text-gray-400 dark:text-gray-700${border}`;
+                      if (val === maxVal && vals.length > 1) return `text-gray-800 dark:text-gray-100 font-bold bg-emerald-50 dark:bg-emerald-950/30${border}`;
+                      if (!isBare && val === minVal && vals.length > 1 && bare !== null && bare !== undefined && val < bare) return `text-gray-800 dark:text-gray-100 font-bold bg-red-50 dark:bg-red-950/30${border}`;
+                      return `text-gray-600 dark:text-gray-400${border}`;
+                    };
+
+                    const renderCell = (val: number | null | undefined, isFirst: boolean, isBare: boolean) => {
+                      if (val === null || val === undefined) return <td className={`text-center py-2 px-2 font-mono ${cellClass(val, isFirst, isBare)}`}>—</td>;
+                      const isMax = val === maxVal && vals.length > 1;
+                      const isRegression = !isBare && bare !== null && bare !== undefined && val < bare;
+                      const regressionDelta = isRegression && bare ? Math.round(((bare - val) / bare) * 100) : 0;
+                      return (
+                        <td className={`text-center py-2 px-2 font-mono ${cellClass(val, isFirst, isBare)}`}>
+                          {val.toFixed(2)}
+                          {isMax && delta > 0 && (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">↑{delta}%</span>
+                          )}
+                          {isRegression && regressionDelta > 0 && (
+                            <span className="text-red-500 dark:text-red-400 font-semibold ml-1">↓{regressionDelta}%</span>
+                          )}
+                        </td>
+                      );
+                    };
+
+                    return (
+                      <React.Fragment key={i}>
+                        {renderCell(bare, true, true)}
+                        {renderCell(rag, false, false)}
+                        {renderCell(rerank, false, false)}
+                      </React.Fragment>
+                    );
+                  })}
+                </tr>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
+                  <td colSpan={1 + EVAL_DATA.length * 3} className="py-1.5 px-1 text-xs text-gray-500 dark:text-gray-500 italic">
+                    {METRIC_INSIGHTS[metric]}
+                  </td>
+                </tr>
+                </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
+
+        <p className="text-xs text-gray-500 dark:text-gray-600 mt-4">
+          <span className="text-emerald-600">↑ Green</span> = best score (improvement). <span className="text-red-500">↓ Red</span> = worst score (regression). Retrieval metrics are model-independent.
+        </p>
       </div>
 
-      <footer className="mt-12 pt-6 border-t border-gray-50 dark:border-gray-800 text-center text-xs text-gray-300 dark:text-gray-600">
+      <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-600">
         Built by Anant Jain · AI Engineer · Canadian pilot ·{" "}
         <a href="https://github.com/anant-j" className="underline hover:text-gray-500" target="_blank" rel="noopener noreferrer">GitHub</a>
       </footer>
