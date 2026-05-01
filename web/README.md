@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Web — Next.js Frontend + Streaming Generation
 
-## Getting Started
+Next.js app with two responsibilities:
+1. **Frontend** — side-by-side RAG vs bare LLM comparison, eval benchmark table, expandable citations
+2. **Streaming API route** (`/api/stream`) — calls Azure Function for retrieval, streams OpenAI generation via SSE
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+Browser
+  ├── OpenAI mode:  POST /api/stream → Azure /retrieve → OpenAI streaming → SSE to browser
+  └── WebLLM mode:  fetch Azure /retrieve → generate locally in browser (WebGPU)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Create `.env.production` (gitignored):
+   ```
+   NEXT_PUBLIC_API_URL=https://aeroquery-api.azurewebsites.net/api
+   OPENAI_API_KEY=sk-...
+   ```
+   `OPENAI_API_KEY` has no `NEXT_PUBLIC_` prefix — it stays server-side only, never sent to the browser.
 
-## Learn More
+3. Run locally:
+   ```bash
+   npm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+## Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/
+  page.tsx              — Main UI: query form, streaming results, eval table, WebLLM
+  layout.tsx            — Root layout, fonts, metadata
+  globals.css           — Tailwind + custom styles
+  lib/
+    prompts.ts          — Shared system prompts (RAG + bare LLM)
+  api/
+    stream/
+      route.ts          — SSE streaming endpoint (calls Azure /retrieve + OpenAI)
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Features
 
-## Deploy on Vercel
+- **Streaming** — tokens render as they arrive (parallel streams for RAG + bare)
+- **WebLLM** — Llama 3.2 1B runs in-browser via WebGPU, streams locally
+- **Expandable citations** — click §3.12 to see the actual retrieved chunk text
+- **Eval table** — RAGAS v0.4 benchmark (6 metrics × 3 models × 3 configs)
+- **Dark mode** — toggle in top-right
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deployed on Netlify. Push to `main` triggers auto-deploy.
+
+```bash
+netlify deploy --prod
+```
+
+Set `OPENAI_API_KEY` in Netlify dashboard → Site settings → Environment variables.

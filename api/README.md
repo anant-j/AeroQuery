@@ -1,34 +1,35 @@
-# API — Azure Functions Backend
+# API — Azure Functions (Retrieval)
 
-Python Azure Functions serving the RAG pipeline over HTTP. Three endpoints for the frontend.
+Serves the retrieval layer: embed query → Pinecone search → Cohere rerank → return chunks.
 
-Optimized with module-level client reuse (OpenAI, Pinecone, Cohere) and parallel LLM calls.
+Generation happens in the Next.js API route (`web/app/api/stream/`), not here. This keeps the OpenAI generation key on Netlify and the retrieval keys (Pinecone, Cohere, OpenAI embeddings) on Azure.
 
 ## Setup
 
 1. Install Azure Functions Core Tools:
    ```bash
-   brew tap azure/functions
    brew install azure-functions-core-tools@4
    ```
 
-2. Create a virtual environment and install dependencies:
+2. Create venv and install dependencies:
    ```bash
-   python3.11 -m venv .venv
+   python3 -m venv .venv
    source .venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. Add your API keys to `local.settings.json` (already gitignored):
+3. Add API keys to `local.settings.json` (gitignored by default):
    ```json
    {
      "Values": {
+       "FUNCTIONS_WORKER_RUNTIME": "python",
+       "AzureWebJobsStorage": "UseDevelopmentStorage=true",
        "OPENAI_API_KEY": "sk-...",
        "PINECONE_API_KEY": "pcsk_...",
        "PINECONE_INDEX_NAME": "aeroquery",
-       "COHERE_API_KEY": "...",
-       "LLM_MODEL": "gpt-5.4-mini"
-     }
+       "COHERE_API_KEY": "..."
+     },
+     "Host": { "CORS": "*" }
    }
    ```
 
@@ -37,83 +38,15 @@ Optimized with module-level client reuse (OpenAI, Pinecone, Cohere) and parallel
    func start
    ```
 
-## Endpoints
-
-### `POST /api/compare` (primary — used by frontend)
-
-Runs RAG and bare LLM in parallel, returns both results. Embeds query once, shares retrieval.
-
-**Request:**
-```json
-{
-  "query": "What are the fuel requirements for VFR flight?"
-}
-```
-
-**Response:**
-```json
-{
-  "query": "...",
-  "model": "gpt-5.4-mini",
-  "rag": {
-    "answer": "...",
-    "tokens": 2322,
-    "sources": [{"section": "3.12", "title": "Fuel Requirements"}]
-  },
-  "bare": {
-    "answer": "...",
-    "tokens": 850
-  }
-}
-```
-
-### `POST /api/ask`
-
-Full RAG pipeline or bare LLM, depending on toggle.
-
-**Request:**
-```json
-{
-  "query": "What are the fuel requirements for VFR flight?",
-  "use_rag": true,
-  "model": "gpt-5.4-mini"
-}
-```
-
-**Response (RAG):**
-```json
-{
-  "query": "...",
-  "answer": "...",
-  "model": "gpt-5.4-mini",
-  "tokens": 2322,
-  "use_rag": true,
-  "sources": [
-    {"section": "3.12", "title": "Fuel Requirements"}
-  ]
-}
-```
-
-**Response (bare LLM, `use_rag: false`):**
-```json
-{
-  "query": "...",
-  "answer": "...",
-  "model": "gpt-5.4-mini",
-  "tokens": 850,
-  "use_rag": false
-}
-```
+## Endpoint
 
 ### `POST /api/retrieve`
 
-Retrieval + reranking only — returns chunks for WebLLM mode.
+Embeds the query, searches Pinecone (top-10), reranks with Cohere (top-5), returns chunks.
 
 **Request:**
 ```json
-{
-  "query": "What are the fuel requirements for VFR flight?"
-}
+{ "query": "What are the fuel requirements for VFR flight?" }
 ```
 
 **Response:**
@@ -121,15 +54,28 @@ Retrieval + reranking only — returns chunks for WebLLM mode.
 {
   "query": "...",
   "chunks": [
-    {"section": "3.12", "title": "Fuel Requirements", "text": "..."}
+    { "section": "3.12", "title": "Fuel Requirements", "text": "..." }
   ]
 }
 ```
 
-## Deployment
+Called by:
+- `web/app/api/stream/route.ts` — for OpenAI streaming (server-side)
+- `web/app/page.tsx` — for WebLLM mode (client-side, direct fetch)
 
-Deploy to Azure Functions:
+## Architecture
+
+```
+function_app.py
+  ├── embed_query()        → OpenAI text-embedding-3-large
+  ├── search_pinecone()    → Pinecone cosine similarity (top-10)
+  └── rerank_chunks()      → Cohere rerank-v4.0-pro (top-5)
+```
+
+Module-level client reuse — OpenAI, Pinecone, and Cohere clients are initialized once and shared across requests.
+
+## Deploy
+
 ```bash
-az login
-func azure functionapp publish <your-function-app-name>
+func azure functionapp publish aeroquery-api
 ```
