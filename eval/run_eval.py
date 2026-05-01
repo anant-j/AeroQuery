@@ -6,7 +6,7 @@ from generation.rag import ask
 
 load_dotenv()
 
-LLM_MODEL = "gpt-3.5-turbo"  # Change this to run eval with a different model
+LLM_MODEL = "gpt-5.4-mini"  # Change this to run eval with a different model
 JUDGE_MODEL = "gpt-5.4-mini"  # Always use a strong model for judging
 
 

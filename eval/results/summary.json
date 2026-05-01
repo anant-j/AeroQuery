@@ -1,7 +1,0 @@
-{
-  "num_questions": 25,
-  "model": "gpt-5.4-mini",
-  "rag_correctness": 0.91,
-  "rag_faithfulness": 0.901,
-  "bare_correctness": 0.849
-}
