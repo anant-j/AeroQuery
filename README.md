@@ -42,15 +42,16 @@ See each folder's README for setup and run instructions.
 
 ## Eval Benchmark
 
-| Config | Correctness | Faithfulness |
-|---|---|---|
-| GPT-5.4-mini + RAG + Rerank | **0.92** | 0.95 |
-| GPT-5.4-mini + RAG (no rerank) | 0.91 | 0.98 |
-| GPT-5.4-mini Bare | 0.81 | N/A |
-| GPT-3.5 + RAG (no rerank) | 0.84 | 0.87 |
-| GPT-3.5 Bare | 0.68 | N/A |
+| Model | Bare LLM | RAG | RAG + Rerank | Faithfulness |
+|---|---|---|---|---|
+| GPT-5.4-mini | 0.76 | **0.83** | 0.82 | 0.90 |
+| GPT-3.5-turbo | 0.69 | **0.79** | 0.78 | 0.91 |
+| Llama 3.2 1B (WebLLM) | 0.18 | 0.36 | **0.47** | 0.49 |
 
-*25 questions, judged by GPT-5.4-mini. RAG improves GPT-3.5 correctness by +16 points.*
+*50 questions, judged by GPT-5.4-mini. Key findings:*
+- *RAG improves Llama 3.2 1B by +170% (0.18 → 0.47 with rerank)*
+- *Reranking helps small models most (+32% for Llama) but slightly hurts GPT models*
+- *Strong models use more context better; weak models need cleaner, focused context*
 
 ## Current Status
 

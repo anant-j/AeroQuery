@@ -17,17 +17,24 @@ Rules:
 const EVAL_DATA = [
   {
     model: "GPT-5.4-mini",
-    bare: 0.81,
-    rag: 0.92,
-    faithfulness: 0.95,
-    note: "with Cohere rerank",
+    bare: 0.76,
+    rag: 0.83,
+    ragRerank: 0.82,
+    faithfulness: 0.90,
   },
   {
     model: "GPT-3.5-turbo",
-    bare: 0.68,
-    rag: 0.84,
-    faithfulness: 0.87,
-    note: "without rerank",
+    bare: 0.69,
+    rag: 0.79,
+    ragRerank: 0.78,
+    faithfulness: 0.91,
+  },
+  {
+    model: "Llama 3.2 1B (WebLLM)",
+    bare: 0.18,
+    rag: 0.36,
+    ragRerank: 0.47,
+    faithfulness: 0.49,
   },
 ];
 
@@ -301,53 +308,47 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark</h2>
         <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
-          25 questions, judged by GPT-5.4-mini. How much does RAG improve correctness?
+          50 questions, judged by GPT-5.4-mini. How much does RAG improve correctness?
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {EVAL_DATA.map((row, i) => {
-            const delta = Math.round((row.rag - row.bare) * 100);
+            const bestRag = Math.max(row.rag, row.ragRerank);
+            const delta = Math.round((bestRag - row.bare) * 100);
+            const bars = [
+              { label: "Bare LLM", value: row.bare, color: "bg-red-400/60 dark:bg-red-500/40" },
+              { label: "RAG", value: row.rag, color: "bg-yellow-400/60 dark:bg-yellow-500/40" },
+              { label: "RAG + Rerank", value: row.ragRerank, color: "bg-green-400/60 dark:bg-green-500/40" },
+            ];
             return (
               <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{row.model}</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">{row.note}</span>
                 </div>
 
-                <div className="flex items-end gap-6 mb-4">
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Without RAG</p>
-                    <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                      <div
-                        className="absolute inset-y-0 left-0 bg-yellow-400/60 dark:bg-yellow-500/40 rounded"
-                        style={{ width: `${row.bare * 100}%` }}
-                      />
-                      <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-medium text-gray-700 dark:text-gray-200">
-                        {row.bare.toFixed(2)}
-                      </span>
+                <div className="space-y-3 mb-4">
+                  {bars.map((bar, j) => (
+                    <div key={j}>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">{bar.label}</p>
+                      <div className="relative h-7 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
+                        <div
+                          className={`absolute inset-y-0 left-0 ${bar.color} rounded`}
+                          style={{ width: `${bar.value * 100}%` }}
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-medium text-gray-700 dark:text-gray-200">
+                          {bar.value.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">With RAG</p>
-                    <div className="relative h-8 bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
-                      <div
-                        className="absolute inset-y-0 left-0 bg-green-400/60 dark:bg-green-500/40 rounded"
-                        style={{ width: `${row.rag * 100}%` }}
-                      />
-                      <span className="absolute inset-0 flex items-center justify-center text-xs font-mono font-medium text-gray-700 dark:text-gray-200">
-                        {row.rag.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">
-                    +{delta}% correctness with RAG
+                    +{delta}% with RAG
                   </span>
                   <span className="text-xs text-gray-400 dark:text-gray-500">
-                    Faithfulness: {row.faithfulness.toFixed(2)}
+                    Faith: {row.faithfulness.toFixed(2)}
                   </span>
                 </div>
               </div>
