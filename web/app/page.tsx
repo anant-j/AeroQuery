@@ -92,7 +92,7 @@ interface Chunk {
 }
 
 export default function Home() {
-  const defaultQuery = "What is the minimum amount of time I need to wait after drinking alcohol before flying VFR?";
+  const defaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
   const [query, setQuery] = useState("");
   const [modelOption, setModelOption] = useState<ModelOption>("openai");
   const [loading, setLoading] = useState(false);
