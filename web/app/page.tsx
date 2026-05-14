@@ -109,6 +109,12 @@ export default function Home() {
   const [webllmLoading, setWebllmLoading] = useState(true);
   const engineRef = useRef<MLCEngine | null>(null);
 
+  // Warm up the Azure Function on page load to avoid cold-start latency
+  // on the user's first query. Fire-and-forget — failures are silent.
+  useEffect(() => {
+    fetch("/api/warmup").catch(() => {});
+  }, []);
+
   // Load WebLLM model on page load
   useEffect(() => {
     let cancelled = false;

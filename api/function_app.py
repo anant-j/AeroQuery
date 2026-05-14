@@ -85,6 +85,22 @@ def rerank_chunks(query, chunks, top_n=5):
     return reranked
 
 
+@app.route(route="warmup", methods=["GET", "POST"])
+def warmup(req: func.HttpRequest) -> func.HttpResponse:
+    """Lightweight warmup — pre-initializes module-level clients so the
+    first real request avoids cold-start latency. Safe to call repeatedly.
+    """
+    get_openai()
+    get_pinecone_index()
+    get_cohere()
+    get_agent_graph()
+    return func.HttpResponse(
+        json.dumps({"status": "warm"}),
+        mimetype="application/json",
+        headers={"Access-Control-Allow-Origin": "*"},
+    )
+
+
 @app.route(route="retrieve", methods=["POST"])
 def retrieve(req: func.HttpRequest) -> func.HttpResponse:
     """Retrieve + rerank — embed query, search Pinecone, rerank with Cohere."""
