@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-EMBEDDING_MODEL = "text-embedding-3-large"
+# On Azure Foundry (v1 API), the embedding "model" is the deployment name.
+EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
 NAMESPACE = "canada"
 RERANK_MODEL = "rerank-v4.0-pro"
 
@@ -44,7 +45,11 @@ def rerank(query, chunks, top_n=5):
 
 
 def search(query, top_k=10, namespace=NAMESPACE, use_rerank=True, rerank_top_n=5):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
+    client = OpenAI(
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        base_url=f"{endpoint}/openai/v1/",
+    )
     index = get_pinecone_index()
 
     query_vector = embed_query(query, client)

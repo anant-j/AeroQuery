@@ -8,7 +8,8 @@ from agent import build_graph
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-EMBEDDING_MODEL = "text-embedding-3-large"
+# On Azure Foundry (v1 API), the embedding "model" is the deployment name.
+EMBEDDING_MODEL = os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
 RERANK_MODEL = "rerank-v4.0-pro"
 NAMESPACE = "canada"
 
@@ -21,7 +22,11 @@ cohere_client = None
 def get_openai():
     global openai_client
     if openai_client is None:
-        openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        endpoint = os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
+        openai_client = OpenAI(
+            api_key=os.environ["AZURE_OPENAI_API_KEY"],
+            base_url=f"{endpoint}/openai/v1/",
+        )
     return openai_client
 
 

@@ -9,7 +9,8 @@ from ingestion.chunk import chunk_document
 
 load_dotenv()
 
-EMBEDDING_MODEL = "text-embedding-3-large"
+# On Azure Foundry (v1 API), the embedding "model" is the deployment name.
+EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
 EMBEDDING_DIM = 3072
 BATCH_SIZE = 100  # Pinecone upsert batch size
 NAMESPACE = "canada"
@@ -45,7 +46,11 @@ def make_chunk_id(chunk):
 
 
 def run_ingestion():
-    openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
+    openai_client = OpenAI(
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        base_url=f"{endpoint}/openai/v1/",
+    )
     index = get_pinecone_index()
 
     # 0. Clear old vectors

@@ -17,13 +17,20 @@ def ask(query, top_k=10, namespace="canada", model=None, use_rerank=True, base_u
     messages = build_prompt(query, chunks)
 
     # 3. Generate answer
-    client_kwargs = {"api_key": os.getenv("OPENAI_API_KEY")}
     if base_url:
-        client_kwargs["base_url"] = base_url
-        client_kwargs["api_key"] = "ollama"  # Ollama doesn't need a real key
-    client = OpenAI(**client_kwargs)
+        # Ollama (or any OpenAI-compatible local server)
+        client = OpenAI(base_url=base_url, api_key="ollama")
+        chat_model = model or LLM_MODEL
+    else:
+        # Azure Foundry — v1 OpenAI-compatible endpoint; model is the deployment name
+        endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
+        client = OpenAI(
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            base_url=f"{endpoint}/openai/v1/",
+        )
+        chat_model = model or os.getenv("AZURE_OPENAI_DEPLOYMENT", LLM_MODEL)
     response = client.chat.completions.create(
-        model=model or LLM_MODEL,
+        model=chat_model,
         messages=messages,
         temperature=0,
     )
@@ -34,7 +41,7 @@ def ask(query, top_k=10, namespace="canada", model=None, use_rerank=True, base_u
         "query": query,
         "answer": answer,
         "chunks": chunks,
-        "model": model or LLM_MODEL,
+        "model": chat_model,
         "tokens": response.usage.total_tokens if response.usage else 0,
     }
 

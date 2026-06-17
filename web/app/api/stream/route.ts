@@ -9,10 +9,10 @@ interface RetrievedChunk {
 
 /**
  * Streaming endpoint. Calls Azure Function /retrieve for RAG chunks,
- * then streams OpenAI generation as SSE.
+ * then streams Azure AI Foundry generation as SSE.
  *
- * OPENAI_API_KEY is a server-only env var (no NEXT_PUBLIC_ prefix) —
- * never sent to the browser.
+ * AZURE_OPENAI_API_KEY / AZURE_OPENAI_ENDPOINT are server-only env vars
+ * (no NEXT_PUBLIC_ prefix) — never sent to the browser.
  */
 export async function POST(req: Request) {
   const body = await req.json();
@@ -26,16 +26,23 @@ export async function POST(req: Request) {
     });
   }
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  const apiKey = process.env.AZURE_OPENAI_API_KEY;
+  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
+  if (!apiKey || !endpoint) {
     return new Response(
-      JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+      JSON.stringify({
+        error: "AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT must be configured",
+      }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  const openai = new OpenAI({ apiKey });
-  const model = process.env.LLM_MODEL || "gpt-5.4-mini";
+  // For Azure Foundry (v1 API), `model` is the deployment name.
+  const model =
+    process.env.AZURE_OPENAI_DEPLOYMENT || process.env.LLM_MODEL || "gpt-5.4-mini";
+  const baseURL = `${endpoint.replace(/\/$/, "")}/openai/v1/`;
+
+  const openai = new OpenAI({ apiKey, baseURL });
 
   let messages: OpenAI.ChatCompletionMessageParam[];
   let sources: { section: string; title: string; text: string }[] = [];

@@ -50,10 +50,12 @@ def build_graph(embed_fn, search_fn, rerank_fn):
         search_fn: function(vector, top_k) -> chunks
         rerank_fn: function(query, chunks, top_n) -> reranked_chunks
     """
-    # Shared LLM — reused across classifier and decomposer nodes
+    # Shared LLM — reused across classifier and decomposer nodes (Azure Foundry v1 API)
+    endpoint = os.environ["AZURE_OPENAI_ENDPOINT"].rstrip("/")
     llm = ChatOpenAI(
-        model=os.environ.get("LLM_MODEL", "gpt-5.4-mini"),
-        api_key=os.environ["OPENAI_API_KEY"],
+        model=os.environ.get("AZURE_OPENAI_DEPLOYMENT", os.environ.get("LLM_MODEL", "gpt-5.4-mini")),
+        api_key=os.environ["AZURE_OPENAI_API_KEY"],
+        base_url=f"{endpoint}/openai/v1/",
         temperature=0,
     )
 
