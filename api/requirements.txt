@@ -1,4 +1,5 @@
 azure-functions
+azure-data-tables
 openai
 pinecone
 cohere

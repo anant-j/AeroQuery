@@ -1,12 +1,73 @@
 import azure.functions as func
 import json
+import logging
 import os
+import uuid
+from datetime import datetime, timezone
+
+from azure.data.tables import TableServiceClient
 from openai import OpenAI
 from pinecone import Pinecone
 import cohere
 from agent import build_graph
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+logger = logging.getLogger("aeroquery.queries")
+
+# Question log — persisted to Azure Table Storage on the storage account the
+# Function App already uses (AzureWebJobsStorage). Durable, never sampled, and
+# directly queryable from the Portal / Storage Explorer / SDK. No new infra.
+QUESTIONS_TABLE = os.environ.get("QUESTIONS_TABLE_NAME", "QuestionLog")
+_questions_table = None
+
+
+def get_questions_table():
+    """Lazily create/connect the question-log table client. Reused across
+    requests. Returns None if no storage connection is configured."""
+    global _questions_table
+    if _questions_table is None:
+        conn = os.environ.get("AzureWebJobsStorage")
+        if not conn:
+            return None
+        service = TableServiceClient.from_connection_string(conn)
+        service.create_table_if_not_exists(QUESTIONS_TABLE)
+        _questions_table = service.get_table_client(QUESTIONS_TABLE)
+    return _questions_table
+
+
+def log_question(req: func.HttpRequest, query: str, mode: str) -> None:
+    """Record every incoming question to Table Storage. Captures lightweight
+    "who" signals so usage can be queried later. Best-effort — logging must
+    never break a request.
+    """
+    try:
+        table = get_questions_table()
+        if table is None:
+            return
+
+        headers = req.headers
+        # Azure puts the real client IP first in X-Forwarded-For.
+        forwarded = headers.get("X-Forwarded-For", "")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else "unknown"
+
+        now = datetime.now(timezone.utc)
+        # PartitionKey = day (fast per-day scans); RowKey = reverse-time ordered
+        # so newest rows sort first, with a uuid suffix to guarantee uniqueness.
+        ticks = int((datetime.max - now.replace(tzinfo=None)).total_seconds() * 1000)
+        table.create_entity({
+            "PartitionKey": now.strftime("%Y-%m-%d"),
+            "RowKey": f"{ticks:020d}-{uuid.uuid4().hex}",
+            "timestamp": now.isoformat(),
+            "query": query,
+            "mode": mode,
+            "client_ip": client_ip,
+            "user_agent": headers.get("User-Agent", "unknown"),
+            "referer": headers.get("Referer", "unknown"),
+        })
+    except Exception:  # pragma: no cover - logging must never fail a request
+        logger.exception("Failed to log question")
+
 
 # On Azure Foundry (v1 API), the embedding "model" is the deployment name.
 EMBEDDING_MODEL = os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
@@ -118,6 +179,8 @@ def retrieve(req: func.HttpRequest) -> func.HttpResponse:
     if not query:
         return func.HttpResponse(json.dumps({"error": "query is required"}), status_code=400)
 
+    log_question(req, query, mode="webllm")
+
     query_vector = embed_query(query)
     chunks = search_pinecone(query_vector)
     chunks = rerank_chunks(query, chunks)
@@ -155,6 +218,8 @@ def agent(req: func.HttpRequest) -> func.HttpResponse:
     query = body.get("query", "")
     if not query:
         return func.HttpResponse(json.dumps({"error": "query is required"}), status_code=400)
+
+    log_question(req, query, mode="openai")
 
     graph = get_agent_graph()
     result = graph.invoke({
