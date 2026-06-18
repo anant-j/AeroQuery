@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
-import { CreateMLCEngine, type MLCEngine } from "@mlc-ai/web-llm";
+import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
@@ -106,8 +106,10 @@ export default function Home() {
   const [webllmReady, setWebllmReady] = useState(false);
   const [webllmProgress, setWebllmProgress] = useState(0);
   const [webllmStatus, setWebllmStatus] = useState("Initializing...");
-  const [webllmLoading, setWebllmLoading] = useState(true);
+  const [webllmLoading, setWebllmLoading] = useState(false);
+  const [webllmStarted, setWebllmStarted] = useState(false);
   const engineRef = useRef<MLCEngine | null>(null);
+  const webllmStartedRef = useRef(false);
 
   // Warm up the Azure Function on page load to avoid cold-start latency
   // on the user's first query. Fire-and-forget — failures are silent.
@@ -115,34 +117,30 @@ export default function Home() {
     fetch("/api/warmup").catch(() => {});
   }, []);
 
-  // Load WebLLM model on page load
-  useEffect(() => {
-    let cancelled = false;
+  // Lazily load WebLLM only when the user interacts with the model dropdown,
+  // so unsupported or low-power devices don't download a model they can't use.
+  // The SDK itself is dynamically imported to keep it out of the initial bundle.
+  const startWebLLM = useCallback(async () => {
+    if (webllmStartedRef.current) return;
+    webllmStartedRef.current = true;
+    setWebllmStarted(true);
+    setWebllmLoading(true);
 
-    async function loadWebLLM() {
-      try {
-        const engine = await CreateMLCEngine(WEBLLM_MODEL, {
-          initProgressCallback: (progress) => {
-            if (cancelled) return;
-            setWebllmProgress(Math.round(progress.progress * 100));
-            setWebllmStatus(progress.text);
-          },
-        });
-        if (!cancelled) {
-          engineRef.current = engine;
-          setWebllmReady(true);
-          setWebllmLoading(false);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setWebllmStatus("WebGPU not supported in this browser");
-          setWebllmLoading(false);
-        }
-      }
+    try {
+      const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
+      const engine = await CreateMLCEngine(WEBLLM_MODEL, {
+        initProgressCallback: (progress) => {
+          setWebllmProgress(Math.round(progress.progress * 100));
+          setWebllmStatus(progress.text);
+        },
+      });
+      engineRef.current = engine;
+      setWebllmReady(true);
+      setWebllmLoading(false);
+    } catch (err) {
+      setWebllmStatus("WebGPU not supported in this browser");
+      setWebllmLoading(false);
     }
-
-    loadWebLLM();
-    return () => { cancelled = true; };
   }, []);
 
   async function readSSEStream(
@@ -440,16 +438,20 @@ export default function Home() {
           <select
             id="model-select"
             value={modelOption}
+            onMouseDown={startWebLLM}
+            onFocus={startWebLLM}
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
             <option value="openai">OpenAI (GPT-5.4-mini)</option>
-            <option value="webllm" disabled={webllmLoading}>
-              {webllmLoading
-                ? `WebLLM (Llama 3.2 1B) — ${webllmProgress}%`
-                : webllmReady
-                  ? "WebLLM (Llama 3.2 1B)"
-                  : "WebLLM — unavailable"
+            <option value="webllm" disabled={!webllmReady}>
+              {!webllmStarted
+                ? "WebLLM (Llama 3.2 1B) — click to load"
+                : webllmLoading
+                  ? `WebLLM (Llama 3.2 1B) — ${webllmProgress}%`
+                  : webllmReady
+                    ? "WebLLM (Llama 3.2 1B)"
+                    : "WebLLM — unavailable"
               }
             </option>
           </select>
