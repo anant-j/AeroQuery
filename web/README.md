@@ -50,7 +50,7 @@ app/
 - **Streaming** — tokens render as they arrive (parallel streams for RAG + bare)
 - **WebLLM** — Llama 3.2 1B runs in-browser via WebGPU, streams locally
 - **Expandable citations** — click §3.12 to see the actual retrieved chunk text
-- **Eval table** — RAGAS v0.4 benchmark (6 metrics × 3 models × 3 configs)
+- **Eval table** — exploratory 50-question RAGAS v0.4 results (up to 6 metrics across 3 models and 3 configs); see the repository evaluation limitations before interpreting scores
 - **Dark mode** — toggle in top-right
 
 ## Deploy

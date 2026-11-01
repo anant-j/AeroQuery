@@ -3,6 +3,7 @@ Error Analysis: Diagnose the worst-scoring questions from the RAGAS eval.
 Run: cd pipeline && python -m eval.error_analysis
 """
 import json
+import math
 from collections import defaultdict
 
 
@@ -28,9 +29,14 @@ def classify_failures(results, cache, gt_map):
     """Classify each fc=0 question into a failure mode."""
     rerank = results["gpt-5.4-mini/rag_rerank_results"]
     failures = []
+    skipped = 0
 
     for r in rerank:
-        if r.get("factual_correctness", 1) > 0:
+        factual_correctness = r.get("factual_correctness")
+        if not isinstance(factual_correctness, (int, float)) or not math.isfinite(factual_correctness):
+            skipped += 1
+            continue
+        if factual_correctness > 0:
             continue
 
         q = r["question"]
@@ -71,13 +77,15 @@ def classify_failures(results, cache, gt_map):
             "sections": [c["section"] for c in chunks],
         })
 
-    return failures
+    return failures, skipped
 
 
-def print_analysis(failures):
+def print_analysis(failures, skipped):
     print("=" * 70)
-    print("ERROR ANALYSIS: GPT-5.4-mini RAG+Rerank — 10 questions with fc=0")
+    print(f"ERROR ANALYSIS: GPT-5.4-mini RAG+Rerank — {len(failures)} questions with fc=0")
     print("=" * 70)
+    if skipped:
+        print(f"Skipped {skipped} questions with a failed factual-correctness judge score.\n")
 
     # Group by failure mode
     by_mode = defaultdict(list)
@@ -131,8 +139,8 @@ def print_analysis(failures):
 
 def main():
     results, cache, gt_map = load_data()
-    failures = classify_failures(results, cache, gt_map)
-    print_analysis(failures)
+    failures, skipped = classify_failures(results, cache, gt_map)
+    print_analysis(failures, skipped)
 
 
 if __name__ == "__main__":

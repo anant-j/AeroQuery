@@ -54,12 +54,12 @@ const METRIC_LABELS: Record<string, string> = {
 };
 
 const METRIC_INSIGHTS: Record<string, string> = {
-  factual_correctness: "RAG triples Llama accuracy. Reranking adds another boost.",
-  faithfulness: "GPT models stay grounded. Llama often ignores context.",
-  context_precision: "Cohere rerank: 0.78 → 0.92. Right chunks, right order.",
-  context_recall: "94% recall — retrieval finds the right information.",
-  answer_relevancy: "Bare LLM scores higher by confidently hallucinating relevant-sounding answers. RAG correctly refuses when unsure — for aviation safety, faithfulness > relevancy.",
-  semantic_similarity: "RAG answers are consistently closer to ground truth.",
+  factual_correctness: "In this small exploratory sample, factual-correctness means varied by model and condition.",
+  faithfulness: "Faithfulness is an LLM-judge estimate of support from retrieved context, not a human-verified rate.",
+  context_precision: "Observed reranked context-precision means were higher in this sample; confidence intervals were not available for this historical run.",
+  context_recall: "Observed context-recall means on this 50-question sample; not an estimate of real-world coverage.",
+  answer_relevancy: "Relevance does not measure factual accuracy or safety.",
+  semantic_similarity: "Embedding similarity to one reference answer does not establish factual correctness.",
 };
 
 type ModelOption = "openai" | "webllm";
@@ -511,7 +511,10 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          50 questions · 6 metrics · 3 models · Judged by GPT-5.4-mini via Azure AI Foundry
+          Exploratory historical run · 50 questions · 3 models · single GPT-5.4-mini judge
+        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-300 mb-4">
+          Preliminary point estimates only: the set spans 40 sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
         </p>
 
         <div className="overflow-x-auto">
@@ -618,7 +621,7 @@ export default function Home() {
         </div>
 
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
-          <span className="text-emerald-600 dark:text-emerald-400">↑ Green</span> = best score (improvement). <span className="text-red-500 dark:text-red-400">↓ Red</span> = worst score (regression). Retrieval metrics are model-independent.
+          <span className="text-emerald-600 dark:text-emerald-400">↑ Green</span> = highest observed score. <span className="text-red-500 dark:text-red-400">↓ Red</span> = lower than the bare baseline. These descriptive comparisons are not statistical significance tests.
         </p>
       </div>
 

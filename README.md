@@ -1,10 +1,10 @@
 # AeroQuery
 
-Production-grade RAG system over Canadian aviation regulations (TC AIM), with dense retrieval, Cohere reranking, automated eval pipelines, and a live demo — built to answer questions a pilot actually asks.
+Research prototype for question answering over Canadian aviation regulations (TC AIM), with dense retrieval, Cohere reranking, an evaluation pipeline, and a live demo.
 
 ## Why This Project
 
-I'm a Canadian pilot building my PPL. Aviation regulations are dense, hierarchical, and full of cross-references — a harder RAG problem than most tutorials tackle. The eval pipeline proves the system works with numbers, not vibes.
+I'm a Canadian pilot building my PPL. Aviation regulations are dense, hierarchical, and full of cross-references — a useful setting for studying retrieval and grounded generation. This is a learning project, not a validated aviation decision-support tool.
 
 ## Architecture
 
@@ -21,7 +21,7 @@ flowchart LR
 flowchart LR
     A["50 Questions"] --> B["Generate Answers\n3 models × 3 configs"]
     B --> C["RAGAS Judge\nGPT-5.4-mini via Azure"]
-    C --> D["6 Metrics\nper question"]
+    C --> D["3–6 Metrics\nper condition"]
     D --> E["Error Analysis\nclassify failures"]
 
     style C fill:#e3f2fd,stroke:#2196f3
@@ -86,7 +86,11 @@ See each folder's README for setup and run instructions.
 | Frontend | Next.js + Tailwind CSS |
 | Deployment | Azure (API + AI Foundry) + Netlify (frontend) |
 
-## Eval Benchmark (RAGAS v0.4 — 6 Industry-Standard Metrics)
+## Eval Benchmark (RAGAS v0.4 — 6 Metrics)
+
+**Exploratory results — 50-question benchmark**
+
+These are historical point estimates from one run, not reliable evidence of general performance. The benchmark currently has 50 questions across 40 TC AIM sections; it has no documented sampling protocol, independent human scoring, or held-out split. Scores were judged by a single GPT-5.4-mini judge, and the original evaluation script converted judge errors to zero. The evaluator now preserves failed scores as missing and reports bootstrap intervals, but the checked-in historical scores have not yet been rerun with that correction.
 
 **Factual Correctness** (does the answer match ground truth?):
 
@@ -96,7 +100,7 @@ See each folder's README for setup and run instructions.
 | GPT-3.5-turbo | 0.23 | **0.44** | 0.44 | +91% |
 | Llama 3.2 1B | 0.07 | 0.18 | **0.22** | +203% |
 
-**Retrieval Quality** (same across models — retrieval is model-independent):
+**Retrieval Quality** (retrieved contexts are shared; judge-scored metrics may vary by run):
 
 | Metric | RAG | RAG + Rerank |
 |---|---|---|
@@ -111,17 +115,22 @@ See each folder's README for setup and run instructions.
 | Answer Relevancy (RAG+Rerank) | 0.79 | **0.87** | 0.62 |
 | Semantic Similarity (RAG+Rerank) | 0.77 | **0.79** | 0.69 |
 
-*50 questions, 6 RAGAS metrics, judged by GPT-5.4-mini via Azure AI Foundry. Key findings:*
-- *RAG improves factual correctness for every model — Llama by +203%, GPT-3.5 by +91%*
-- *Cohere reranking boosts context precision from 0.78 to 0.92 (+18%)*
-- *Retrieval quality is strong (0.92 recall/precision) — generation capability is the bottleneck*
-- *Bare Llama 1B hallucinates confidently (0.07 factual correctness); with RAG it triples to 0.22*
+*Observed means only; no significance or generalization claims are made. The bare-LLM condition has three applicable metrics, while each RAG condition has six: the complete run therefore has 2,250 score slots (not 2,700), before any judge failures.*
+
+**Evaluation limitations and next steps**
+
+- Expand toward a 500-question benchmark using source-cited, human-reviewed examples; do not treat generated questions or answers as ground truth without review.
+- Stratify by TC AIM chapter, question type, and difficulty; document source edition, evidence location, inclusion criteria, and reviewer decisions.
+- Keep a held-out test set and publish per-question results alongside means, paired comparisons, and confidence intervals.
+- Interpret bootstrap intervals as uncertainty across sampled questions only; they do not capture judge bias, judge randomness, or benchmark selection bias.
+- Calibrate the LLM judge against human ratings and report judge failures rather than silently treating them as zero.
+- Re-run and publish results after the dataset, retrieval index, models, and prompts are versioned.
 
 ## Current Status
 
 - [x] PDF ingestion pipeline (parse, clean, chunk, embed, upsert)
 - [x] RAG query pipeline (retrieve, rerank, generate with citations)
-- [x] Eval pipeline (LLM-as-judge, multi-model comparison)
+- [x] Eval pipeline (LLM-as-judge, multi-model comparison, bootstrap intervals)
 - [x] Cohere Reranking
 - [x] Azure Functions API (`/agent` + `/retrieve` endpoints)
 - [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
@@ -130,5 +139,3 @@ See each folder's README for setup and run instructions.
 - [x] Streaming responses (SSE for OpenAI, SDK streaming for WebLLM)
 - [x] Expandable source citations (click §section to see retrieved chunk text)
 - [x] LangGraph agentic layer (query classification, decomposition, guard)
-
-
