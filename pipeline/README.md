@@ -1,8 +1,8 @@
-# Pipeline — Offline Ingestion & Eval
+# Pipeline — Offline Ingestion & Evaluation
 
-Offline Python pipeline that *builds* the RAG system: parse PDFs, chunk, embed, upsert to Pinecone, and benchmark with RAGAS. Runs locally in Docker. Not deployed.
+This offline Python pipeline builds the RAG system: it parses PDFs, chunks the text, embeds the content, upserts it to Pinecone, and benchmarks retrieval via RAGAS. It runs locally in Docker and is not deployed.
 
-Once Pinecone is populated, this only runs again for re-ingestion or eval.
+For the project overview, see the root README. Once Pinecone is populated, this pipeline only runs again for re-ingestion or evaluation.
 
 ## Setup
 

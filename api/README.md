@@ -1,8 +1,8 @@
-# API — Azure Functions (Retrieval)
+# API — Azure Functions (Retrieval Layer)
 
-Serves the retrieval layer: embed query → Pinecone search → Cohere rerank → return chunks.
+This service provides the retrieval layer: embed query → Pinecone search → Cohere rerank → return chunks.
 
-Generation happens in the Next.js API route (`web/app/api/stream/`), not here. This keeps the OpenAI generation key on Netlify and the retrieval keys (Pinecone, Cohere, OpenAI embeddings) on Azure.
+For the project overview and architecture, see the root README. Generation happens in the Next.js API route (`web/app/api/stream/`), not here. This keeps the OpenAI generation key on Netlify and the retrieval keys (Pinecone, Cohere, OpenAI embeddings) on Azure.
 
 ## Setup
 

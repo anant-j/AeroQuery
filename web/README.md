@@ -1,8 +1,10 @@
 # Web — Next.js Frontend + Streaming Generation
 
-Next.js app with two responsibilities:
-1. **Frontend** — side-by-side RAG vs bare LLM comparison, eval benchmark table, expandable citations
-2. **Streaming API route** (`/api/stream`) — calls Azure Function for retrieval, streams OpenAI generation via SSE
+This Next.js app has two responsibilities:
+1. **Frontend** — side-by-side RAG vs. bare LLM comparison, evaluation table, and expandable citations
+2. **Streaming API route** (`/api/stream`) — calls the Azure Function for retrieval and streams OpenAI generation via SSE
+
+For the project overview and architecture, see the root README.
 
 ## Architecture
 
