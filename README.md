@@ -1,22 +1,39 @@
 # AeroQuery
 
-Research prototype for question answering over Canadian aviation regulations (TC AIM), with dense retrieval, Cohere reranking, an evaluation pipeline, and a live demo.
+AeroQuery is a research project focused on answering aviation questions grounded in Canadian aviation regulations (TC AIM), combining dense retrieval, reranking, and evaluation.
 
-## Why This Project
+The project is served as a live demo at https://aeroquery.anant-j.com.
 
-I'm a Canadian pilot building my PPL. Aviation regulations are dense, hierarchical, and full of cross-references — a useful setting for studying retrieval and grounded generation. This is a learning project, not a validated aviation decision-support tool.
+## Why this project exists
+
+I am a Canadian Private Pilot Licence holder and a Software Engineer. While training for my licence, I realized that aviation regulations are hierarchical, repetitive, and difficult to navigate without context.
+
+At the same time, I wanted to explore how RAG systems work in production environments. I also noticed that the smaller open-source on-device models I had access to were not really trained on Canadian aviation regulations (TC AIM), but instead on American aviation regulations (FAA FAR).
+
+This project is a learning and research prototype. It is not a validated aviation decision-support system and should not be relied on as operational guidance.
+
+## What the system does
+
+AeroQuery is a retrieval-augmented QA system for TC AIM. It ingests regulatory PDFs, chunks and embeds the content, retrieves relevant passages, reranks them, and generates answers grounded in source sections.
+
+The project explores several core AI engineering questions:
+
+- How well does retrieval improve factual grounding over a bare LLM?
+- Does reranking materially improve context quality?
+- Can answer quality be evaluated in a repeatable way using LLM-based judges?
+- How do we serve these systems in a live application with citations and streaming responses?
 
 ## Architecture
 
-### Ingestion Pipeline
+### Ingestion pipeline
 ```mermaid
 flowchart LR
-    A["📄 PDF"] --> B["Parse\nPyMuPDF"] --> C["Chunk\n512 tokens"] --> D["Embed\n3072-dim"] --> E[("Pinecone\n1,614 vectors")]
+    A["📄 PDF"] --> B["Parse\nPyMuPDF"] --> C["Chunk\n512 tokens"] --> D["Embed\n3072-dim"] --> E[("Pinecone\nvector index")]
 
     style E fill:#fff3e0,stroke:#ff9800
 ```
 
-### Eval Pipeline
+### Evaluation pipeline
 ```mermaid
 flowchart LR
     A["50 Questions"] --> B["Generate Answers\n3 models × 3 configs"]
@@ -28,7 +45,7 @@ flowchart LR
     style E fill:#fce4ec,stroke:#e91e63
 ```
 
-### Query Flow — OpenAI + LangGraph
+### Query flow
 ```mermaid
 flowchart LR
     A["📝 Question"] --> B["LangGraph\nAgent"]
@@ -44,7 +61,7 @@ flowchart LR
     style F fill:#fce4ec,stroke:#e91e63
 ```
 
-### Query Flow — WebLLM (in-browser)
+### WebLLM browser flow
 ```mermaid
 flowchart LR
     A["📝 Question"] --> B["Azure\n/retrieve"]
@@ -57,85 +74,92 @@ flowchart LR
     style E fill:#e8f5e9,stroke:#4caf50
 ```
 
-## Project Structure
-
-```
-pipeline/      — Offline: PDF ingestion, chunking, embedding, eval (runs locally in Docker)
-api/           — Live: Azure Function serving retrieval (embed → Pinecone → rerank)
-web/           — Live: Next.js frontend + streaming generation (calls API + OpenAI)
-```
-
-`pipeline/` *builds* the system (parses docs, fills Pinecone, benchmarks with RAGAS). `api/` + `web/` *serve* it. Once Pinecone is populated, the pipeline only runs again for re-ingestion or eval.
-
-See each folder's README for setup and run instructions.
-
-## Tech Stack
+## Solution stack
 
 | Layer | Tool |
 |---|---|
-| PDF Parsing | PyMuPDF |
+| PDF parsing | PyMuPDF |
 | Embeddings | OpenAI text-embedding-3-large (3072 dims) |
 | Vector DB | Pinecone (serverless, cosine, namespaces) |
 | Reranking | Cohere rerank-v4.0-pro |
-| Agentic Layer | LangGraph (query routing, decomposition, guard) |
-| LLM | OpenAI GPT-5.4-mini (server), WebLLM Llama 3.2 1B (browser) |
-| Eval | RAGAS v0.4 (6 metrics), Azure AI Foundry (judge) |
-| Streaming | SSE via Next.js API route (OpenAI), WebLLM SDK (browser) |
-| Orchestration | LangChain + LangGraph (agent), LiteLLM (multi-provider routing) |
-| API | Azure Functions (retrieval), Next.js API route (generation) |
+| Agentic workflow | LangGraph |
+| LLMs | OpenAI GPT models and WebLLM Llama 3.2 1B |
+| Evaluation | RAGAS v0.4, LLM-as-judge workflow |
+| Streaming | SSE for server-side generation, WebLLM SDK in-browser |
+| Orchestration | LangChain + LangGraph, LiteLLM |
+| API | Azure Functions |
 | Frontend | Next.js + Tailwind CSS |
-| Deployment | Azure (API + AI Foundry) + Netlify (frontend) |
+| Deployment | Azure + Netlify |
 
-## Eval Benchmark (RAGAS v0.4 — 6 Metrics)
+## Project structure
 
-**Exploratory results — 50-question benchmark**
+```text
+api/          — live retrieval API and agent endpoints
+pipeline/    — offline ingestion, embedding, indexing, and eval
+web/         — Next.js frontend and streaming generation UI
+```
 
-These are historical point estimates from one run, not reliable evidence of general performance. The benchmark currently has 50 questions across 40 TC AIM sections; it has no documented sampling protocol, independent human scoring, or held-out split. Scores were judged by a single GPT-5.4-mini judge, and the original evaluation script converted judge errors to zero. The evaluator now preserves failed scores as missing and reports bootstrap intervals, but the checked-in historical scores have not yet been rerun with that correction.
+The repository is intentionally split into an offline data pipeline and a live serving layer:
 
-**Factual Correctness** (does the answer match ground truth?):
+- `pipeline/` builds the knowledge base, parses source documents, embeds them, and benchmarks model choices.
+- `api/` and `web/` serve the system to users through retrieval and generation endpoints.
+
+## Key capabilities
+
+- PDF ingestion and normalization of technical regulatory text
+- Chunking and vector indexing for retrieval over large document corpora
+- Dense retrieval + reranking for higher-quality context selection
+- Grounded answer generation with citation-aware responses
+- Query routing and decomposition using LangGraph
+- Browser-side inference with WebLLM
+- End-to-end benchmark evaluation using RAGAS-style metrics
+- Streaming responses and expandable source citations in the frontend
+
+## Evaluation benchmark
+
+The project includes an exploratory evaluation benchmark over a set of aviation questions, with multiple model and retrieval configurations.
+
+### Benchmark framing
+
+These are historical point estimates from a single run and should not be interpreted as a final or generalizable performance claim. The benchmark currently includes 50 questions across 40 TC AIM sections, without a documented held-out split or independent human scoring process. The evaluator also uses an LLM judge and the historical results reflect earlier scoring behavior.
+
+### Representative results
+
+**Factual correctness**
 
 | Model | Bare LLM | RAG | RAG + Rerank | Improvement |
-|---|---|---|---|---|
-| GPT-5.4-mini | 0.32 | 0.40 | **0.43** | +34% |
-| GPT-3.5-turbo | 0.23 | **0.44** | 0.44 | +91% |
-| Llama 3.2 1B | 0.07 | 0.18 | **0.22** | +203% |
+|---|---:|---:|---:|---:|
+| GPT-5.4-mini | 0.32 | 0.40 | 0.43 | +34% |
+| GPT-3.5-turbo | 0.23 | 0.44 | 0.44 | +91% |
+| Llama 3.2 1B | 0.07 | 0.18 | 0.22 | +203% |
 
-**Retrieval Quality** (retrieved contexts are shared; judge-scored metrics may vary by run):
+**Retrieval quality**
 
 | Metric | RAG | RAG + Rerank |
-|---|---|---|
-| Context Precision | 0.78 | **0.92** |
-| Context Recall | **0.92** | 0.92 |
+|---|---:|---:|
+| Context Precision | 0.78 | 0.92 |
+| Context Recall | 0.92 | 0.92 |
 
-**Generation Quality:**
+**Generation quality**
 
 | Metric | GPT-5.4-mini | GPT-3.5 | Llama 1B |
-|---|---|---|---|
-| Faithfulness (RAG+Rerank) | **0.88** | 0.85 | 0.55 |
-| Answer Relevancy (RAG+Rerank) | 0.79 | **0.87** | 0.62 |
-| Semantic Similarity (RAG+Rerank) | 0.77 | **0.79** | 0.69 |
+|---|---:|---:|---:|
+| Faithfulness | 0.88 | 0.85 | 0.55 |
+| Answer Relevancy | 0.79 | 0.87 | 0.62 |
+| Semantic Similarity | 0.77 | 0.79 | 0.69 |
 
-*Observed means only; no significance or generalization claims are made. The bare-LLM condition has three applicable metrics, while each RAG condition has six: the complete run therefore has 2,250 score slots (not 2,700), before any judge failures.*
+### Evaluation limitations and next steps
 
-**Evaluation limitations and next steps**
+- Expand the benchmark toward a larger, human-reviewed test set
+- Stratify by chapter, question type, and difficulty
+- Preserve judge failures instead of silently converting them to zero
+- Publish per-question results and confidence intervals alongside aggregate means
+- Version the dataset, prompts, retrieval index, and model configurations
 
-- Expand toward a 500-question benchmark using source-cited, human-reviewed examples; do not treat generated questions or answers as ground truth without review.
-- Stratify by TC AIM chapter, question type, and difficulty; document source edition, evidence location, inclusion criteria, and reviewer decisions.
-- Keep a held-out test set and publish per-question results alongside means, paired comparisons, and confidence intervals.
-- Interpret bootstrap intervals as uncertainty across sampled questions only; they do not capture judge bias, judge randomness, or benchmark selection bias.
-- Calibrate the LLM judge against human ratings and report judge failures rather than silently treating them as zero.
-- Re-run and publish results after the dataset, retrieval index, models, and prompts are versioned.
+## Notes
 
-## Current Status
+This project is intentionally framed as a research prototype and learning exercise. It is not a validated aviation decision-support system and should not be treated as operational guidance for flight, compliance, or regulatory interpretation.
 
-- [x] PDF ingestion pipeline (parse, clean, chunk, embed, upsert)
-- [x] RAG query pipeline (retrieve, rerank, generate with citations)
-- [x] Eval pipeline (LLM-as-judge, multi-model comparison, bootstrap intervals)
-- [x] Cohere Reranking
-- [x] Azure Functions API (`/agent` + `/retrieve` endpoints)
-- [x] Next.js frontend (side-by-side RAG vs bare LLM comparison + eval table)
-- [x] Deployed — [Live Demo](https://aeroquery.netlify.app) | [API](https://aeroquery-api.azurewebsites.net/api)
-- [x] WebLLM client-side model (Llama 3.2 1B, runs in browser via WebGPU)
-- [x] Streaming responses (SSE for OpenAI, SDK streaming for WebLLM)
-- [x] Expandable source citations (click §section to see retrieved chunk text)
-- [x] LangGraph agentic layer (query classification, decomposition, guard)
+## License
+
+This repository is intended for research and portfolio use. Please review the relevant project and service licenses before reuse or commercial deployment.
