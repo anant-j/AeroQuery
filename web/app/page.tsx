@@ -91,6 +91,95 @@ interface Chunk {
   text: string;
 }
 
+function SourceItem({ source }: { source: Source }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div>
+      <button
+        onClick={() => source.text && setExpanded(!expanded)}
+        className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 ${source.text ? "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700" : "cursor-default"} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
+      >
+        §{source.section}
+        {source.text && (
+          <svg className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+      {expanded && source.text && (
+        <div className="mt-1 ml-1 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+          {source.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultCard({ result, label, accent, streaming }: { result: AskResponse; label: string; accent: string; streaming?: boolean }) {
+  return (
+    <div className={`border rounded-lg p-5 ${accent}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
+          {label}
+        </span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {result.model}{result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
+        </span>
+      </div>
+
+      <div className="prose prose-sm prose-gray dark:prose-invert max-w-none mb-3">
+        {streaming && !result.answer && (
+          <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">
+            {label === "RAG" ? "Retrieving context..." : "Generating..."}
+          </span>
+        )}
+        <ReactMarkdown>{result.answer}</ReactMarkdown>
+        {streaming && result.answer && (
+          <span className="inline-block w-1.5 h-4 bg-gray-400 dark:bg-gray-500 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
+        )}
+      </div>
+
+      {result.sources && result.sources.length > 0 && (
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
+          <div className="flex flex-col gap-1.5">
+            {result.sources.map((s, i) => (
+              <SourceItem key={i} source={s} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.agent && result.agent.steps && result.agent.steps.length > 0 && (
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Agent Trace</p>
+          <div className="flex items-center gap-1 flex-wrap">
+            {result.agent.steps.map((step, i) => (
+              <span key={i} className="flex items-center gap-1">
+                <span className="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                  {step}
+                </span>
+                {i < result.agent!.steps!.length - 1 && (
+                  <span className="text-gray-300 dark:text-gray-600 text-[10px]">→</span>
+                )}
+              </span>
+            ))}
+          </div>
+          {result.agent.sub_queries && result.agent.sub_queries.length > 0 && (
+            <div className="mt-1.5">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">Sub-queries:</p>
+              {result.agent.sub_queries.map((sq, i) => (
+                <p key={i} className="text-[10px] text-gray-500 dark:text-gray-400 ml-2">• {sq}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const defaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
   const [query, setQuery] = useState("");
@@ -137,7 +226,7 @@ export default function Home() {
       engineRef.current = engine;
       setWebllmReady(true);
       setWebllmLoading(false);
-    } catch (err) {
+    } catch {
       setWebllmStatus("WebGPU not supported in this browser");
       setWebllmLoading(false);
     }
@@ -292,98 +381,7 @@ export default function Home() {
     }
   };
 
-  const SourceItem = ({ source }: { source: Source }) => {
-    const [expanded, setExpanded] = useState(false);
-    return (
-      <div>
-        <button
-          onClick={() => source.text && setExpanded(!expanded)}
-          className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 ${source.text ? "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700" : "cursor-default"} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
-        >
-          §{source.section}
-          {source.text && (
-            <svg className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          )}
-        </button>
-        {expanded && source.text && (
-          <div className="mt-1 ml-1 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-            {source.text}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const ResultCard = ({ result, label, accent, streaming }: { result: AskResponse; label: string; accent: string; streaming?: boolean }) => (
-    <div className={`border rounded-lg p-5 ${accent}`}>
-      <div className="flex items-center gap-2 mb-3">
-        <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
-          {label}
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {result.model}{result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
-        </span>
-      </div>
-
-      <div className="prose prose-sm prose-gray dark:prose-invert max-w-none mb-3">
-        {streaming && !result.answer && (
-          <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">
-            {label === "RAG" ? "Retrieving context..." : "Generating..."}
-          </span>
-        )}
-        <ReactMarkdown>{result.answer}</ReactMarkdown>
-        {streaming && result.answer && (
-          <span className="inline-block w-1.5 h-4 bg-gray-400 dark:bg-gray-500 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
-        )}
-      </div>
-
-      {result.sources && result.sources.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
-          <div className="flex flex-col gap-1.5">
-            {result.sources.map((s, i) => (
-              <SourceItem key={i} source={s} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {result.agent && result.agent.steps && result.agent.steps.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Agent Trace</p>
-          <div className="flex items-center gap-1 flex-wrap">
-            {result.agent.steps.map((step, i) => (
-              <span key={i} className="flex items-center gap-1">
-                <span className="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
-                  {step}
-                </span>
-                {i < result.agent!.steps!.length - 1 && (
-                  <span className="text-gray-300 dark:text-gray-600 text-[10px]">→</span>
-                )}
-              </span>
-            ))}
-          </div>
-          {result.agent.sub_queries && result.agent.sub_queries.length > 0 && (
-            <div className="mt-1.5">
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Sub-queries:</p>
-              {result.agent.sub_queries.map((sq, i) => (
-                <p key={i} className="text-[10px] text-gray-500 dark:text-gray-400 ml-2">• {sq}</p>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  // Theme toggle
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" ? document.documentElement.classList.contains("dark") : false);
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -541,16 +539,6 @@ export default function Home() {
             </thead>
             <tbody>
               {Object.keys(METRIC_LABELS).map((metric) => {
-                // Calculate best improvement across all models for this metric
-                const allBare = EVAL_DATA.map(r => {
-                  const m = r.metrics[metric as keyof typeof r.metrics];
-                  return "bare" in m ? m.bare : null;
-                }).filter(v => v !== null) as number[];
-                const allRerank = EVAL_DATA.map(r => {
-                  const m = r.metrics[metric as keyof typeof r.metrics];
-                  return "rerank" in m ? m.rerank : null;
-                }).filter(v => v !== null) as number[];
-
                 return (
                 <React.Fragment key={metric}>
                 <tr className="border-b border-gray-50 dark:border-gray-800">
