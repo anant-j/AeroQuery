@@ -156,6 +156,32 @@ These are historical point estimates from a single run and should not be interpr
 - Publish per-question results and confidence intervals alongside aggregate means
 - Version the dataset, prompts, retrieval index, and model configurations
 
+## Environment and deployment
+
+Use server-managed settings for live credentials and keep them out of browser bundles.
+
+```bash
+# Frontend and local dev
+cp web/.env.example web/.env.local
+
+# Azure Function app
+cp api/.env.example api/local.settings.json
+```
+
+Required runtime values include:
+
+- `NEXT_PUBLIC_API_URL` for the browser frontend
+- `API_URL` for the Next.js server-side proxy
+- `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`
+- `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`
+- `COHERE_API_KEY`
+
+Never expose secret values in `NEXT_PUBLIC_*` variables and never commit real credentials.
+
+## Privacy and safety
+
+The service stores lightweight query logs in Azure Table Storage with client IP, user-agent, and referrer metadata for operational monitoring and abuse detection. Retention should follow a defined policy (for example, 30–90 days) and access should be restricted to the project owner and designated maintainers. See [PRIVACY.md](PRIVACY.md) for the current notice and retention guidance.
+
 ## Notes
 
 This project is intentionally framed as a research prototype and learning exercise. It is not a validated aviation decision-support system and should not be treated as operational guidance for flight, compliance, or regulatory interpretation.

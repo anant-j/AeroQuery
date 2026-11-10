@@ -5,6 +5,18 @@ import os
 import uuid
 from datetime import datetime, timezone
 
+MAX_QUERY_LENGTH = 1500
+MAX_BODY_BYTES = 32768
+REQUEST_RATE_LIMIT = 30
+RATE_LIMIT_WINDOW_MS = 60000
+ALLOWED_ORIGINS = {
+    "https://aeroquery.anant-j.com",
+    "https://www.aeroquery.anant-j.com",
+    "http://localhost:3000",
+    "http://localhost:3001",
+}
+_request_timestamps = {}
+
 from azure.data.tables import TableServiceClient
 from openai import OpenAI
 from pinecone import Pinecone
@@ -34,6 +46,46 @@ def get_questions_table():
         service.create_table_if_not_exists(QUESTIONS_TABLE)
         _questions_table = service.get_table_client(QUESTIONS_TABLE)
     return _questions_table
+
+
+def get_cors_headers(req: func.HttpRequest):
+    origin = req.headers.get("Origin")
+    if origin and origin in ALLOWED_ORIGINS:
+        return {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type"}
+    if req.method == "OPTIONS":
+        return {"Access-Control-Allow-Origin": "https://aeroquery.anant-j.com", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type"}
+    return {"Access-Control-Allow-Origin": "https://aeroquery.anant-j.com", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type"}
+
+
+def enforce_rate_limit(req: func.HttpRequest):
+    ip = (req.headers.get("X-Forwarded-For", "") or "unknown").split(",")[0].strip() or "unknown"
+    now = int(datetime.now(timezone.utc).timestamp() * 1000)
+    bucket = _request_timestamps.setdefault(ip, [])
+    bucket[:] = [ts for ts in bucket if now - ts < RATE_LIMIT_WINDOW_MS]
+    bucket.append(now)
+    if len(bucket) > REQUEST_RATE_LIMIT:
+        raise PermissionError("Rate limit exceeded")
+
+
+def validate_json_payload(req: func.HttpRequest):
+    try:
+        body = req.get_json()
+    except ValueError:
+        raise ValueError("Invalid JSON")
+    if not isinstance(body, dict):
+        raise ValueError("Request body must be a JSON object")
+    query = body.get("query", "")
+    if not isinstance(query, str):
+        raise ValueError("query must be a string")
+    query = query.strip()
+    if not query:
+        raise ValueError("query is required")
+    if len(query) > MAX_QUERY_LENGTH:
+        raise ValueError(f"query must be shorter than {MAX_QUERY_LENGTH} characters")
+    payload_size = len(json.dumps(body).encode("utf-8"))
+    if payload_size > MAX_BODY_BYTES:
+        raise ValueError(f"request body must be shorter than {MAX_BODY_BYTES} bytes")
+    return query
 
 
 def log_question(req: func.HttpRequest, query: str, mode: str) -> None:
@@ -151,11 +203,13 @@ def rerank_chunks(query, chunks, top_n=5):
     return reranked
 
 
-@app.route(route="warmup", methods=["GET", "POST"])
+@app.route(route="warmup", methods=["GET", "POST", "OPTIONS"])
 def warmup(req: func.HttpRequest) -> func.HttpResponse:
     """Lightweight warmup — pre-initializes module-level clients so the
     first real request avoids cold-start latency. Safe to call repeatedly.
     """
+    if req.method == "OPTIONS":
+        return func.HttpResponse(status_code=204, headers=get_cors_headers(req))
     get_openai()
     get_pinecone_index()
     get_cohere()
@@ -163,21 +217,23 @@ def warmup(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(
         json.dumps({"status": "warm"}),
         mimetype="application/json",
-        headers={"Access-Control-Allow-Origin": "*"},
+        headers=get_cors_headers(req),
     )
 
 
-@app.route(route="retrieve", methods=["POST"])
+@app.route(route="retrieve", methods=["POST", "OPTIONS"])
 def retrieve(req: func.HttpRequest) -> func.HttpResponse:
     """Retrieve + rerank — embed query, search Pinecone, rerank with Cohere."""
+    if req.method == "OPTIONS":
+        return func.HttpResponse(status_code=204, headers=get_cors_headers(req))
     try:
-        body = req.get_json()
-    except ValueError:
-        return func.HttpResponse(json.dumps({"error": "Invalid JSON"}), status_code=400)
-
-    query = body.get("query", "")
-    if not query:
-        return func.HttpResponse(json.dumps({"error": "query is required"}), status_code=400)
+        enforce_rate_limit(req)
+    except PermissionError:
+        return func.HttpResponse(json.dumps({"error": "Too many requests. Please wait a minute and try again."}), status_code=429, headers=get_cors_headers(req))
+    try:
+        query = validate_json_payload(req)
+    except ValueError as exc:
+        return func.HttpResponse(json.dumps({"error": str(exc)}), status_code=400, headers=get_cors_headers(req))
 
     log_question(req, query, mode="webllm")
 
@@ -191,6 +247,7 @@ def retrieve(req: func.HttpRequest) -> func.HttpResponse:
             "chunks": [{"section": c["section"], "title": c["title"], "text": c["text"]} for c in chunks],
         }),
         mimetype="application/json",
+        headers=get_cors_headers(req),
     )
 
 
@@ -207,17 +264,19 @@ def get_agent_graph():
     return _agent_graph
 
 
-@app.route(route="agent", methods=["POST"])
+@app.route(route="agent", methods=["POST", "OPTIONS"])
 def agent(req: func.HttpRequest) -> func.HttpResponse:
     """LangGraph agent: classify → route → retrieve (with optional decomposition) → guard."""
+    if req.method == "OPTIONS":
+        return func.HttpResponse(status_code=204, headers=get_cors_headers(req))
     try:
-        body = req.get_json()
-    except ValueError:
-        return func.HttpResponse(json.dumps({"error": "Invalid JSON"}), status_code=400)
-
-    query = body.get("query", "")
-    if not query:
-        return func.HttpResponse(json.dumps({"error": "query is required"}), status_code=400)
+        enforce_rate_limit(req)
+    except PermissionError:
+        return func.HttpResponse(json.dumps({"error": "Too many requests. Please wait a minute and try again."}), status_code=429, headers=get_cors_headers(req))
+    try:
+        query = validate_json_payload(req)
+    except ValueError as exc:
+        return func.HttpResponse(json.dumps({"error": str(exc)}), status_code=400, headers=get_cors_headers(req))
 
     log_question(req, query, mode="openai")
 
@@ -245,4 +304,5 @@ def agent(req: func.HttpRequest) -> func.HttpResponse:
             },
         }),
         mimetype="application/json",
+        headers=get_cors_headers(req),
     )

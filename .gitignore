@@ -3,6 +3,13 @@ PLAN.md
 CONSIDERATIONS.md
 pipeline/.env
 .env
+.env.*
+.env.local
+.env.development.local
+.env.production.local
+api/local.settings.json
+web/.env
+web/.env.*
 venv/
 __pycache__/
 .DS_Store
