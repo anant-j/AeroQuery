@@ -79,16 +79,17 @@ flowchart LR
 | Layer | Tool |
 |---|---|
 | PDF parsing | PyMuPDF |
-| Embeddings | OpenAI text-embedding-3-large (3072 dims) |
+| Embeddings | Azure OpenAI text-embedding-3-large deployment (3072 dims) |
 | Vector DB | Pinecone (serverless, cosine, namespaces) |
 | Reranking | Cohere rerank-v4.0-pro |
 | Agentic workflow | LangGraph |
-| LLMs | OpenAI GPT models and WebLLM Llama 3.2 1B |
-| Evaluation | RAGAS v0.4, LLM-as-judge workflow |
+| Hosted LLM | Azure OpenAI / AI Foundry GPT-5.4-mini for agent routing and answer generation |
+| Local LLM | WebLLM Llama 3.2 1B in the browser |
+| Evaluation | RAGAS; Azure GPT-5.4-mini judge, direct OpenAI embeddings, plus Azure/OpenAI/Ollama generation models |
 | Streaming | SSE for server-side generation, WebLLM SDK in-browser |
-| Orchestration | LangChain + LangGraph, LiteLLM |
-| API | Azure Functions |
-| Frontend | Next.js + Tailwind CSS |
+| Orchestration | LangChain + LangGraph for the agent; LiteLLM for the evaluation judge |
+| API | Python Azure Functions |
+| Frontend | Next.js, React, TypeScript, and Tailwind CSS |
 | Deployment | Azure + Netlify |
 
 ## Project structure
@@ -150,31 +151,26 @@ These are historical point estimates from a single run and should not be interpr
 
 ### Evaluation limitations and next steps
 
-- Expand the benchmark toward a larger, human-reviewed test set
-- Stratify by chapter, question type, and difficulty
-- Preserve judge failures instead of silently converting them to zero
-- Publish per-question results and confidence intervals alongside aggregate means
-- Version the dataset, prompts, retrieval index, and model configurations
+- The 50-question set is exploratory and has not been independently human-scored; expand it and stratify by chapter, question type, and difficulty.
+- The evaluator records failed metrics as missing values and reports valid sample counts, bootstrap intervals, and paired comparisons.
+- The checked-in result rows predate the current evaluator protocol and do not include those uncertainty and paired-comparison summaries. Re-run the evaluator before treating those newer statistics as published results.
+- Version the dataset, prompts, retrieval index, and model configurations for future benchmark runs.
 
 ## Environment and deployment
 
-Use server-managed settings for live credentials and keep them out of browser bundles.
+Use server-managed settings for live credentials and keep them out of browser bundles. The web app's hosted generation and agent use Azure OpenAI; direct OpenAI credentials are only used by the offline evaluation pipeline.
 
 ```bash
-# Frontend and local dev
-cp web/.env.example web/.env.local
-
-# Azure Function app
-cp api/.env.example api/local.settings.json
+# Create web/.env.local from the variables documented in web/README.md.
+# Create api/local.settings.json in Azure Functions' Values format; see api/README.md.
 ```
 
 Required runtime values include:
 
 - `NEXT_PUBLIC_API_URL` for the browser frontend
-- `API_URL` for the Next.js server-side proxy
-- `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`
-- `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`
-- `COHERE_API_KEY`
+- `API_URL` for the Next.js server-side route (optional; defaults to `NEXT_PUBLIC_API_URL`)
+- `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_DEPLOYMENT` for server-side generation
+- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, and `COHERE_API_KEY` for the Azure Functions retrieval service
 
 Never expose secret values in `NEXT_PUBLIC_*` variables and never commit real credentials.
 
