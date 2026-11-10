@@ -325,41 +325,7 @@ export default function Home() {
           `[Section ${c.section}]\n${c.text}`
         ).join("\n\n---\n\n");
 
-        const ragMessages = [
-          { role: "system" as const, content: RAG_SYSTEM_PROMPT },
-          { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${effectiveQuery}` },
-        ];
-        const bareMessages = [
-          { role: "system" as const, content: BARE_SYSTEM_PROMPT },
-          { role: "user" as const, content: effectiveQuery },
-        ];
-
-        const webllmModel = `WebLLM (${WEBLLM_MODEL})`;
-
-        // RAG with streaming (WebLLM is single-threaded, run sequentially)
-        setRagResult({
-          query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: true,
-          sources: chunks.map((c) => ({ section: c.section, title: c.title, text: c.text })),
-        });
-        setRagStreaming(true);
-
-        const ragStream = await engineRef.current!.chat.completions.create({
-          messages: ragMessages,
-          temperature: 0,
-          stream: true,
-        });
-        for await (const chunk of ragStream) {
-          const token = chunk.choices[0]?.delta?.content;
-          if (token) {
-            setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null);
-          }
-        }
-        setRagStreaming(false);
-
-        // Bare LLM with streaming
-        setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: false });
-        setBareStreaming(true);
-        const bareStream = await engineRef.current!.chat.completions.create({
+        const EVAL_DATA = BENCHMARK_DATA.models;
           messages: bareMessages,
           temperature: 0,
           stream: true,
