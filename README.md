@@ -64,8 +64,8 @@ flowchart LR
 ### WebLLM browser flow
 ```mermaid
 flowchart LR
-    A["📝 Question"] --> B["Azure\n/retrieve"]
-    B --> C["Embed → Pinecone\n→ Cohere Rerank"]
+    A["📝 Question"] --> B["Next.js\n/api/retrieve"]
+    B --> C["Azure Function /retrieve\nAzure OpenAI → Pinecone → Cohere"]
     C --> D["Chunks"]
     D --> E["WebLLM\nLlama 3.2 1B\nin browser"]
     E --> F["💬 Answer"]
@@ -167,16 +167,15 @@ Use server-managed settings for live credentials and keep them out of browser bu
 
 Required runtime values include:
 
-- `NEXT_PUBLIC_API_URL` for the browser frontend
-- `API_URL` for the Next.js server-side route (optional; defaults to `NEXT_PUBLIC_API_URL`)
-- `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_DEPLOYMENT` for server-side generation
-- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, and `COHERE_API_KEY` for the Azure Functions retrieval service
+- `AZURE_FUNCTION_API_URL` and `AZURE_FUNCTION_KEY` for server-side Next.js calls to the protected Azure Function API
+- `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_DEPLOYMENT` for Next.js server-side generation
+- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, and `COHERE_API_KEY` in Azure Function settings for retrieval and agent operations
 
 Never expose secret values in `NEXT_PUBLIC_*` variables and never commit real credentials.
 
 ## Privacy and safety
 
-The service stores lightweight query logs in Azure Table Storage with client IP, user-agent, and referrer metadata for operational monitoring and abuse detection. Retention should follow a defined policy (for example, 30–90 days) and access should be restricted to the project owner and designated maintainers. See [PRIVACY.md](PRIVACY.md) for the current notice and retention guidance.
+The Azure Function records question timestamps, mode, and query length in Azure Table Storage. Query text logging is disabled by default; when enabled, a timer purges entries older than 30 days. Restrict access to the storage account and adjust the retention setting to match your privacy policy.
 
 ## Notes
 

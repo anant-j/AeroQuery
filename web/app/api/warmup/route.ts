@@ -1,31 +1,38 @@
-/**
- * Warmup proxy — pings the Azure Function /warmup endpoint to wake it
- * before the user submits their first query. Server-side proxy avoids
- * exposing the Function URL to CORS handling in the browser.
- */
-export async function GET() {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl) {
-    return new Response(JSON.stringify({ status: "skipped" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+import { getAzureFunctionConfig, getClientIp } from "../../lib/azure-functions";
+import { isRateLimited } from "../../lib/rate-limit";
+
+export async function GET(req: Request) {
+  const clientIp = getClientIp(req);
+  if (isRateLimited(clientIp)) {
+    return new Response(JSON.stringify({ status: "rate_limited" }), {
+      status: 429,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  }
+
+  const functionConfig = getAzureFunctionConfig();
+  if (!functionConfig) {
+    return new Response(JSON.stringify({ status: "unconfigured" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   }
 
   try {
-    const res = await fetch(`${apiUrl}/warmup`, {
+    const res = await fetch(`${functionConfig.apiUrl}/warmup`, {
       method: "GET",
-      // Don't block the page — short timeout via AbortController
-      signal: AbortSignal.timeout(15000),
+      headers: { "x-functions-key": functionConfig.functionKey },
+      signal: AbortSignal.timeout(45_000),
+      cache: "no-store",
     });
     return new Response(JSON.stringify({ status: res.ok ? "warm" : "error" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+      status: res.ok ? 200 : 502,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   } catch {
     return new Response(JSON.stringify({ status: "error" }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
+      status: 502,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
     });
   }
 }

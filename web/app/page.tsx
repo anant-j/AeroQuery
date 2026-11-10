@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
 const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
 const EVAL_DATA = [
@@ -200,8 +199,6 @@ export default function Home() {
   const engineRef = useRef<MLCEngine | null>(null);
   const webllmStartedRef = useRef(false);
 
-  // Warm up the Azure Function on page load to avoid cold-start latency
-  // on the user's first query. Fire-and-forget — failures are silent.
   useEffect(() => {
     fetch("/api/warmup").catch(() => {});
   }, []);
@@ -310,7 +307,7 @@ export default function Home() {
         ]);
       } else {
         // WebLLM: retrieve chunks from server, generate locally with streaming
-        const retrieveRes = await fetch(`${API_URL}/retrieve`, {
+        const retrieveRes = await fetch("/api/retrieve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: effectiveQuery }),
