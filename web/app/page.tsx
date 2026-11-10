@@ -10,36 +10,36 @@ const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
 const EVAL_DATA = [
   {
-    model: "GPT-5.4-mini",
+    model: "GPT-5.4-mini (Azure)",
     metrics: {
-      factual_correctness: { bare: 0.32, rag: 0.40, rerank: 0.43 },
-      faithfulness: { rag: 0.82, rerank: 0.88 },
-      context_precision: { rag: 0.78, rerank: 0.92 },
+      factual_correctness: { bare: 0.321, rag: 0.399, rerank: 0.427 },
+      faithfulness: { rag: 0.824, rerank: 0.884 },
+      context_precision: { rag: 0.784, rerank: 0.921 },
       context_recall: { rag: 0.88, rerank: 0.92 },
-      answer_relevancy: { bare: 0.84, rag: 0.78, rerank: 0.79 },
-      semantic_similarity: { bare: 0.69, rag: 0.77, rerank: 0.77 },
+      answer_relevancy: { bare: 0.839, rag: 0.783, rerank: 0.788 },
+      semantic_similarity: { bare: 0.688, rag: 0.766, rerank: 0.772 },
     },
   },
   {
-    model: "GPT-3.5-turbo",
+    model: "GPT-3.5-turbo (OpenAI)",
     metrics: {
-      factual_correctness: { bare: 0.23, rag: 0.44, rerank: 0.44 },
-      faithfulness: { rag: 0.82, rerank: 0.85 },
-      context_precision: { rag: 0.78, rerank: 0.92 },
+      factual_correctness: { bare: 0.225, rag: 0.439, rerank: 0.438 },
+      faithfulness: { rag: 0.82, rerank: 0.851 },
+      context_precision: { rag: 0.783, rerank: 0.922 },
       context_recall: { rag: 0.93, rerank: 0.93 },
-      answer_relevancy: { bare: 0.83, rag: 0.86, rerank: 0.87 },
-      semantic_similarity: { bare: 0.74, rag: 0.80, rerank: 0.79 },
+      answer_relevancy: { bare: 0.827, rag: 0.863, rerank: 0.867 },
+      semantic_similarity: { bare: 0.74, rag: 0.8, rerank: 0.792 },
     },
   },
   {
-    model: "Llama 3.2 1B (WebLLM)",
+    model: "Llama 3.2 1B (Ollama)",
     metrics: {
-      factual_correctness: { bare: 0.07, rag: 0.18, rerank: 0.22 },
-      faithfulness: { rag: 0.52, rerank: 0.55 },
-      context_precision: { rag: 0.78, rerank: 0.93 },
+      factual_correctness: { bare: 0.071, rag: 0.181, rerank: 0.215 },
+      faithfulness: { rag: 0.516, rerank: 0.55 },
+      context_precision: { rag: 0.781, rerank: 0.926 },
       context_recall: { rag: 0.94, rerank: 0.90 },
-      answer_relevancy: { bare: 0.79, rag: 0.58, rerank: 0.62 },
-      semantic_similarity: { bare: 0.66, rag: 0.67, rerank: 0.69 },
+      answer_relevancy: { bare: 0.791, rag: 0.584, rerank: 0.616 },
+      semantic_similarity: { bare: 0.66, rag: 0.672, rerank: 0.685 },
     },
   },
 ];
@@ -54,12 +54,12 @@ const METRIC_LABELS: Record<string, string> = {
 };
 
 const METRIC_INSIGHTS: Record<string, string> = {
-  factual_correctness: "RAG triples Llama accuracy. Reranking adds another boost.",
-  faithfulness: "GPT models stay grounded. Llama often ignores context.",
-  context_precision: "Cohere rerank: 0.78 → 0.92. Right chunks, right order.",
-  context_recall: "94% recall — retrieval finds the right information.",
-  answer_relevancy: "Bare LLM scores higher by confidently hallucinating relevant-sounding answers. RAG correctly refuses when unsure — for aviation safety, faithfulness > relevancy.",
-  semantic_similarity: "RAG answers are consistently closer to ground truth.",
+  factual_correctness: "In this small exploratory sample, factual-correctness means varied by model and condition.",
+  faithfulness: "Faithfulness is an LLM-judge estimate of support from retrieved context, not a human-verified rate.",
+  context_precision: "Observed reranked context-precision means were higher in this sample; confidence intervals were not available for this historical run.",
+  context_recall: "Observed context-recall means on this 50-question sample; not an estimate of real-world coverage.",
+  answer_relevancy: "Relevance does not measure factual accuracy or safety.",
+  semantic_similarity: "Embedding similarity to one reference answer does not establish factual correctness.",
 };
 
 type ModelOption = "openai" | "webllm";
@@ -89,6 +89,95 @@ interface Chunk {
   section: string;
   title: string;
   text: string;
+}
+
+function SourceItem({ source }: { source: Source }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div>
+      <button
+        onClick={() => source.text && setExpanded(!expanded)}
+        className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 ${source.text ? "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700" : "cursor-default"} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
+      >
+        §{source.section}
+        {source.text && (
+          <svg className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
+      </button>
+      {expanded && source.text && (
+        <div className="mt-1 ml-1 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+          {source.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultCard({ result, label, accent, streaming }: { result: AskResponse; label: string; accent: string; streaming?: boolean }) {
+  return (
+    <div className={`border rounded-lg p-5 ${accent}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
+          {label}
+        </span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {result.model}{result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
+        </span>
+      </div>
+
+      <div className="prose prose-sm prose-gray dark:prose-invert max-w-none mb-3">
+        {streaming && !result.answer && (
+          <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">
+            {label === "RAG" ? "Retrieving context..." : "Generating..."}
+          </span>
+        )}
+        <ReactMarkdown>{result.answer}</ReactMarkdown>
+        {streaming && result.answer && (
+          <span className="inline-block w-1.5 h-4 bg-gray-400 dark:bg-gray-500 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
+        )}
+      </div>
+
+      {result.sources && result.sources.length > 0 && (
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
+          <div className="flex flex-col gap-1.5">
+            {result.sources.map((s, i) => (
+              <SourceItem key={i} source={s} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.agent && result.agent.steps && result.agent.steps.length > 0 && (
+        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Agent Trace</p>
+          <div className="flex items-center gap-1 flex-wrap">
+            {result.agent.steps.map((step, i) => (
+              <span key={i} className="flex items-center gap-1">
+                <span className="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                  {step}
+                </span>
+                {i < result.agent!.steps!.length - 1 && (
+                  <span className="text-gray-300 dark:text-gray-600 text-[10px]">→</span>
+                )}
+              </span>
+            ))}
+          </div>
+          {result.agent.sub_queries && result.agent.sub_queries.length > 0 && (
+            <div className="mt-1.5">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">Sub-queries:</p>
+              {result.agent.sub_queries.map((sq, i) => (
+                <p key={i} className="text-[10px] text-gray-500 dark:text-gray-400 ml-2">• {sq}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -137,7 +226,7 @@ export default function Home() {
       engineRef.current = engine;
       setWebllmReady(true);
       setWebllmLoading(false);
-    } catch (err) {
+    } catch {
       setWebllmStatus("WebGPU not supported in this browser");
       setWebllmLoading(false);
     }
@@ -269,7 +358,6 @@ export default function Home() {
         // Bare LLM with streaming
         setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: false });
         setBareStreaming(true);
-
         const bareStream = await engineRef.current!.chat.completions.create({
           messages: bareMessages,
           temperature: 0,
@@ -292,98 +380,7 @@ export default function Home() {
     }
   };
 
-  const SourceItem = ({ source }: { source: Source }) => {
-    const [expanded, setExpanded] = useState(false);
-    return (
-      <div>
-        <button
-          onClick={() => source.text && setExpanded(!expanded)}
-          className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 ${source.text ? "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700" : "cursor-default"} bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400`}
-        >
-          §{source.section}
-          {source.text && (
-            <svg className={`w-3 h-3 transition-transform ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          )}
-        </button>
-        {expanded && source.text && (
-          <div className="mt-1 ml-1 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-            {source.text}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const ResultCard = ({ result, label, accent, streaming }: { result: AskResponse; label: string; accent: string; streaming?: boolean }) => (
-    <div className={`border rounded-lg p-5 ${accent}`}>
-      <div className="flex items-center gap-2 mb-3">
-        <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
-          {label}
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {result.model}{result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
-        </span>
-      </div>
-
-      <div className="prose prose-sm prose-gray dark:prose-invert max-w-none mb-3">
-        {streaming && !result.answer && (
-          <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">
-            {label === "RAG" ? "Retrieving context..." : "Generating..."}
-          </span>
-        )}
-        <ReactMarkdown>{result.answer}</ReactMarkdown>
-        {streaming && result.answer && (
-          <span className="inline-block w-1.5 h-4 bg-gray-400 dark:bg-gray-500 animate-pulse ml-0.5 align-text-bottom rounded-sm" />
-        )}
-      </div>
-
-      {result.sources && result.sources.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
-          <div className="flex flex-col gap-1.5">
-            {result.sources.map((s, i) => (
-              <SourceItem key={i} source={s} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {result.agent && result.agent.steps && result.agent.steps.length > 0 && (
-        <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Agent Trace</p>
-          <div className="flex items-center gap-1 flex-wrap">
-            {result.agent.steps.map((step, i) => (
-              <span key={i} className="flex items-center gap-1">
-                <span className="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
-                  {step}
-                </span>
-                {i < result.agent!.steps!.length - 1 && (
-                  <span className="text-gray-300 dark:text-gray-600 text-[10px]">→</span>
-                )}
-              </span>
-            ))}
-          </div>
-          {result.agent.sub_queries && result.agent.sub_queries.length > 0 && (
-            <div className="mt-1.5">
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Sub-queries:</p>
-              {result.agent.sub_queries.map((sq, i) => (
-                <p key={i} className="text-[10px] text-gray-500 dark:text-gray-400 ml-2">• {sq}</p>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  // Theme toggle
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, []);
+  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" ? document.documentElement.classList.contains("dark") : false);
 
   const toggleTheme = () => {
     const next = !isDark;
@@ -460,7 +457,7 @@ export default function Home() {
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
-            <option value="openai">OpenAI (GPT-5.4-mini)</option>
+            <option value="openai">Azure OpenAI (GPT-5.4-mini)</option>
             <option value="webllm" disabled={!webllmReady}>
               {!webllmStarted
                 ? "WebLLM (Llama 3.2 1B) — click to load"
@@ -511,7 +508,10 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          50 questions · 6 metrics · 3 models · Judged by GPT-5.4-mini via Azure AI Foundry
+          Exploratory historical run · 50 questions · 3 models · single GPT-5.4-mini judge
+        </p>
+        <p className="text-xs text-amber-700 dark:text-amber-300 mb-4">
+          Preliminary point estimates only: the set spans 40 sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
         </p>
 
         <div className="overflow-x-auto">
@@ -538,16 +538,6 @@ export default function Home() {
             </thead>
             <tbody>
               {Object.keys(METRIC_LABELS).map((metric) => {
-                // Calculate best improvement across all models for this metric
-                const allBare = EVAL_DATA.map(r => {
-                  const m = r.metrics[metric as keyof typeof r.metrics];
-                  return "bare" in m ? m.bare : null;
-                }).filter(v => v !== null) as number[];
-                const allRerank = EVAL_DATA.map(r => {
-                  const m = r.metrics[metric as keyof typeof r.metrics];
-                  return "rerank" in m ? m.rerank : null;
-                }).filter(v => v !== null) as number[];
-
                 return (
                 <React.Fragment key={metric}>
                 <tr className="border-b border-gray-50 dark:border-gray-800">
@@ -618,7 +608,7 @@ export default function Home() {
         </div>
 
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
-          <span className="text-emerald-600 dark:text-emerald-400">↑ Green</span> = best score (improvement). <span className="text-red-500 dark:text-red-400">↓ Red</span> = worst score (regression). Retrieval metrics are model-independent.
+          <span className="text-emerald-600 dark:text-emerald-400">↑ Green</span> = highest observed score. <span className="text-red-500 dark:text-red-400">↓ Red</span> = lower than the bare baseline. These descriptive comparisons are not statistical significance tests.
         </p>
       </div>
 

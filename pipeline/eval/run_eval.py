@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import time
 import litellm
 from openai import OpenAI, AsyncOpenAI
@@ -18,6 +19,7 @@ from ragas.metrics.collections import (
     FactualCorrectness,
     SemanticSimilarity,
 )
+from eval.statistics import metric_summary, paired_metric_summary
 from retrieval.search import search
 from generation.prompt import build_prompt
 
@@ -33,6 +35,7 @@ LLM_MODELS = [
 
 # RAGAS judge — Azure AI Foundry (free unlimited tokens)
 JUDGE_MODEL = "azure/gpt-5.4-mini"
+EVAL_PROTOCOL_VERSION = 2
 
 # Metric categories by required kwargs
 CONTEXT_METRICS = ["faithfulness", "context_precision", "context_recall"]  # need retrieved_contexts
@@ -120,10 +123,14 @@ def score_ragas(scorers, user_input, response, reference, retrieved_contexts):
                 result = scorer.score(user_input=user_input, response=response)
             else:  # REFERENCE_METRICS
                 result = scorer.score(response=response, reference=reference)
-            scores[name] = round(result.value, 4) if result.value is not None else 0.0
+            scores[name] = (
+                round(result.value, 4)
+                if result.value is not None and math.isfinite(result.value)
+                else None
+            )
         except Exception as e:
             print(f"    Warning: {name} failed: {e}")
-            scores[name] = 0.0
+            scores[name] = None
     return scores
 
 
@@ -175,7 +182,23 @@ def run_eval():
         bare_results = load_existing("bare_results.json")
         rag_results = load_existing("rag_no_rerank_results.json")
         rerank_results = load_existing("rag_rerank_results.json")
-        start_idx = min(len(bare_results), len(rag_results), len(rerank_results))
+        result_sets = [bare_results, rag_results, rerank_results]
+        start_idx = 0
+        for i, item in enumerate(test_set):
+            if not all(
+                i < len(results)
+                and results[i].get("question") == item["question"]
+                and results[i].get("ground_truth") == item["ground_truth"]
+                and results[i].get("eval_protocol_version") == EVAL_PROTOCOL_VERSION
+                for results in result_sets
+            ):
+                break
+            start_idx += 1
+        discarded = max(len(results) for results in result_sets) - start_idx
+        for results in result_sets:
+            del results[start_idx:]
+        if discarded:
+            print(f"  Discarding {discarded} mismatched or out-of-date result rows before resuming.")
 
         if start_idx > 0:
             print(f"  Resuming from question {start_idx + 1} ({start_idx} already scored)")
@@ -202,6 +225,7 @@ def run_eval():
             bare_results.append({
                 "question": q, "ground_truth": gt, "answer": bare_answer,
                 **bare_scores, "tokens": bare_tokens,
+                "eval_protocol_version": EVAL_PROTOCOL_VERSION,
             })
 
             # --- RAG (no rerank) ---
@@ -216,6 +240,7 @@ def run_eval():
             rag_results.append({
                 "question": q, "ground_truth": gt, "answer": rag_answer,
                 **rag_scores, "tokens": rag_tokens,
+                "eval_protocol_version": EVAL_PROTOCOL_VERSION,
             })
 
             # --- RAG + Rerank ---
@@ -230,11 +255,16 @@ def run_eval():
             rerank_results.append({
                 "question": q, "ground_truth": gt, "answer": rr_answer,
                 **rr_scores, "tokens": rr_tokens,
+                "eval_protocol_version": EVAL_PROTOCOL_VERSION,
             })
 
-            print(f"    bare_fc={bare_scores.get('factual_correctness', 0):.2f}  "
-                  f"rag_faith={rag_scores.get('faithfulness', 0):.2f}  "
-                  f"rr_faith={rr_scores.get('faithfulness', 0):.2f}")
+            def format_score(scores, metric):
+                value = scores.get(metric)
+                return f"{value:.2f}" if value is not None else "n/a"
+
+            print(f"    bare_fc={format_score(bare_scores, 'factual_correctness')}  "
+                  f"rag_faith={format_score(rag_scores, 'faithfulness')}  "
+                  f"rr_faith={format_score(rr_scores, 'faithfulness')}")
 
             # Save after each question (incremental, prevents data loss)
             with open(f"{results_dir}/bare_results.json", "w") as f:
@@ -249,15 +279,36 @@ def run_eval():
         bare_metric_names = ANSWER_METRICS + REFERENCE_METRICS
 
         def avg(results, metric):
-            vals = [r.get(metric, 0) for r in results]
-            return round(sum(vals) / len(vals), 3) if vals else 0
+            return metric_summary([r.get(metric) for r in results])["mean"]
 
         summary = {
             "num_questions": len(test_set),
+            "eval_protocol_version": EVAL_PROTOCOL_VERSION,
             "model": llm_model,
             "bare": {m: avg(bare_results, m) for m in bare_metric_names},
             "rag": {m: avg(rag_results, m) for m in all_metric_names},
             "rag_rerank": {m: avg(rerank_results, m) for m in all_metric_names},
+            "uncertainty": {
+                config: {
+                    metric: metric_summary([result.get(metric) for result in results])
+                    for metric in metrics
+                }
+                for config, results, metrics in [
+                    ("bare", bare_results, bare_metric_names),
+                    ("rag", rag_results, all_metric_names),
+                    ("rag_rerank", rerank_results, all_metric_names),
+                ]
+            },
+            "paired_comparisons": {
+                "rag_minus_bare": {
+                    metric: paired_metric_summary(bare_results, rag_results, metric)
+                    for metric in bare_metric_names
+                },
+                "rerank_minus_rag": {
+                    metric: paired_metric_summary(rag_results, rerank_results, metric)
+                    for metric in all_metric_names
+                },
+            },
         }
 
         # Print
@@ -274,6 +325,17 @@ def run_eval():
             rag_str = f"{rag_val:.3f}" if isinstance(rag_val, float) else rag_val
             rr_str = f"{rr_val:.3f}" if isinstance(rr_val, float) else rr_val
             print(f"{m:<25} {bare_str:>10} {rag_str:>10} {rr_str:>10}")
+            for config, results in [
+                ("bare", bare_results),
+                ("rag", rag_results),
+                ("rag_rerank", rerank_results),
+            ]:
+                stats = summary["uncertainty"].get(config, {}).get(m)
+                if stats and stats["n"] and stats["ci95"]:
+                    print(
+                        f"  {config:<23} n={stats['n']:<3} "
+                        f"95% bootstrap CI [{stats['ci95'][0]:.3f}, {stats['ci95'][1]:.3f}]"
+                    )
         print()
 
         # Save

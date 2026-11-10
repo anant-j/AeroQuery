@@ -1,8 +1,8 @@
-# API — Azure Functions (Retrieval)
+# API — Azure Functions (Retrieval + Agent)
 
-Serves the retrieval layer: embed query → Pinecone search → Cohere rerank → return chunks.
+This service provides retrieval and the LangGraph query agent. It embeds queries with the Azure OpenAI `text-embedding-3-large` deployment, searches Pinecone, and reranks with Cohere `rerank-v4.0-pro`. The agent uses Azure OpenAI for classification and query decomposition.
 
-Generation happens in the Next.js API route (`web/app/api/stream/`), not here. This keeps the OpenAI generation key on Netlify and the retrieval keys (Pinecone, Cohere, OpenAI embeddings) on Azure.
+For the project overview and architecture, see the root README. Final answer generation happens in the Next.js API route (`web/app/api/stream/`) using Azure OpenAI. Keep the Azure OpenAI, Pinecone, Cohere, and storage credentials in server-side settings; do not expose them to the browser.
 
 ## Setup
 
@@ -18,18 +18,22 @@ Generation happens in the Next.js API route (`web/app/api/stream/`), not here. T
    pip install -r requirements.txt
    ```
 
-3. Add API keys to `local.settings.json` (gitignored by default):
+3. Create `local.settings.json` (gitignored) with the Azure Functions `Values` format. `AzureWebJobsStorage` must point to Azurite or an Azure Storage account for local question logging.
    ```json
    {
      "Values": {
        "FUNCTIONS_WORKER_RUNTIME": "python",
        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-       "OPENAI_API_KEY": "sk-...",
+      "AZURE_OPENAI_API_KEY": "...",
+      "AZURE_OPENAI_ENDPOINT": "https://your-openai-resource-name.openai.azure.com",
+      "AZURE_OPENAI_DEPLOYMENT": "gpt-5.4-mini",
+      "AZURE_OPENAI_EMBEDDING_DEPLOYMENT": "text-embedding-3-large",
        "PINECONE_API_KEY": "pcsk_...",
        "PINECONE_INDEX_NAME": "aeroquery",
-       "COHERE_API_KEY": "..."
+      "COHERE_API_KEY": "...",
+      "QUESTIONS_TABLE_NAME": "QuestionLog"
      },
-     "Host": { "CORS": "*" }
+    "Host": { "CORS": ["http://localhost:3000", "http://localhost:3001"] }
    }
    ```
 
@@ -40,7 +44,7 @@ Generation happens in the Next.js API route (`web/app/api/stream/`), not here. T
 
 ## Endpoints
 
-### `POST /api/agent` (primary — used by OpenAI streaming)
+### `POST /api/agent` (primary — used by the Azure OpenAI streaming route)
 
 LangGraph agent: classifies query, routes through retrieval strategy, guards result.
 
@@ -92,9 +96,9 @@ function_app.py
   └── /agent            → LangGraph (classify → route → retrieve → guard)
 
 agent.py (LangGraph StateGraph)
-  ├── classify          → ChatOpenAI: simple vs complex
+  ├── classify          → Azure OpenAI via LangChain ChatOpenAI: simple vs complex
   ├── retrieve          → single retrieval (simple queries)
-  ├── decompose         → ChatOpenAI: break into sub-queries
+  ├── decompose         → Azure OpenAI: break into sub-queries
   ├── retrieve_multi    → retrieve per sub-query, merge & dedup
   └── guard             → check rerank scores, flag low confidence
 ```
