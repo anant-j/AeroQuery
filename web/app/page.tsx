@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
-import BENCHMARK_DATA from "./lib/benchmark-data.json";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
 const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
@@ -325,7 +324,41 @@ export default function Home() {
           `[Section ${c.section}]\n${c.text}`
         ).join("\n\n---\n\n");
 
-        const EVAL_DATA = BENCHMARK_DATA.models;
+        const ragMessages = [
+          { role: "system" as const, content: RAG_SYSTEM_PROMPT },
+          { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${effectiveQuery}` },
+        ];
+        const bareMessages = [
+          { role: "system" as const, content: BARE_SYSTEM_PROMPT },
+          { role: "user" as const, content: effectiveQuery },
+        ];
+
+        const webllmModel = `WebLLM (${WEBLLM_MODEL})`;
+
+        // RAG with streaming (WebLLM is single-threaded, run sequentially)
+        setRagResult({
+          query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: true,
+          sources: chunks.map((c) => ({ section: c.section, title: c.title, text: c.text })),
+        });
+        setRagStreaming(true);
+
+        const ragStream = await engineRef.current!.chat.completions.create({
+          messages: ragMessages,
+          temperature: 0,
+          stream: true,
+        });
+        for await (const chunk of ragStream) {
+          const token = chunk.choices[0]?.delta?.content;
+          if (token) {
+            setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null);
+          }
+        }
+        setRagStreaming(false);
+
+        // Bare LLM with streaming
+        setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: false });
+        setBareStreaming(true);
+        const bareStream = await engineRef.current!.chat.completions.create({
           messages: bareMessages,
           temperature: 0,
           stream: true,
@@ -475,10 +508,10 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Exploratory historical run · {BENCHMARK_DATA.questionCount} questions · {EVAL_DATA.length} models · single {BENCHMARK_DATA.judge} judge
+          Exploratory historical run · 50 questions · 3 models · single GPT-5.4-mini judge
         </p>
         <p className="text-xs text-amber-700 dark:text-amber-300 mb-4">
-          Preliminary point estimates only: the set spans {BENCHMARK_DATA.sectionCount} sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
+          Preliminary point estimates only: the set spans 40 sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
         </p>
 
         <div className="overflow-x-auto">
