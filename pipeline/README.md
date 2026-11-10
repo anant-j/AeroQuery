@@ -67,7 +67,7 @@ generation/
 
 eval/
   test_set.json   — 50 QA pairs from TC AIM content
-  run_eval.py     — RAGAS eval with 6 metrics, Azure AI Foundry judge, incremental saves
+  run_eval.py     — 50-question RAGAS eval; Azure GPT-5.4-mini, OpenAI GPT-3.5-turbo, and local Ollama Llama 3.2 1B generators; Azure GPT-5.4-mini judge
   error_analysis.py — Classify failure modes (judge disagreement vs retrieval miss vs hallucination)
   results/        — Per-model eval results (JSON), retrieval cache
 ```
@@ -80,7 +80,7 @@ eval/
 - **50 questions** across 40 sections; 3 models and 3 configs
 - Each bare-LLM question has 3 applicable metrics; each RAG question has 6 (2,250 score slots when complete)
 - The checked-in results are exploratory point estimates, judged by one model. They have not been independently human-scored.
-- Evaluation failures are stored as missing values, not zero scores. Summaries report valid sample counts, percentile-bootstrap intervals, and paired comparisons.
+- Evaluation failures are stored as missing values, not zero scores. Current evaluator summaries report valid sample counts, percentile-bootstrap intervals, and paired comparisons; checked-in historical summaries predate these fields.
 - The bootstrap intervals describe variation across sampled questions; they do not quantify judge bias or make a convenience sample representative.
 - The target is a 500-question source-cited, human-reviewed benchmark, stratified by section, question type, and difficulty; the current set is not yet representative.
 - Checked-in per-question rows predate the current evaluator protocol and lack its protocol-version field. Running the current evaluator regenerates those rows; it reuses the retrieval cache when that cache matches the test set.
