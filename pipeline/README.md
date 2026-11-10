@@ -6,7 +6,7 @@ For the project overview, see the root README. Once Pinecone is populated, this 
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and fill in the values. The pipeline uses separate Azure settings for retrieval/generation and for the evaluator's LiteLLM judge:
+1. Copy `.env.example` to `.env`, then add the Azure OpenAI settings below. The evaluator's LiteLLM judge uses the separate `AZURE_API_*` settings already listed in the example file:
    ```
   OPENAI_API_KEY=sk-...
   AZURE_OPENAI_API_KEY=...

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
+import BENCHMARK_DATA from "./lib/benchmark-data.json";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7071/api";
 const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
@@ -358,7 +359,6 @@ export default function Home() {
         // Bare LLM with streaming
         setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: false });
         setBareStreaming(true);
-
         const bareStream = await engineRef.current!.chat.completions.create({
           messages: bareMessages,
           temperature: 0,
@@ -458,7 +458,7 @@ export default function Home() {
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
-            <option value="openai">OpenAI (GPT-5.4-mini)</option>
+            <option value="openai">Azure OpenAI (GPT-5.4-mini)</option>
             <option value="webllm" disabled={!webllmReady}>
               {!webllmStarted
                 ? "WebLLM (Llama 3.2 1B) — click to load"
@@ -509,10 +509,10 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Exploratory historical run · 50 questions · 3 models · single GPT-5.4-mini judge
+          Exploratory historical run · {BENCHMARK_DATA.questionCount} questions · {EVAL_DATA.length} models · single {BENCHMARK_DATA.judge} judge
         </p>
         <p className="text-xs text-amber-700 dark:text-amber-300 mb-4">
-          Preliminary point estimates only: the set spans 40 sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
+          Preliminary point estimates only: the set spans {BENCHMARK_DATA.sectionCount} sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
         </p>
 
         <div className="overflow-x-auto">
