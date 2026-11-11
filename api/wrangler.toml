@@ -28,7 +28,7 @@ exclude = ["**/*.pyc", "**/__pycache__"]
 binding = "DB"
 database_name = "aeroquery-questions"
 database_id = "REPLACE_WITH_D1_DATABASE_ID"
-migrations_dir = "migrations"
+migrations_dir = "schema"
 
 [triggers]
 crons = ["0 3 * * *"]
