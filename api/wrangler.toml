@@ -1,0 +1,42 @@
+name = "aeroquery-api"
+main = "src/worker.py"
+compatibility_date = "2026-11-11"
+compatibility_flags = ["python_workers"]
+workers_dev = true
+
+[observability]
+enabled = true
+
+[vars]
+QUESTIONS_RETENTION_DAYS = "30"
+QUESTIONS_LOG_QUERY_TEXT = "false"
+
+[secrets]
+required = [
+	"API_WORKER_KEY",
+	"AZURE_OPENAI_API_KEY",
+	"AZURE_OPENAI_ENDPOINT",
+	"PINECONE_API_KEY",
+	"PINECONE_INDEX_HOST",
+	"COHERE_API_KEY",
+]
+
+[python_modules]
+exclude = ["**/*.pyc", "**/__pycache__"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "aeroquery-questions"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["0 3 * * *"]
+
+[[ratelimits]]
+name = "API_RATE_LIMITER"
+namespace_id = "913847210"
+
+	[ratelimits.simple]
+	limit = 30
+	period = 60

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
@@ -198,10 +198,6 @@ export default function Home() {
   const [webllmStarted, setWebllmStarted] = useState(false);
   const engineRef = useRef<MLCEngine | null>(null);
   const webllmStartedRef = useRef(false);
-
-  useEffect(() => {
-    fetch("/api/warmup").catch(() => {});
-  }, []);
 
   // Lazily load WebLLM only when the user interacts with the model dropdown,
   // so unsupported or low-power devices don't download a model they can't use.
@@ -629,7 +625,7 @@ export default function Home() {
             { name: "Azure AI Foundry", desc: "Judge model", url: "https://ai.azure.com" },
           ]},
           { label: "Infra", items: [
-            { name: "Azure Functions", desc: "API", url: "https://azure.microsoft.com/en-us/products/functions" },
+            { name: "Cloudflare Workers", desc: "API", url: "https://workers.cloudflare.com/" },
             { name: "Next.js", desc: "Frontend", url: "https://nextjs.org" },
             { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
             { name: "Netlify", desc: "Hosting", url: "https://www.netlify.com" },

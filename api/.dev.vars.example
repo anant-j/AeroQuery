@@ -1,0 +1,8 @@
+API_WORKER_KEY=replace-with-a-64-character-random-hex-key
+AZURE_OPENAI_API_KEY=replace-with-your-foundry-key
+AZURE_OPENAI_ENDPOINT=https://your-foundry-resource.openai.azure.com
+AZURE_OPENAI_DEPLOYMENT=gpt-5.4-mini
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
+PINECONE_API_KEY=replace-with-your-pinecone-key
+PINECONE_INDEX_HOST=your-index-host.svc.your-region.pinecone.io
+COHERE_API_KEY=replace-with-your-cohere-key

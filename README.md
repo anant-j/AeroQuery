@@ -65,7 +65,7 @@ flowchart LR
 ```mermaid
 flowchart LR
     A["📝 Question"] --> B["Next.js\n/api/retrieve"]
-    B --> C["Azure Function /retrieve\nAzure OpenAI → Pinecone → Cohere"]
+    B --> C["Cloudflare Worker /retrieve\nAzure Foundry → Pinecone → Cohere"]
     C --> D["Chunks"]
     D --> E["WebLLM\nLlama 3.2 1B\nin browser"]
     E --> F["💬 Answer"]
@@ -88,9 +88,9 @@ flowchart LR
 | Evaluation | RAGAS; Azure GPT-5.4-mini judge, direct OpenAI embeddings, plus Azure/OpenAI/Ollama generation models |
 | Streaming | SSE for server-side generation, WebLLM SDK in-browser |
 | Orchestration | LangChain + LangGraph for the agent; LiteLLM for the evaluation judge |
-| API | Python Azure Functions |
+| API | Cloudflare Python Workers |
 | Frontend | Next.js, React, TypeScript, and Tailwind CSS |
-| Deployment | Azure + Netlify |
+| Deployment | Cloudflare Workers + Netlify |
 
 ## Project structure
 
@@ -158,24 +158,23 @@ These are historical point estimates from a single run and should not be interpr
 
 ## Environment and deployment
 
-Use server-managed settings for live credentials and keep them out of browser bundles. The web app's hosted generation and agent use Azure OpenAI; direct OpenAI credentials are only used by the offline evaluation pipeline.
+Use server-managed settings for live credentials and keep them out of browser bundles. The Cloudflare Worker calls Azure AI Foundry for live embeddings and generation; direct OpenAI credentials are only used by the offline evaluation pipeline.
 
 ```bash
 # Create web/.env.local from the variables documented in web/README.md.
-# Create api/local.settings.json in Azure Functions' Values format; see api/README.md.
+# Configure api/.dev.vars for local Worker secrets; see api/README.md.
 ```
 
 Required runtime values include:
 
-- `AZURE_FUNCTION_API_URL` and `AZURE_FUNCTION_KEY` for server-side Next.js calls to the protected Azure Function API
-- `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_DEPLOYMENT` for Next.js server-side generation
-- `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, and `COHERE_API_KEY` in Azure Function settings for retrieval and agent operations
+- `CLOUDFLARE_WORKER_API_URL` and `CLOUDFLARE_WORKER_KEY` for server-side Next.js calls to the protected Worker
+- Azure Foundry, Pinecone, and Cohere credentials as Cloudflare Worker secrets; see `api/README.md`
 
 Never expose secret values in `NEXT_PUBLIC_*` variables and never commit real credentials.
 
 ## Privacy and safety
 
-The Azure Function records question timestamps, mode, and query length in Azure Table Storage. Query text logging is disabled by default; when enabled, a timer purges entries older than 30 days. Restrict access to the storage account and adjust the retention setting to match your privacy policy.
+The Cloudflare Worker records question timestamps, mode, and query length in D1. Query text logging is disabled by default; when enabled, a Cron Trigger purges entries older than 30 days. Adjust the retention setting to match your privacy policy.
 
 ## Notes
 

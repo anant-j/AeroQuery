@@ -1,31 +1,8 @@
-import OpenAI from "openai";
-import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "../../lib/prompts";
 import { PayloadTooLargeError, readJsonBody, validateQueryPayload } from "../../lib/security.js";
-import { getAzureFunctionConfig, getClientIp } from "../../lib/azure-functions";
-import { isRateLimited } from "../../lib/rate-limit";
+import { getCloudflareWorkerConfig, getClientIp } from "../../lib/cloudflare-worker";
 
-interface RetrievedChunk {
-  section: string;
-  title: string;
-  text: string;
-}
-
-/**
- * Streaming endpoint. Calls the keyed Azure Function /agent for RAG context,
- * then streams Azure AI Foundry generation as SSE.
- *
- * AZURE_OPENAI_API_KEY / AZURE_OPENAI_ENDPOINT are server-only env vars
- * (no NEXT_PUBLIC_ prefix) — never sent to the browser.
- */
 export async function POST(req: Request) {
   const clientIp = getClientIp(req);
-  if (isRateLimited(clientIp)) {
-    return new Response(JSON.stringify({ error: "Too many requests. Please wait a minute and try again." }), {
-      status: 429,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
   let body: unknown;
   try {
     body = await readJsonBody(req);
@@ -36,12 +13,9 @@ export async function POST(req: Request) {
     });
   }
 
-  let query: string;
-  let useRag: boolean;
+  let payload: ReturnType<typeof validateQueryPayload>;
   try {
-    const payload = validateQueryPayload(body);
-    query = payload.query;
-    useRag = payload.use_rag;
+    payload = validateQueryPayload(body);
   } catch (error) {
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Invalid request" }), {
       status: 400,
@@ -49,134 +23,37 @@ export async function POST(req: Request) {
     });
   }
 
-  const apiKey = process.env.AZURE_OPENAI_API_KEY;
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-  if (!apiKey || !endpoint) {
-    return new Response(
-      JSON.stringify({
-        error: "AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT must be configured",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+  const workerConfig = getCloudflareWorkerConfig();
+  if (!workerConfig) {
+    return new Response(JSON.stringify({ error: "Cloudflare Worker configuration is missing" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  // For Azure Foundry (v1 API), `model` is the deployment name.
-  const model =
-    process.env.AZURE_OPENAI_DEPLOYMENT || process.env.LLM_MODEL || "gpt-5.4-mini";
-  const baseURL = `${endpoint.replace(/\/$/, "")}/openai/v1/`;
-
-  const openai = new OpenAI({ apiKey, baseURL });
-
-  let messages: OpenAI.ChatCompletionMessageParam[];
-  let sources: { section: string; title: string; text: string }[] = [];
-  let agentMeta: Record<string, unknown> | undefined;
-
-  if (useRag) {
-    const functionConfig = getAzureFunctionConfig();
-    if (!functionConfig) {
-      return new Response(JSON.stringify({ error: "Azure Function configuration is missing" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    const res = await fetch(`${functionConfig.apiUrl}/agent`, {
+  try {
+    const res = await fetch(`${workerConfig.apiUrl}/api/stream`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-functions-key": functionConfig.functionKey,
+        "x-aeroquery-key": workerConfig.workerKey,
         "x-aeroquery-client-ip": clientIp,
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify(payload),
+      cache: "no-store",
     });
-
-    if (!res.ok) {
-      return new Response(
-        JSON.stringify({ error: "Agent retrieval failed" }),
-        { status: 502, headers: { "Content-Type": "application/json" } },
-      );
-    }
-
-    const data = await res.json();
-    const chunks: RetrievedChunk[] = data.chunks;
-    const agent = data.agent;
-
-    sources = chunks.map((c) => ({ section: c.section, title: c.title, text: c.text }));
-    agentMeta = agent;
-
-    const context = chunks
-      .map((c) => `[Section ${c.section}]\n${c.text}`)
-      .join("\n\n---\n\n");
-
-    const systemContent = agent?.context_sufficient === false
-      ? RAG_SYSTEM_PROMPT + "\n\nIMPORTANT: The retrieval system flagged low confidence for this query. If the context does not clearly answer the question, say so."
-      : RAG_SYSTEM_PROMPT;
-
-    messages = [
-      { role: "system", content: systemContent },
-      {
-        role: "user",
-        content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${query}`,
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        "Content-Type": res.headers.get("Content-Type") || "application/json",
+        "Cache-Control": res.headers.get("Cache-Control") || "no-cache, no-transform",
+        "X-Content-Type-Options": "nosniff",
       },
-    ];
-  } else {
-    messages = [
-      { role: "system", content: BARE_SYSTEM_PROMPT },
-      { role: "user", content: query },
-    ];
+    });
+  } catch {
+    return new Response(JSON.stringify({ error: "Cloudflare generation request failed" }), {
+      status: 502,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-
-  const stream = await openai.chat.completions.create({
-    model,
-    messages,
-    temperature: 0,
-    stream: true,
-    stream_options: { include_usage: true },
-  });
-
-  const encoder = new TextEncoder();
-
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      if (useRag && sources.length > 0) {
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({ type: "sources", sources, model, agent: agentMeta })}\n\n`,
-          ),
-        );
-      }
-
-      for await (const chunk of stream) {
-        const token = chunk.choices[0]?.delta?.content;
-        if (token) {
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ type: "token", token })}\n\n`,
-            ),
-          );
-        }
-
-        if (chunk.usage) {
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ type: "usage", tokens: chunk.usage.total_tokens, model })}\n\n`,
-            ),
-          );
-        }
-      }
-
-      controller.enqueue(
-        encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`),
-      );
-      controller.close();
-    },
-  });
-
-  return new Response(readableStream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
 }
