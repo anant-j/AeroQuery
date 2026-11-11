@@ -195,20 +195,20 @@ export default function Home() {
   const [webllmProgress, setWebllmProgress] = useState(0);
   const [webllmStatus, setWebllmStatus] = useState("Initializing...");
   const [webllmLoading, setWebllmLoading] = useState(false);
-  const [webllmStarted, setWebllmStarted] = useState(false);
+  const [webllmError, setWebllmError] = useState("");
   const engineRef = useRef<MLCEngine | null>(null);
   const webllmStartedRef = useRef(false);
 
-  // Lazily load WebLLM only when the user interacts with the model dropdown,
-  // so unsupported or low-power devices don't download a model they can't use.
-  // The SDK itself is dynamically imported to keep it out of the initial bundle.
   const startWebLLM = useCallback(async () => {
-    if (webllmStartedRef.current) return;
+    if (webllmStartedRef.current || webllmReady) return;
     webllmStartedRef.current = true;
-    setWebllmStarted(true);
+    setWebllmError("");
     setWebllmLoading(true);
 
     try {
+      if (!("gpu" in navigator)) {
+        throw new Error("WebGPU is not available in this browser.");
+      }
       const { CreateMLCEngine } = await import("@mlc-ai/web-llm");
       const engine = await CreateMLCEngine(WEBLLM_MODEL, {
         initProgressCallback: (progress) => {
@@ -219,11 +219,14 @@ export default function Home() {
       engineRef.current = engine;
       setWebllmReady(true);
       setWebllmLoading(false);
-    } catch {
-      setWebllmStatus("WebGPU not supported in this browser");
+    } catch (error) {
+      console.error("WebLLM initialization failed", error);
+      setWebllmError(error instanceof Error ? error.message : "Unknown WebLLM error");
+      setWebllmStatus("Load failed");
       setWebllmLoading(false);
+      webllmStartedRef.current = false;
     }
-  }, []);
+  }, [webllmReady]);
 
   async function readSSEStream(
     body: { query: string; use_rag: boolean },
@@ -452,23 +455,22 @@ export default function Home() {
           <select
             id="model-select"
             value={modelOption}
-            onMouseDown={startWebLLM}
-            onFocus={startWebLLM}
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
             <option value="openai">Azure OpenAI (GPT-5.4-mini)</option>
-            <option value="webllm" disabled={!webllmReady}>
-              {!webllmStarted
-                ? "WebLLM (Llama 3.2 1B) — click to load"
-                : webllmLoading
-                  ? `WebLLM (Llama 3.2 1B) — ${webllmProgress}%`
-                  : webllmReady
-                    ? "WebLLM (Llama 3.2 1B)"
-                    : "WebLLM — unavailable"
-              }
-            </option>
+            <option value="webllm" disabled={!webllmReady}>WebLLM (Llama 3.2 1B)</option>
           </select>
+          {!webllmReady && (
+            <button
+              type="button"
+              onClick={startWebLLM}
+              disabled={webllmLoading}
+              className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-gray-700 dark:text-gray-200 disabled:opacity-50"
+            >
+              {webllmLoading ? `Loading ${webllmProgress}%` : webllmError ? "Retry WebLLM" : "Load WebLLM"}
+            </button>
+          )}
           {webllmLoading && (
             <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
               <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" aria-hidden="true">
@@ -476,6 +478,11 @@ export default function Home() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
               <span aria-live="polite">{webllmStatus.length > 50 ? webllmStatus.slice(0, 50) + "..." : webllmStatus}</span>
+            </span>
+          )}
+          {webllmError && (
+            <span role="alert" className="text-xs text-red-600 dark:text-red-400">
+              {webllmError}
             </span>
           )}
           {webllmReady && modelOption === "webllm" && (
