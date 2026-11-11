@@ -27,7 +27,7 @@ exclude = ["**/*.pyc", "**/__pycache__"]
 [[d1_databases]]
 binding = "DB"
 database_name = "aeroquery-questions"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "d5f0ccd1-8eff-48b7-80de-0a610e7c4a19"
 migrations_dir = "schema"
 
 [triggers]
