@@ -34,18 +34,40 @@ def _js_options(options):
     return to_js(options, dict_converter=Object.fromEntries)
 
 
-async def _json_request(url, payload, headers=None):
+async def _json_request(url, payload, service, headers=None):
     request_headers = {"Content-Type": "application/json"}
     if headers:
         request_headers.update(headers)
-    response = await fetch(url, _js_options({
-        "method": "POST",
-        "headers": request_headers,
-        "body": json.dumps(payload),
-    }))
+    try:
+        response = await fetch(
+            url,
+            method="POST",
+            headers=request_headers,
+            body=json.dumps(payload),
+        )
+    except Exception as error:
+        print(json.dumps({
+            "event": "upstream_exception",
+            "service": service,
+            "error_type": type(error).__name__,
+        }))
+        raise
     if not response.ok:
+        print(json.dumps({
+            "event": "upstream_http_error",
+            "service": service,
+            "status": response.status,
+        }))
         raise ApiError("An upstream service request failed", 502)
-    return await response.json()
+    try:
+        return await response.json()
+    except Exception as error:
+        print(json.dumps({
+            "event": "upstream_response_error",
+            "service": service,
+            "error_type": type(error).__name__,
+        }))
+        raise
 
 
 def _azure_base(env):
@@ -72,14 +94,20 @@ async def _azure_chat(env, messages, stream=False):
     if stream:
         payload["stream"] = True
         payload["stream_options"] = {"include_usage": True}
-    response = await fetch(
-        f"{_azure_base(env)}/chat/completions",
-        _js_options({
-            "method": "POST",
-            "headers": {"Content-Type": "application/json", **_azure_headers(env)},
-            "body": json.dumps(payload),
-        }),
-    )
+    try:
+        response = await fetch(
+            f"{_azure_base(env)}/chat/completions",
+            method="POST",
+            headers={"Content-Type": "application/json", **_azure_headers(env)},
+            body=json.dumps(payload),
+        )
+    except Exception as error:
+        print(json.dumps({
+            "event": "upstream_exception",
+            "service": "azure_chat",
+            "error_type": type(error).__name__,
+        }))
+        raise
     return response, model
 
 
@@ -88,6 +116,7 @@ async def _embed_query(env, query):
     result = await _json_request(
         f"{_azure_base(env)}/embeddings",
         {"model": model, "input": [query]},
+        "azure_embeddings",
         _azure_headers(env),
     )
     return result["data"][0]["embedding"]
@@ -109,6 +138,7 @@ async def _search_pinecone(env, vector, top_k=10):
             "namespace": NAMESPACE,
             "includeMetadata": True,
         },
+        "pinecone_query",
         {"Api-Key": api_key, "X-Pinecone-Api-Version": "2025-01"},
     )
     chunks = []
@@ -137,6 +167,7 @@ async def _rerank_chunks(env, query, chunks, top_n=5):
             "documents": [chunk["text"] for chunk in chunks],
             "top_n": top_n,
         },
+        "cohere_rerank",
         {"Authorization": f"Bearer {api_key}"},
     )
     reranked = []
@@ -383,6 +414,7 @@ async def _stream_generation(env, messages, model, sources=None, agent=None):
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
+        stage = "authentication"
         try:
             expected_key = getattr(self.env, "API_WORKER_KEY", "")
             provided_key = request.headers.get("x-aeroquery-key", "")
@@ -395,6 +427,7 @@ class Default(WorkerEntrypoint):
             ):
                 raise ApiError("Unauthorized", 401)
 
+            stage = "rate_limit"
             forwarded_ip = (request.headers.get("x-aeroquery-client-ip", "") or "").strip()
             try:
                 client_ip = ipaddress.ip_address(forwarded_ip).compressed
@@ -411,16 +444,21 @@ class Default(WorkerEntrypoint):
             if request.method != "POST" or path not in ("/retrieve", "/agent", "/stream"):
                 raise ApiError("Not found", 404)
 
+            stage = "request_validation"
             body = await _read_json_body(request)
             query = _validate_query(body.get("query"))
 
             if path == "/retrieve":
+                stage = "question_logging"
                 await _log_question(self.env, query, "webllm")
+                stage = "retrieval"
                 chunks = await _retrieve_chunks(self.env, query)
                 return Response.json({"query": query, "chunks": _public_chunks(chunks)})
 
             if path == "/agent":
+                stage = "question_logging"
                 await _log_question(self.env, query, "openai")
+                stage = "agent_retrieval"
                 result = await _run_agent(self.env, query)
                 return Response.json({
                     "query": query,
@@ -435,7 +473,9 @@ class Default(WorkerEntrypoint):
             agent = None
             sources = []
             if use_rag:
+                stage = "question_logging"
                 await _log_question(self.env, query, "openai")
+                stage = "agent_retrieval"
                 result = await _run_agent(self.env, query)
                 agent = result["agent"]
                 sources = _public_chunks(result["chunks"])
@@ -467,11 +507,16 @@ class Default(WorkerEntrypoint):
                 or getattr(self.env, "LLM_MODEL", "")
                 or "gpt-5.4-mini"
             )
+            stage = "generation"
             return await _stream_generation(self.env, messages, model, sources, agent)
         except ApiError as error:
             return Response.json({"error": str(error)}, status=error.status)
         except Exception as error:
-            print(json.dumps({"event": "request_failed", "error_type": type(error).__name__}))
+            print(json.dumps({
+                "event": "request_failed",
+                "stage": stage,
+                "error_type": type(error).__name__,
+            }))
             return Response.json({"error": "Request failed"}, status=502)
 
     async def scheduled(self, controller, env, ctx):
