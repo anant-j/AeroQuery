@@ -243,6 +243,7 @@ export default function Home() {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let tokensSincePaint = 0;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -256,8 +257,14 @@ export default function Home() {
         if (line.startsWith("data: ")) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.type === "token") onToken(data.token);
-            else if (data.type === "sources" && onSources) onSources(data.sources, data.agent);
+            if (data.type === "token") {
+              onToken(data.token);
+              tokensSincePaint += 1;
+              if (tokensSincePaint >= 8) {
+                tokensSincePaint = 0;
+                await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+              }
+            } else if (data.type === "sources" && onSources) onSources(data.sources, data.agent);
             else if (data.type === "usage" && onMeta) onMeta({ tokens: data.tokens, model: data.model });
           } catch {
             // Skip malformed SSE events
