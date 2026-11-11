@@ -87,7 +87,6 @@ flowchart LR
 | Local LLM | WebLLM Llama 3.2 1B in the browser |
 | Evaluation | RAGAS; Azure GPT-5.4-mini judge, direct OpenAI embeddings, plus Azure/OpenAI/Ollama generation models |
 | Streaming | SSE for server-side generation, WebLLM SDK in-browser |
-| Orchestration | LangChain + LangGraph for the agent; LiteLLM for the evaluation judge |
 | API | Cloudflare Python Workers |
 | Frontend | Next.js, React, TypeScript, and Tailwind CSS |
 | Deployment | Cloudflare Workers + Netlify |
