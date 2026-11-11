@@ -12,6 +12,7 @@ export function proxy(request: NextRequest) {
     "font-src 'self' data: https:",
     `connect-src 'self' https: wss:${isDevelopment ? " ws:" : ""}`,
     "worker-src 'self' blob:",
+    "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

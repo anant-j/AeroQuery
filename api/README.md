@@ -54,6 +54,12 @@ In Netlify, set `CLOUDFLARE_WORKER_API_URL` to the Worker origin (without `/api`
 
 Each request requires `x-aeroquery-key`; the Next.js server routes add it. The Worker enforces a Cloudflare Rate Limiting binding per validated client IP (30 requests per minute, approximate per Cloudflare location). Keep the shared key private and rotate it if exposed. D1 stores timestamp, query length, mode, and optional query text; query-text logging is off by default. The Cron Trigger at 03:00 UTC deletes rows older than `QUESTIONS_RETENTION_DAYS` (30 by default).
 
+## Abuse and usage limits
+
+The Worker does not enforce an application-wide daily or concurrent request limit. Cloudflare plan limits apply to the Worker, but do not cap usage or charges from Azure, Pinecone, Cohere, or Netlify. Monitor those services separately and configure provider budget alerts or limits where available. Chat output is limited to 2048 completion tokens, retrieved chunks to 8000 characters, and upstream fetches to 60 seconds. Confirm these settings work with your model deployment.
+
+Cloudflare's IP rate-limit binding is approximate and per location. The web deployment additionally uses a Netlify per-IP edge rule; check the deploy log and verify it is active. The web layer obtains IPs from Netlify's request context, not a client-provided header. If another proxy fronts Netlify, verify the context identifies the real visitor before relying on IP limits. Multiple visitors can share an IP.
+
 ## Deploy
 
 ```bash

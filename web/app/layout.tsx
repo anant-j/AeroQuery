@@ -34,6 +34,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script id="turnstile-script" nonce={nonce} src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer />
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: `
           (function() {
             var theme = localStorage.getItem('theme');

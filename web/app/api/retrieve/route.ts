@@ -1,18 +1,14 @@
-import { getCloudflareWorkerConfig, getClientIp } from "../../lib/cloudflare-worker";
-import { PayloadTooLargeError, readJsonBody, validateQueryPayload } from "../../lib/security.js";
+import { getCloudflareWorkerConfig } from "../../lib/cloudflare-worker";
+import { readProtectedRequest, securityErrorResponse } from "../../lib/protected-request";
 
 export async function POST(req: Request) {
-  const clientIp = getClientIp(req);
-  let payload: ReturnType<typeof validateQueryPayload>;
+  let protectedRequest: Awaited<ReturnType<typeof readProtectedRequest>>;
   try {
-    payload = validateQueryPayload(await readJsonBody(req));
+    protectedRequest = await readProtectedRequest(req);
   } catch (error) {
-    const tooLarge = error instanceof PayloadTooLargeError;
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Invalid request" }), {
-      status: tooLarge ? 413 : 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return securityErrorResponse(error);
   }
+  const { payload, clientIp } = protectedRequest;
 
   const workerConfig = getCloudflareWorkerConfig();
   if (!workerConfig) {

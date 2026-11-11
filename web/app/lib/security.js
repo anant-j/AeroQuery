@@ -2,15 +2,74 @@ export const MAX_QUERY_LENGTH = 1500;
 export const MAX_BODY_BYTES = 32 * 1024;
 
 export class PayloadTooLargeError extends Error {}
+export class RequestSecurityError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+export function validateRequestHeaders(request, allowedOrigins) {
+  const contentType = request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
+  if (contentType !== "application/json") {
+    throw new RequestSecurityError("Content-Type must be application/json", 415);
+  }
+  const origin = request.headers.get("origin");
+  if (!allowedOrigins?.length) {
+    throw new RequestSecurityError("Allowed origins are not configured", 503);
+  }
+  if (!origin || !allowedOrigins.includes(origin)) {
+    throw new RequestSecurityError("Origin is not allowed", 403);
+  }
+}
+
+export async function verifyTurnstile(token, { secret, hostname, clientIp, allowTestKeys = false, fetcher = fetch }) {
+  if (!secret || (!allowTestKeys && /^[123]x0{30,}/.test(secret))) {
+    throw new RequestSecurityError("Verification is not configured", 503);
+  }
+  if (typeof token !== "string" || !token || token.length > 2048) {
+    throw new RequestSecurityError("Verification is required", 403);
+  }
+  let result;
+  try {
+    const response = await fetcher("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret, response: token, ...(clientIp && { remoteip: clientIp }) }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) throw new Error("Verification unavailable");
+    result = await response.json();
+  } catch {
+    throw new RequestSecurityError("Verification is unavailable", 503);
+  }
+  const isTestResponse = allowTestKeys && /^[123]x0{30,}/.test(secret) && result.hostname === "example.com";
+  if (!result.success || (!isTestResponse && (result.hostname !== hostname || result.action !== "aeroquery"))) {
+    throw new RequestSecurityError("Verification failed", 403);
+  }
+}
 
 export async function readJsonBody(request) {
-  const body = await request.arrayBuffer();
-  if (body.byteLength > MAX_BODY_BYTES) {
-    throw new PayloadTooLargeError("request body is too large");
+  const reader = request.body?.getReader();
+  const decoder = new TextDecoder();
+  let body = "";
+  let size = 0;
+  if (reader) {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY_BYTES) {
+        await reader.cancel().catch(() => {});
+        throw new PayloadTooLargeError("request body is too large");
+      }
+      body += decoder.decode(value, { stream: true });
+    }
+    body += decoder.decode();
   }
 
   try {
-    return JSON.parse(new TextDecoder().decode(body));
+    return JSON.parse(body);
   } catch {
     throw new SyntaxError("Invalid JSON");
   }

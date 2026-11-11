@@ -9,7 +9,7 @@ enabled = true
 
 [vars]
 QUESTIONS_RETENTION_DAYS = "30"
-QUESTIONS_LOG_QUERY_TEXT = "false"
+QUESTIONS_LOG_QUERY_TEXT = "true"
 
 [secrets]
 required = [

@@ -5,13 +5,15 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from js import Object, ReadableStream, TextEncoder
+from js import AbortSignal, Object, ReadableStream, TextEncoder
 from pyodide.ffi import create_proxy, to_js
 from workers import Response, WorkerEntrypoint, fetch
 
 
 MAX_QUERY_LENGTH = 1500
 MAX_BODY_BYTES = 32768
+MAX_CHUNK_LENGTH = 8000
+MAX_COMPLETION_TOKENS = 2048
 RERANK_MODEL = "rerank-v4.0-pro"
 NAMESPACE = "canada"
 RAG_SYSTEM_PROMPT = """You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
@@ -44,6 +46,7 @@ async def _json_request(url, payload, service, headers=None):
             method="POST",
             headers=request_headers,
             body=json.dumps(payload),
+            signal=AbortSignal.timeout(60000),
         )
     except Exception as error:
         print(json.dumps({
@@ -90,7 +93,7 @@ async def _azure_chat(env, messages, stream=False):
         or getattr(env, "LLM_MODEL", "")
         or "gpt-5.4-mini"
     )
-    payload = {"model": model, "messages": messages, "temperature": 0}
+    payload = {"model": model, "messages": messages, "temperature": 0, "max_completion_tokens": MAX_COMPLETION_TOKENS}
     if stream:
         payload["stream"] = True
         payload["stream_options"] = {"include_usage": True}
@@ -100,6 +103,7 @@ async def _azure_chat(env, messages, stream=False):
             method="POST",
             headers={"Content-Type": "application/json", **_azure_headers(env)},
             body=json.dumps(payload),
+            signal=AbortSignal.timeout(60000),
         )
     except Exception as error:
         print(json.dumps({
@@ -146,7 +150,7 @@ async def _search_pinecone(env, vector, top_k=10):
         metadata = match.get("metadata") or {}
         chunks.append({
             "score": match.get("score", 0),
-            "text": metadata.get("text", ""),
+            "text": metadata.get("text", "")[:MAX_CHUNK_LENGTH],
             "section": metadata.get("section", ""),
             "title": metadata.get("title", ""),
         })
@@ -216,7 +220,7 @@ async def _decompose_query(env, query):
         raise ApiError("Azure Foundry request failed", 502)
     result = await response.json()
     sub_queries = [
-        line.strip()
+        line.strip()[:MAX_QUERY_LENGTH]
         for line in result["choices"][0]["message"]["content"].strip().splitlines()
         if line.strip()
     ][:3]
@@ -356,15 +360,6 @@ async def _stream_generation(env, messages, model, sources=None, agent=None):
     encoder = TextEncoder.new()
 
     async def start(controller):
-        if sources:
-            controller.enqueue(encoder.encode(_sse_event({
-                "type": "sources",
-                "sources": sources,
-                "model": model,
-                "agent": agent,
-            })))
-
-        reader = response.body.getReader()
         buffer = b""
 
         def emit_line(raw_line):
@@ -388,6 +383,14 @@ async def _stream_generation(env, messages, model, sources=None, agent=None):
                 })))
 
         try:
+            if sources:
+                controller.enqueue(encoder.encode(_sse_event({
+                    "type": "sources",
+                    "sources": sources,
+                    "model": model,
+                    "agent": agent,
+                })))
+            reader = response.body.getReader()
             while True:
                 item = await reader.read()
                 if item.done:
@@ -448,6 +451,10 @@ class Default(WorkerEntrypoint):
             body = await _read_json_body(request)
             query = _validate_query(body.get("query"))
 
+            use_rag = body.get("use_rag", False)
+            if not isinstance(use_rag, bool):
+                raise ApiError("use_rag must be a boolean", 400)
+
             if path == "/retrieve":
                 stage = "question_logging"
                 await _log_question(self.env, query, "webllm")
@@ -465,10 +472,6 @@ class Default(WorkerEntrypoint):
                     "chunks": _public_chunks(result["chunks"]),
                     "agent": result["agent"],
                 })
-
-            use_rag = body.get("use_rag", False)
-            if not isinstance(use_rag, bool):
-                raise ApiError("use_rag must be a boolean", 400)
 
             agent = None
             sources = []
@@ -518,7 +521,6 @@ class Default(WorkerEntrypoint):
                 "error_type": type(error).__name__,
             }))
             return Response.json({"error": "Request failed"}, status=502)
-
     async def scheduled(self, controller, env, ctx):
         worker_env = self.env
         retention_days = max(1, int(getattr(worker_env, "QUESTIONS_RETENTION_DAYS", "30")))

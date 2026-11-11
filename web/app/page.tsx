@@ -1,11 +1,22 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
 
 const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: Record<string, unknown>) => string;
+      execute: (widget: string) => void;
+      remove: (widget: string) => void;
+    };
+  }
+}
 
 const EVAL_DATA = [
   {
@@ -198,6 +209,47 @@ export default function Home() {
   const [webllmError, setWebllmError] = useState("");
   const engineRef = useRef<MLCEngine | null>(null);
   const webllmStartedRef = useRef(false);
+  const turnstileContainer = useRef<HTMLDivElement>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
+
+  useEffect(() => {
+    const script = document.getElementById("turnstile-script");
+    const onLoad = () => setTurnstileReady(Boolean(window.turnstile));
+    const onError = () => setError("Verification could not load. Please refresh and try again.");
+    onLoad();
+    script?.addEventListener("load", onLoad);
+    script?.addEventListener("error", onError);
+    return () => {
+      script?.removeEventListener("load", onLoad);
+      script?.removeEventListener("error", onError);
+    };
+  }, []);
+
+  async function getTurnstileToken() {
+    const turnstile = window.turnstile;
+    const container = turnstileContainer.current;
+    if (!turnstile || !container || !TURNSTILE_SITE_KEY) throw new Error("Verification is unavailable.");
+    let widget = "";
+    let timer: ReturnType<typeof setTimeout>;
+    try {
+      return await new Promise<string>((resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("Verification timed out. Please try again.")), 120000);
+        widget = turnstile.render(container, {
+          sitekey: TURNSTILE_SITE_KEY,
+          action: "aeroquery",
+          execution: "execute",
+          appearance: "interaction-only",
+          callback: resolve,
+          "error-callback": () => reject(new Error("Verification failed. Please try again.")),
+          "expired-callback": () => reject(new Error("Verification expired. Please try again.")),
+        });
+        turnstile.execute(widget);
+      });
+    } finally {
+      clearTimeout(timer!);
+      if (widget) turnstile.remove(widget);
+    }
+  }
 
   const startWebLLM = useCallback(async () => {
     if (webllmStartedRef.current || webllmReady) return;
@@ -229,7 +281,7 @@ export default function Home() {
   }, [webllmReady]);
 
   async function readSSEStream(
-    body: { query: string; use_rag: boolean },
+    body: { query: string; use_rag: boolean; turnstile_token: string },
     onToken: (token: string) => void,
     onSources?: (sources: Source[], agent?: AskResponse["agent"]) => void,
     onMeta?: (meta: { tokens?: number; model?: string }) => void,
@@ -240,7 +292,10 @@ export default function Home() {
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) throw new Error("Stream request failed");
+    if (!res.ok) {
+      const error = await res.json().catch(() => null);
+      throw new Error(error?.error || "Stream request failed");
+    }
     if (!res.body) throw new Error("No response body");
 
     const reader = res.body.getReader();
@@ -289,7 +344,9 @@ export default function Home() {
     setBareStreaming(false);
 
     try {
+      const firstToken = await getTurnstileToken();
       if (modelOption === "openai") {
+        const secondToken = await getTurnstileToken();
         // Initialize results with empty answers for streaming
         setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
         setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
@@ -299,13 +356,13 @@ export default function Home() {
         // Stream both RAG and bare LLM in parallel
         await Promise.all([
           readSSEStream(
-            { query: effectiveQuery, use_rag: true },
+            { query: effectiveQuery, use_rag: true, turnstile_token: firstToken },
             (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             (sources, agent) => setRagResult(prev => prev ? { ...prev, sources, agent } : null),
             (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
           ).finally(() => setRagStreaming(false)),
           readSSEStream(
-            { query: effectiveQuery, use_rag: false },
+            { query: effectiveQuery, use_rag: false, turnstile_token: secondToken },
             (token) => setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             undefined,
             (meta) => setBareResult(prev => prev ? { ...prev, ...meta } : null),
@@ -316,10 +373,13 @@ export default function Home() {
         const retrieveRes = await fetch("/api/retrieve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: effectiveQuery }),
+          body: JSON.stringify({ query: effectiveQuery, turnstile_token: firstToken }),
         });
 
-        if (!retrieveRes.ok) throw new Error("Retrieval API error");
+        if (!retrieveRes.ok) {
+          const error = await retrieveRes.json().catch(() => null);
+          throw new Error(error?.error || "Retrieval API error");
+        }
         const retrieveData = await retrieveRes.json();
         const chunks: Chunk[] = retrieveData.chunks;
 
@@ -432,6 +492,8 @@ export default function Home() {
       </div>
 
       <form onSubmit={handleSubmit} className="mb-8">
+        <div ref={turnstileContainer} />
+        {!TURNSTILE_SITE_KEY && <p role="alert" className="mb-3 text-sm text-red-600">Verification is not configured.</p>}
         <div className="flex gap-3 mb-3">
           <input
             type="text"
@@ -443,7 +505,7 @@ export default function Home() {
           />
           <button
             type="submit"
-            disabled={loading || (modelOption === "webllm" && !webllmReady)}
+            disabled={loading || !TURNSTILE_SITE_KEY || !turnstileReady || (modelOption === "webllm" && !webllmReady)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Searching..." : "Compare"}

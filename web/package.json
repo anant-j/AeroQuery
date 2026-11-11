@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mlc-ai/web-llm": "^0.2.83",
+    "@netlify/functions": "^6.1.1",
     "@netlify/plugin-nextjs": "^5.15.10",
     "@tailwindcss/typography": "^0.5.4",
     "next": "^16.4.6",

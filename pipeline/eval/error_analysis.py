@@ -46,7 +46,6 @@ def classify_failures(results, cache, gt_map):
         answer = r["answer"]
 
         chunks = cache.get(q, {}).get("rerank", [])
-        chunk_texts = " ".join(c["text"] for c in chunks).lower()
 
         # Classify
         if "i don't have enough information" in answer.lower():
