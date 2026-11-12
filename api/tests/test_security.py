@@ -101,6 +101,9 @@ with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), 
     spec = importlib.util.spec_from_file_location("worker_under_test", Path(__file__).parents[1] / "src" / "worker.py")
     worker = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(worker)
+    import persistence
+    import security
+    import streaming
 
 
 class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
@@ -113,7 +116,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(await read_body([b'{"query":"test"}']), {"query": "test"})
         for parts, content_type, status in [
-            ([b"x" * (worker.MAX_BODY_BYTES + 1)], "application/json", 413),
+            ([b"x" * (security.MAX_BODY_BYTES + 1)], "application/json", 413),
             ([b"{}"], "text/plain", 415),
             ([b"invalid"], "application/json", 400),
         ]:
@@ -123,7 +126,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_sessions_enforce_signature_expiry_and_origin(self):
         env = types.SimpleNamespace(SESSION_JWT_SECRET="secret-" * 8)
-        with patch.object(worker.time, "time", return_value=1000):
+        with patch.object(security.time, "time", return_value=1000):
             token, expires = await worker._issue_session(env, "https://example.test")
             self.assertEqual(expires, 1300)
             await worker._verify_session(env, f"Bearer {token}", "https://example.test")
@@ -134,7 +137,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             ]:
                 with self.assertRaises(worker.ApiError):
                     await worker._verify_session(env, f"Bearer {candidate}", origin)
-        with patch.object(worker.time, "time", return_value=1300), self.assertRaises(worker.ApiError):
+        with patch.object(security.time, "time", return_value=1300), self.assertRaises(worker.ApiError):
             await worker._verify_session(env, f"Bearer {token}", "https://example.test")
 
     async def test_turnstile_checks_hostname_action_and_single_use_result(self):
@@ -146,7 +149,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             ({"success": False, "error-codes": ["timeout-or-duplicate"]}, False),
         ]:
             response = types.SimpleNamespace(ok=True, json=AsyncMock(return_value=result))
-            with patch.object(worker, "fetch", AsyncMock(return_value=response)), patch.object(worker, "AbortSignal", types.SimpleNamespace(timeout=lambda value: value)):
+            with patch.object(security, "fetch", AsyncMock(return_value=response)), patch.object(security, "AbortSignal", types.SimpleNamespace(timeout=lambda value: value)):
                 if success:
                     await worker._verify_turnstile(env, "token", "https://example.test", "127.0.0.1")
                 else:
@@ -206,7 +209,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
     async def test_kv_cache_uses_ttl_and_fails_open(self):
         cache = types.SimpleNamespace(get=AsyncMock(return_value='{"answer":"cached"}'), put=AsyncMock())
         env = types.SimpleNamespace(AEROQUERY_ANSWER_CACHE=cache, CACHE_TTL_SECONDS="120")
-        with patch.object(worker, "_js_options", lambda value: value):
+        with patch.object(persistence, "_js_options", lambda value: value):
             await worker._cache_put(env, "key", {"answer": "cached"})
         cache.put.assert_awaited_once_with("key", '{"answer": "cached"}', {"expirationTtl": 120})
         self.assertEqual(await worker._cache_get(env, "key"), {"answer": "cached"})
@@ -278,10 +281,10 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                 upstream = types.SimpleNamespace(ok=True, body=types.SimpleNamespace(getReader=lambda: reader))
                 controller = types.SimpleNamespace(enqueue=lambda value: None, close=lambda: None, error=lambda error: self.fail(str(error)))
                 with (
-                    patch.object(worker, "_azure_chat", AsyncMock(return_value=(upstream, "model"))),
-                    patch.object(worker, "_js_options", lambda value: value),
-                    patch.object(worker, "TextEncoder", types.SimpleNamespace(new=lambda: types.SimpleNamespace(encode=lambda value: value))),
-                    patch.object(worker, "ReadableStream", types.SimpleNamespace(new=lambda options: options)),
+                    patch.object(streaming, "_azure_chat", AsyncMock(return_value=(upstream, "model"))),
+                    patch.object(streaming, "_js_options", lambda value: value),
+                    patch.object(streaming, "TextEncoder", types.SimpleNamespace(new=lambda: types.SimpleNamespace(encode=lambda value: value))),
+                    patch.object(streaming, "ReadableStream", types.SimpleNamespace(new=lambda options: options)),
                 ):
                     response = await worker._stream_generation(env, [], "model", cache_key="stream")
                     await response.body["start"](controller)
