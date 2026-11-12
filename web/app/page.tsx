@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { BARE_SYSTEM_PROMPT, EVAL_DATA, formatRagMessage, getTurnstileSiteKey, METRIC_INSIGHTS, METRIC_LABELS, RAG_SYSTEM_PROMPT, SESSION_LIMIT_EVENT, WEBLLM_MODEL } from "./lib/constants.js";
+import { EVAL_DATA, formatComparisonMessage, getTurnstileSiteKey, METRIC_INSIGHTS, METRIC_LABELS, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
@@ -382,12 +382,12 @@ export default function Home() {
         const chunks: Chunk[] = retrieveData.chunks;
 
         const ragMessages = [
-          { role: "system" as const, content: RAG_SYSTEM_PROMPT },
-          { role: "user" as const, content: formatRagMessage(effectiveQuery, chunks) },
+          { role: "system" as const, content: SYSTEM_PROMPT },
+          { role: "user" as const, content: formatComparisonMessage(effectiveQuery, chunks) },
         ];
         const bareMessages = [
-          { role: "system" as const, content: BARE_SYSTEM_PROMPT },
-          { role: "user" as const, content: effectiveQuery },
+          { role: "system" as const, content: SYSTEM_PROMPT },
+          { role: "user" as const, content: formatComparisonMessage(effectiveQuery, null) },
         ];
 
         const webllmModel = `WebLLM (${WEBLLM_MODEL})`;
