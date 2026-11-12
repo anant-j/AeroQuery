@@ -321,30 +321,27 @@ async def _read_json_body(request):
     return body
 
 
-async def _log_question(env, query, mode, cache_key=None, answered_from_cache=False):
+async def _log_question(env, query, mode, question_sha, correlation_id, answered_from_cache=False):
     now = datetime.now(timezone.utc)
-    question_id = uuid.uuid4().hex
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
-    log_event = {"event": "question_received", "question_id": question_id, "mode": mode, "answered_from_cache": answered_from_cache}
+    log_event = {"event": "question_received", "correlation_id": correlation_id, "mode": mode, "answered_from_cache": answered_from_cache}
     if query_text is not None:
         log_event["query_text"] = query_text
     print(json.dumps(log_event))
     try:
         await env.DB.prepare(
-            "INSERT INTO question_logs (id, created_at, query_length, mode, query_text, cache_key, answered_from_cache) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO question_logs (correlation_id, created_at, mode, question_asked, question_sha, answered_from_cache) "
+            "VALUES (?, ?, ?, ?, ?, ?)"
         ).bind(
-            question_id,
+            correlation_id,
             now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
-            len(query),
             mode,
             query_text,
-            cache_key,
+            question_sha,
             int(answered_from_cache),
         ).run()
     except Exception as error:
-        print(json.dumps({"event": "question_log_failed", "question_id": question_id, "error_type": type(error).__name__}))
-    return question_id
+        print(json.dumps({"event": "question_log_failed", "correlation_id": correlation_id, "error_type": type(error).__name__}))
 
 
 def _public_chunks(chunks):
@@ -352,6 +349,10 @@ def _public_chunks(chunks):
         {"section": chunk["section"], "title": chunk["title"], "text": chunk["text"]}
         for chunk in chunks
     ]
+
+
+def _question_sha(query, mode):
+    return hashlib.sha256(json.dumps([query, mode], ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
 def _cache_key(env, path, query, use_rag):
@@ -376,25 +377,19 @@ async def _cache_get(env, key):
     if not _cache_ttl(env):
         return None
     try:
-        row = await env.DB.prepare(
-            "SELECT cache_value FROM question_logs WHERE cache_key = ? "
-            "AND cache_value IS NOT NULL AND cache_expires_at > ? "
-            "ORDER BY cache_expires_at DESC LIMIT 1"
-        ).bind(key, int(datetime.now(timezone.utc).timestamp())).first()
-        return json.loads(row.cache_value) if row else None
+        value = await env.ANSWER_CACHE.get(key)
+        return json.loads(value) if value is not None else None
     except Exception as error:
         print(json.dumps({"event": "cache_read_failed", "error_type": type(error).__name__}))
         return None
 
 
-async def _cache_put(env, question_id, value):
+async def _cache_put(env, key, value):
     ttl = _cache_ttl(env)
     if not ttl:
         return
     try:
-        await env.DB.prepare(
-            "UPDATE question_logs SET cache_value = ?, cache_expires_at = ? WHERE id = ?"
-        ).bind(json.dumps(value), int(datetime.now(timezone.utc).timestamp()) + ttl, question_id).run()
+        await env.ANSWER_CACHE.put(key, json.dumps(value), _js_options({"expirationTtl": max(60, ttl)}))
     except Exception as error:
         print(json.dumps({"event": "cache_write_failed", "error_type": type(error).__name__}))
 
@@ -403,7 +398,7 @@ def _sse_event(event):
     return f"data: {json.dumps(event, separators=(',', ':'))}\n\n"
 
 
-async def _stream_generation(env, messages, model, sources=None, agent=None, question_id=None):
+async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, correlation_id=None):
     response, _ = await _azure_chat(env, messages, stream=True)
     if not response.ok:
         raise ApiError("Azure Foundry generation failed", 502)
@@ -464,12 +459,12 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, que
                     emit_line(line)
             if buffer:
                 emit_line(buffer)
-            if question_id and completed and finish_reason == "stop" and tokens:
-                await _cache_put(env, question_id, {"answer": "".join(tokens), "sources": sources, "agent": agent, "model": model})
+            if cache_key and completed and finish_reason == "stop" and tokens:
+                await _cache_put(env, cache_key, {"answer": "".join(tokens), "sources": sources, "agent": agent, "model": model})
             controller.enqueue(encoder.encode(_sse_event({"type": "done"})))
             controller.close()
         except Exception as error:
-            print(json.dumps({"event": "generation_stream_failed", "error_type": type(error).__name__}))
+            print(json.dumps({"event": "generation_stream_failed", "correlation_id": correlation_id, "error_type": type(error).__name__}))
             controller.error(error)
 
     stream = ReadableStream.new(_js_options({"start": create_proxy(start)}))
@@ -496,6 +491,7 @@ def _cached_stream(value):
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
+        correlation_id = uuid.uuid4().hex
         stage = "authentication"
         try:
             expected_key = getattr(self.env, "API_WORKER_KEY", "")
@@ -538,7 +534,7 @@ class Default(WorkerEntrypoint):
             cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False)
             cached = await _cache_get(self.env, cache_key)
             stage = "question_logging"
-            question_id = await _log_question(self.env, query, mode, cache_key, cached is not None)
+            await _log_question(self.env, query, mode, _question_sha(query, mode), correlation_id, cached is not None)
             if cached is not None:
                 return _cached_stream(cached) if path == "/stream" else Response.json(cached)
 
@@ -546,7 +542,7 @@ class Default(WorkerEntrypoint):
                 stage = "retrieval"
                 chunks = await _retrieve_chunks(self.env, query)
                 result = {"query": query, "chunks": _public_chunks(chunks)}
-                await _cache_put(self.env, question_id, result)
+                await _cache_put(self.env, cache_key, result)
                 return Response.json(result)
 
             if path == "/agent":
@@ -557,7 +553,7 @@ class Default(WorkerEntrypoint):
                     "chunks": _public_chunks(result["chunks"]),
                     "agent": result["agent"],
                 }
-                await _cache_put(self.env, question_id, result)
+                await _cache_put(self.env, cache_key, result)
                 return Response.json(result)
 
             agent = None
@@ -596,12 +592,13 @@ class Default(WorkerEntrypoint):
                 or "gpt-5.4-mini"
             )
             stage = "generation"
-            return await _stream_generation(self.env, messages, model, sources, agent, question_id)
+            return await _stream_generation(self.env, messages, model, sources, agent, cache_key, correlation_id)
         except ApiError as error:
             return Response.json({"error": str(error)}, status=error.status)
         except Exception as error:
             print(json.dumps({
                 "event": "request_failed",
+                "correlation_id": correlation_id,
                 "stage": stage,
                 "error_type": type(error).__name__,
             }))
@@ -613,6 +610,3 @@ class Default(WorkerEntrypoint):
         await worker_env.DB.prepare(
             "DELETE FROM question_logs WHERE created_at < ?"
         ).bind(cutoff.isoformat(timespec="milliseconds").replace("+00:00", "Z")).run()
-        await worker_env.DB.prepare(
-            "UPDATE question_logs SET cache_value = NULL, cache_expires_at = NULL WHERE cache_expires_at <= ?"
-        ).bind(int(datetime.now(timezone.utc).timestamp())).run()

@@ -48,8 +48,22 @@ class Database:
         return Statement()
 
 
+class Cache:
+    def __init__(self):
+        self.values = {}
+        self.ttls = {}
+
+    async def get(self, key):
+        return self.values.get(key)
+
+    async def put(self, key, value, options):
+        self.values[key] = value
+        self.ttls[key] = options["expirationTtl"]
+
+
 js = types.ModuleType("js")
 js.AbortSignal = js.Object = js.ReadableStream = js.TextEncoder = object()
+js.Object = types.SimpleNamespace(fromEntries=lambda value: value)
 ffi = types.ModuleType("pyodide.ffi")
 ffi.create_proxy = ffi.to_js = lambda value, **kwargs: value
 workers = types.ModuleType("workers")
@@ -64,19 +78,32 @@ with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), 
 
 
 class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_kv_cache_uses_ttl_and_fails_open(self):
+        cache = types.SimpleNamespace(get=AsyncMock(return_value='{"answer":"cached"}'), put=AsyncMock())
+        env = types.SimpleNamespace(ANSWER_CACHE=cache, CACHE_TTL_SECONDS="120")
+        with patch.object(worker, "_js_options", lambda value: value):
+            await worker._cache_put(env, "key", {"answer": "cached"})
+        cache.put.assert_awaited_once_with("key", '{"answer": "cached"}', {"expirationTtl": 120})
+        self.assertEqual(await worker._cache_get(env, "key"), {"answer": "cached"})
+        cache.get.side_effect = RuntimeError("unavailable")
+        self.assertIsNone(await worker._cache_get(env, "key"))
+        env.CACHE_TTL_SECONDS = "0"
+        await worker._cache_put(env, "disabled", {})
+        self.assertIsNone(await worker._cache_get(env, "disabled"))
+        self.assertEqual(cache.put.await_count, 1)
+
     async def test_cache_hit_expiration_and_disabled_cache(self):
-        env = types.SimpleNamespace(DB=Database(), CACHE_TTL_SECONDS="60")
-        self.addCleanup(env.DB.connection.close)
+        env = types.SimpleNamespace(ANSWER_CACHE=Cache(), CACHE_TTL_SECONDS="60")
         key = worker._cache_key(env, "/retrieve", "question", False)
-        question_id = await worker._log_question(env, "question", "webllm", key)
-        await worker._cache_put(env, question_id, {"answer": "test"})
+        await worker._cache_put(env, key, {"answer": "test"})
         self.assertEqual(await worker._cache_get(env, key), {"answer": "test"})
-        env.DB.connection.execute("UPDATE question_logs SET cache_expires_at = 0")
+        self.assertEqual(env.ANSWER_CACHE.ttls[key], 60)
+        del env.ANSWER_CACHE.values[key]
         self.assertIsNone(await worker._cache_get(env, key))
         env.CACHE_TTL_SECONDS = "0"
-        await worker._cache_put(env, question_id, {"answer": "new"})
+        await worker._cache_put(env, key, {"answer": "new"})
         self.assertIsNone(await worker._cache_get(env, key))
-        self.assertEqual(json.loads(env.DB.connection.execute("SELECT cache_value FROM question_logs").fetchone()[0]), {"answer": "test"})
+        self.assertNotIn(key, env.ANSWER_CACHE.values)
 
     async def test_cache_keys_separate_paths_modes_models_and_questions(self):
         env = types.SimpleNamespace(AZURE_OPENAI_DEPLOYMENT="model-a")
@@ -90,7 +117,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
     async def test_repeated_retrieval_uses_cache_and_still_logs(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(
-            DB=Database(), API_WORKER_KEY="a" * 32,
+            DB=Database(), ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         self.addCleanup(entry.env.DB.connection.close)
@@ -106,16 +133,15 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             second = await entry.fetch(request)
         self.assertEqual(first, second)
         self.assertEqual(retrieve.await_count, 1)
-        rows = entry.env.DB.connection.execute("SELECT cache_key, answered_from_cache FROM question_logs ORDER BY rowid").fetchall()
+        rows = entry.env.DB.connection.execute("SELECT question_sha, answered_from_cache FROM question_logs ORDER BY rowid").fetchall()
         self.assertEqual([row[1] for row in rows], [0, 1])
+        self.assertEqual(rows[0][0], worker._question_sha("question", "webllm"))
         self.assertEqual(rows[0][0], rows[1][0])
 
     async def test_stream_cache_only_stores_complete_successful_answers(self):
-        env = types.SimpleNamespace(DB=Database())
-        self.addCleanup(env.DB.connection.close)
+        env = types.SimpleNamespace(ANSWER_CACHE=Cache())
         for finish_reason, done, should_cache in (("stop", True, True), ("length", True, False), ("stop", False, False)):
             with self.subTest(finish_reason=finish_reason, done=done):
-                question_id = await worker._log_question(env, "question", "openai_bare", "stream")
                 lines = [
                     'data: {"choices":[{"delta":{"content":"answer"},"finish_reason":null}]}\n',
                     f'data: {{"choices":[{{"delta":{{}},"finish_reason":"{finish_reason}"}}]}}\n',
@@ -132,7 +158,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                     patch.object(worker, "TextEncoder", types.SimpleNamespace(new=lambda: types.SimpleNamespace(encode=lambda value: value))),
                     patch.object(worker, "ReadableStream", types.SimpleNamespace(new=lambda options: options)),
                 ):
-                    response = await worker._stream_generation(env, [], "model", question_id=question_id)
+                    response = await worker._stream_generation(env, [], "model", cache_key="stream")
                     await response.body["start"](controller)
                 cached = await worker._cache_get(env, "stream")
                 self.assertEqual(cached is not None, should_cache)
@@ -140,18 +166,17 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                     replay = worker._cached_stream(cached)
                     self.assertIn('"token":"answer"', replay.body)
                     self.assertIn('"type":"done"', replay.body)
-                    env.DB.connection.execute("DELETE FROM question_logs")
+                    env.ANSWER_CACHE.values.clear()
 
     async def test_stream_cache_hit_skips_agent_and_generation(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(
-            DB=Database(), API_WORKER_KEY="a" * 32,
+            DB=Database(), ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         self.addCleanup(entry.env.DB.connection.close)
         key = worker._cache_key(entry.env, "/stream", "question", True)
-        question_id = await worker._log_question(entry.env, "question", "openai_rag", key)
-        await worker._cache_put(entry.env, question_id, {
+        await worker._cache_put(entry.env, key, {
             "answer": "cached answer", "sources": [{"section": "1", "title": "Title", "text": "Text"}],
             "agent": {"context_sufficient": True}, "model": "gpt-5.4-mini",
         })
@@ -183,6 +208,27 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         connection.executescript((schema_dir / "0003_rename_openai_rag.sql").read_text())
         self.assertEqual(connection.execute("SELECT mode FROM question_logs ORDER BY id").fetchall(), [("openai_bare",), ("openai_rag",)])
 
+    def test_logging_migration_preserves_rows_and_removes_cache_data(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        schema_dir = Path(__file__).parents[1] / "schema"
+        for name in ("0001_question_logs.sql", "0002_answer_cache.sql", "0003_rename_openai_rag.sql"):
+            connection.executescript((schema_dir / name).read_text())
+        connection.execute(
+            "INSERT INTO question_logs (id, created_at, query_length, mode, query_text, cache_key, cache_value, cache_expires_at, answered_from_cache) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ("correlation", "2026-01-01", 8, "openai_rag", "question", "legacy-key", "answer", 123, 1),
+        )
+        connection.executescript((schema_dir / "0004_logging_only.sql").read_text())
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(question_logs)")}
+        self.assertEqual(columns, {"correlation_id", "created_at", "mode", "question_asked", "question_sha", "answered_from_cache"})
+        self.assertEqual(connection.execute("SELECT correlation_id, question_asked, question_sha, answered_from_cache FROM question_logs").fetchone(), ("correlation", "question", None, 1))
+
+    def test_question_sha_depends_only_on_question_and_mode(self):
+        key = worker._question_sha("question", "openai_rag")
+        self.assertEqual(key, worker._question_sha("question", "openai_rag"))
+        self.assertNotEqual(key, worker._question_sha("question", "openai_bare"))
+        self.assertNotEqual(key, worker._question_sha("Question", "openai_rag"))
+
     async def test_question_log_matches_database_id_and_respects_text_setting(self):
         for enabled in ("true", "false"):
             statement = types.SimpleNamespace(bind=lambda *args: types.SimpleNamespace(run=AsyncMock()))
@@ -190,11 +236,11 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             statement.bind = lambda *args: (bound_values.extend(args) or types.SimpleNamespace(run=AsyncMock()))
             env = types.SimpleNamespace(DB=types.SimpleNamespace(prepare=lambda sql: statement), QUESTIONS_LOG_QUERY_TEXT=enabled)
             with patch("builtins.print") as output:
-                await worker._log_question(env, "test question", "openai_rag")
+                await worker._log_question(env, "test question", "openai_rag", "sha", "correlation")
             event = json.loads(output.call_args.args[0])
-            self.assertEqual(event["question_id"], bound_values[0])
+            self.assertEqual(event["correlation_id"], bound_values[0])
             self.assertEqual(event.get("query_text"), "test question" if enabled == "true" else None)
-            self.assertEqual(bound_values[4], "test question" if enabled == "true" else None)
+            self.assertEqual(bound_values[3], "test question" if enabled == "true" else None)
 
     async def test_unauthorized_requests_are_rejected(self):
         entry = worker.Default()
@@ -222,7 +268,8 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(response["status"], 200)
             request.url = "https://example.test/api/stream"
             self.assertEqual(await entry.fetch(request), "stream")
-            log_question.assert_any_await(entry.env, "test", "openai_bare", worker._cache_key(entry.env, "/stream", "test", False), False)
+            self.assertEqual(log_question.await_args.args[:4], (entry.env, "test", "openai_bare", worker._question_sha("test", "openai_bare")))
+            self.assertFalse(log_question.await_args.args[5])
 
 
 if __name__ == "__main__":
