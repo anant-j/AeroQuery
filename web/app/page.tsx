@@ -12,7 +12,7 @@ const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
 function getRemainingRequests() {
   try {
-    return remainingSessionRequests(window.sessionStorage);
+    return remainingSessionRequests();
   } catch {
     return 0;
   }
@@ -39,7 +39,7 @@ function subscribeToTheme(callback: () => void) {
 function reserveSessionRequest() {
   let accepted = false;
   try {
-    accepted = consumeSessionRequest(window.sessionStorage);
+    accepted = consumeSessionRequest();
   } catch {
     accepted = false;
   }
