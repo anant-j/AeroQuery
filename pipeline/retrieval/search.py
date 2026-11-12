@@ -69,6 +69,8 @@ def search(query, top_k=10, namespace=NAMESPACE, use_rerank=True, rerank_top_n=5
             "section": match.metadata.get("section", ""),
             "title": match.metadata.get("title", ""),
             "source": match.metadata.get("source", ""),
+            "source_url": match.metadata.get("source_url", ""),
+            "point_in_time": match.metadata.get("point_in_time", ""),
         })
 
     if use_rerank and chunks:

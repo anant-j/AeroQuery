@@ -10,7 +10,7 @@ export function getTurnstileSiteKey() {
   return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 }
 
-export const RAG_SYSTEM_PROMPT = `You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
+export const RAG_SYSTEM_PROMPT = `You are an expert aviation regulation assistant specializing in Canadian aviation regulations (Transport Canada Canadian Aviation Regulations).
 
 Rules:
 1. Answer ONLY based on the provided context. Do not use any outside knowledge.

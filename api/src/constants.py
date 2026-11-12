@@ -6,7 +6,7 @@ RERANK_MODEL = "rerank-v4.0-pro"
 NAMESPACE = "canada-car-2026-06-17"
 CACHE_VERSION = "1"
 DEFAULT_CACHE_TTL_SECONDS = 86400
-RAG_SYSTEM_PROMPT = """You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
+RAG_SYSTEM_PROMPT = """You are an expert aviation regulation assistant specializing in Canadian aviation regulations (Transport Canada Canadian Aviation Regulations).
 
 Rules:
 1. Answer ONLY based on the provided context. Do not use any outside knowledge.

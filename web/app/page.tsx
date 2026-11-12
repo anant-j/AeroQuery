@@ -459,7 +459,7 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">AeroQuery</h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Ask questions about Canadian aviation regulations. Powered by RAG over the TC AIM.
+            Ask questions about Canadian aviation regulations. Powered by RAG over Transport Canada Canadian Aviation Regulations (CARs).
           </p>
         </div>
         <button
@@ -485,7 +485,7 @@ export default function Home() {
         <p>
           <strong className="font-semibold">For demonstration purposes only.</strong>{" "}
           AI-generated answers can be incomplete or wrong. Always cross-verify every
-          response against the official Transport Canada AIM and other authoritative
+          response against the official Transport Canada CAR/AIM and other authoritative
           sources before relying on it. This tool is provided &ldquo;as is&rdquo; and assumes
           no responsibility or liability for any decisions made or outcomes resulting
           from its use.
@@ -584,10 +584,6 @@ export default function Home() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Exploratory historical run · 50 questions · 3 models · single GPT-5.4-mini judge
         </p>
-        <p className="text-xs text-amber-700 dark:text-amber-300 mb-4">
-          Preliminary point estimates only: the set spans 40 sections, has no held-out split or independent human scoring, and has not been rerun after fixing judge-failure handling. Do not interpret these values as validated performance.
-        </p>
-
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

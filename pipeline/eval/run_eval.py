@@ -1,378 +1,363 @@
-import os
+"""Compare Azure and local models on a source-cited CAR benchmark."""
+
+import argparse
+import asyncio
+import hashlib
 import json
 import math
+import os
+import re
 import time
-import litellm
-from openai import OpenAI, AsyncOpenAI
+from pathlib import Path
 
-# LiteLLM config
-litellm.max_tokens = 4096  # Prevent truncation on long RAGAS judgments
-litellm.drop_params = True  # Drop unsupported params (e.g., top_p for Azure)
+os.environ["RAGAS_DO_NOT_TRACK"] = "true"
+
+import ragas
 from dotenv import load_dotenv
-from ragas.llms import llm_factory
+from openai import AsyncOpenAI, OpenAI
 from ragas.embeddings import OpenAIEmbeddings
+from ragas.llms import llm_factory
 from ragas.metrics.collections import (
-    Faithfulness,
+    AnswerRelevancy,
     ContextPrecision,
     ContextRecall,
-    AnswerRelevancy,
+    Faithfulness,
     FactualCorrectness,
     SemanticSimilarity,
 )
+
+from eval.generate_car_benchmark import BENCHMARK_PATH, file_hash, normalize, validate_questions, write_json
 from eval.statistics import metric_summary, paired_metric_summary
-from retrieval.search import search
-from generation.prompt import build_prompt
+from ingestion.tc_car_xml.parse import CAR_XML, parse_document
+from retrieval.search import RERANK_MODEL, get_pinecone_index, rerank, search
 
 load_dotenv()
 
-# Models to evaluate: (model_name, base_url, provider)
-# provider: "openai" (default), "ollama", "azure"
-LLM_MODELS = [
-    ("gpt-5.4-mini", None, "azure"),        # Azure Foundry — free
-    ("gpt-3.5-turbo", None, "openai"),       # OpenAI — cheap
-    ("llama3.2:1b", "http://host.docker.internal:11434/v1", "ollama"),  # Ollama — free
-]
-
-# RAGAS judge — Azure AI Foundry (free unlimited tokens)
-JUDGE_MODEL = "azure/gpt-5.4-mini"
-EVAL_PROTOCOL_VERSION = 2
-
-# Metric categories by required kwargs
-CONTEXT_METRICS = ["faithfulness", "context_precision", "context_recall"]  # need retrieved_contexts
-ANSWER_METRICS = ["answer_relevancy"]  # need user_input + response only
-REFERENCE_METRICS = ["factual_correctness", "semantic_similarity"]  # need response + reference
-
-
-def load_test_set():
-    with open("eval/test_set.json") as f:
-        return json.load(f)
+PROTOCOL_VERSION = 4
+AZURE_MODELS = ("gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.5")
+LOCAL_MODEL = "llama3.2:1b"
+JUDGE_MODEL = "gpt-5.4-mini"
+EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434/v1")
+NAMESPACE = "canada-car-2026-06-17"
+CANDIDATE_COUNT = 10
+CONTEXT_COUNT = 5
+METRIC_TIMEOUT_SECONDS = 180
+CONTEXT_METRICS = ("faithfulness", "context_precision", "context_recall")
+ANSWER_METRICS = ("answer_relevancy", "factual_correctness", "semantic_similarity")
+ALL_METRICS = CONTEXT_METRICS + ANSWER_METRICS
+CONFIGS = ("bare", "rag", "rag_rerank")
+RAG_SYSTEM = """You are an assistant answering questions about the Canadian Aviation Regulations.
+Use only the supplied context, cite CAR section numbers, and include relevant limitations and exceptions.
+If the context is insufficient, say: "I don't have enough information in the available regulations to answer this question."
+Do not treat regulations outside the provided context as established."""
+BARE_SYSTEM = "You are an aviation regulation expert. Answer using your knowledge of Canadian aviation regulations."
 
 
-def get_llm_client(base_url=None):
-    if base_url:
-        return OpenAI(base_url=base_url, api_key="ollama")
-    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def load_benchmark(path, allow_unreviewed=False, limit=None):
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    manifest = data["manifest"]
+    if manifest.get("source") != "TC_CAR" or not manifest.get("point_in_time"):
+        raise ValueError("Benchmark must identify a CAR point-in-time snapshot")
+    if manifest.get("xml_sha256") != file_hash(CAR_XML):
+        raise ValueError("Benchmark was created from a different CAR XML snapshot")
+    documents = {doc["section"]: doc for doc in parse_document(CAR_XML) if doc["kind"] == "section"}
+    questions = [item for section in data["sections"].values() for item in section]
+    if len(questions) != manifest["target_count"]:
+        raise ValueError(f"Benchmark is incomplete: {len(questions)}/{manifest['target_count']}")
+    if limit is not None:
+        if limit < 1:
+            raise ValueError("--limit must be positive")
+        questions = questions[:limit]
+    seen = set()
+    for item in questions:
+        if not all(isinstance(item.get(k), str) and item[k].strip()
+                   for k in ("question", "ground_truth", "section", "source_url", "evidence_quote")):
+            raise ValueError("Each benchmark question needs an answer, citation, and evidence quote")
+        key = normalize(item["question"]).casefold()
+        if key in seen:
+            raise ValueError("Benchmark contains duplicate questions")
+        seen.add(key)
+        document = documents.get(item["section"])
+        if (not document or document["point_in_time"] != manifest["point_in_time"]
+                or item["source_url"] != document["source_url"]):
+            raise ValueError(f"Invalid source citation for {item['section']}")
+        validate_questions([item], document, 1)
+        if not allow_unreviewed and item.get("reviewed") is not True:
+            raise ValueError("Benchmark contains unreviewed questions; use --allow-unreviewed for a provisional run")
+    return manifest, questions
 
 
-def generate(messages, model, base_url=None, provider="openai"):
-    """Generate a response from any model via OpenAI, Ollama, or Azure."""
-    if provider == "azure":
-        from openai import AzureOpenAI
-        client = AzureOpenAI(
-            api_key=os.getenv("AZURE_API_KEY"),
-            azure_endpoint=os.getenv("AZURE_API_BASE"),
-            api_version=os.getenv("AZURE_API_VERSION", "2025-04-01-preview"),
-        )
-    elif provider == "ollama":
-        client = OpenAI(base_url=base_url, api_key="ollama")
-    else:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-    response = client.chat.completions.create(
-        model=model, messages=messages, temperature=0,
-    )
-    return response.choices[0].message.content, (response.usage.total_tokens if response.usage else 0)
+def azure_client(async_client=False, timeout=120, max_retries=2):
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "").rstrip("/")
+    key = os.getenv("AZURE_OPENAI_API_KEY", "")
+    if not endpoint or not key:
+        raise ValueError("AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY are required")
+    client_class = AsyncOpenAI if async_client else OpenAI
+    return client_class(api_key=key, base_url=f"{endpoint}/openai/v1/",
+                        timeout=timeout, max_retries=max_retries)
 
 
-RETRIEVAL_CACHE_FILE = "eval/results/retrieval_cache.json"
-
-
-def cache_retrieval(test_set):
-    """Run retrieval once per question, cache to disk for reuse across runs."""
-    # Load from disk if exists
-    if os.path.exists(RETRIEVAL_CACHE_FILE):
-        with open(RETRIEVAL_CACHE_FILE) as f:
-            cache = json.load(f)
-        # Check if cache matches current test set
-        if len(cache) == len(test_set) and all(item["question"] in cache for item in test_set):
-            print(f">> Loaded retrieval cache from {RETRIEVAL_CACHE_FILE} ({len(cache)} questions)\n")
-            return cache
-        print(">> Cache exists but doesn't match test set, re-running retrieval...\n")
-
-    print(">> Caching retrieval results (embed + Pinecone + Cohere)...")
-    print("   (Rate-limited for Cohere free tier)\n")
-    cache = {}
-    for i, item in enumerate(test_set):
-        q = item["question"]
-        print(f"  [{i+1}/{len(test_set)}] {q[:55]}...")
-        no_rerank = search(q, top_k=10, use_rerank=False)
-        time.sleep(7)
-        reranked = search(q, top_k=10, use_rerank=True, rerank_top_n=5)
-        time.sleep(7)
-        cache[q] = {"no_rerank": no_rerank, "rerank": reranked}
-
-    # Save to disk
-    os.makedirs(os.path.dirname(RETRIEVAL_CACHE_FILE), exist_ok=True)
-    with open(RETRIEVAL_CACHE_FILE, "w") as f:
-        json.dump(cache, f)
-    print(f"\n  Cached {len(cache)} questions to {RETRIEVAL_CACHE_FILE}\n")
-    return cache
-
-
-def score_ragas(scorers, user_input, response, reference, retrieved_contexts):
-    """Score a single sample across all RAGAS metrics (sync, no nested async)."""
-    scores = {}
-    for name, scorer in scorers.items():
-        try:
-            if name in CONTEXT_METRICS:
-                if name == "faithfulness":
-                    result = scorer.score(user_input=user_input, response=response, retrieved_contexts=retrieved_contexts)
-                else:  # context_precision, context_recall
-                    result = scorer.score(user_input=user_input, reference=reference, retrieved_contexts=retrieved_contexts)
-            elif name in ANSWER_METRICS:
-                result = scorer.score(user_input=user_input, response=response)
-            else:  # REFERENCE_METRICS
-                result = scorer.score(response=response, reference=reference)
-            scores[name] = (
-                round(result.value, 4)
-                if result.value is not None and math.isfinite(result.value)
-                else None
-            )
-        except Exception as e:
-            print(f"    Warning: {name} failed: {e}")
-            scores[name] = None
-    return scores
-
-
-def run_eval():
-    test_set = load_test_set()
-    all_summaries = []
-
-    # Set up RAGAS scorers with judge model
-    print(f"Setting up RAGAS metrics (judge: {JUDGE_MODEL} via Azure AI Foundry)...\n")
-    llm = llm_factory(
-        JUDGE_MODEL, provider="litellm", client=litellm.acompletion,
-        api_key=os.getenv("AZURE_API_KEY"),
-        api_base=os.getenv("AZURE_API_BASE"),
-        api_version=os.getenv("AZURE_API_VERSION", "2025-04-01-preview"),
-    )
-    emb = OpenAIEmbeddings(client=AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY")), model="text-embedding-3-small")
-
+def make_scorers():
+    client = azure_client(async_client=True)
+    llm = llm_factory(JUDGE_MODEL, provider="openai", client=client,
+                      max_completion_tokens=4096, temperature=1.0)
+    # RAGAS 0.4.3 does not recognize dotted GPT-5 deployment names as reasoning models.
+    llm.model_args.pop("max_tokens", None)
+    llm.model_args.pop("top_p", None)
+    embeddings = OpenAIEmbeddings(client=client, model=EMBEDDING_MODEL)
+    similarity_client = azure_client(timeout=30, max_retries=1)
+    similarity_embeddings = OpenAIEmbeddings(client=similarity_client, model=EMBEDDING_MODEL)
     scorers = {
         "faithfulness": Faithfulness(llm=llm),
         "context_precision": ContextPrecision(llm=llm),
         "context_recall": ContextRecall(llm=llm),
-        "answer_relevancy": AnswerRelevancy(llm=llm, embeddings=emb),
+        "answer_relevancy": AnswerRelevancy(llm=llm, embeddings=embeddings),
         "factual_correctness": FactualCorrectness(llm=llm),
-        "semantic_similarity": SemanticSimilarity(embeddings=emb),
+        "semantic_similarity": SemanticSimilarity(embeddings=similarity_embeddings),
     }
+    return scorers, client, similarity_client
 
-    # Cache retrieval once
-    retrieval_cache = cache_retrieval(test_set)
 
-    for llm_model, base_url, provider in LLM_MODELS:
-        model_slug = llm_model.replace("/", "-").replace(":", "-")
-        results_dir = f"eval/results/{model_slug}"
-        os.makedirs(results_dir, exist_ok=True)
+async def score_ragas(scorers, question, answer, reference, contexts):
+    scores, errors = {}, {}
 
-        print(f"\n{'#'*60}")
-        print(f"# Eval: {llm_model} ({len(test_set)} questions)")
-        if base_url:
-            print(f"# via {base_url}")
-        print(f"{'#'*60}")
+    async def score_one(name, scorer):
+        if not contexts and name in CONTEXT_METRICS:
+            return
+        start = time.monotonic()
+        print(f"    {name}: started", flush=True)
 
-        # Load existing results to resume from crash
-        def load_existing(filename):
-            path = f"{results_dir}/{filename}"
-            if os.path.exists(path):
-                with open(path) as f:
-                    return json.load(f)
-            return []
+        async def calculate():
+            if name == "semantic_similarity":
+                # RAGAS calls synchronous embedding methods inside ascore().
+                return await asyncio.to_thread(scorer.score, response=answer, reference=reference)
+            if name == "faithfulness":
+                return await scorer.ascore(user_input=question, response=answer, retrieved_contexts=contexts)
+            if name in ("context_precision", "context_recall"):
+                return await scorer.ascore(user_input=question, reference=reference, retrieved_contexts=contexts)
+            if name == "answer_relevancy":
+                return await scorer.ascore(user_input=question, response=answer)
+            return await scorer.ascore(response=answer, reference=reference)
 
-        bare_results = load_existing("bare_results.json")
-        rag_results = load_existing("rag_no_rerank_results.json")
-        rerank_results = load_existing("rag_rerank_results.json")
-        result_sets = [bare_results, rag_results, rerank_results]
-        start_idx = 0
-        for i, item in enumerate(test_set):
-            if not all(
-                i < len(results)
-                and results[i].get("question") == item["question"]
-                and results[i].get("ground_truth") == item["ground_truth"]
-                and results[i].get("eval_protocol_version") == EVAL_PROTOCOL_VERSION
-                for results in result_sets
-            ):
-                break
-            start_idx += 1
-        discarded = max(len(results) for results in result_sets) - start_idx
-        for results in result_sets:
-            del results[start_idx:]
-        if discarded:
-            print(f"  Discarding {discarded} mismatched or out-of-date result rows before resuming.")
+        try:
+            result = await asyncio.wait_for(calculate(), timeout=METRIC_TIMEOUT_SECONDS)
+            value = result.value
+            if value is None or not math.isfinite(value):
+                raise ValueError("non-finite or missing metric")
+            scores[name] = round(value, 4)
+            print(f"    {name}: completed in {time.monotonic() - start:.1f}s", flush=True)
+        except Exception as error:
+            scores[name] = None
+            errors[name] = f"{type(error).__name__}: {error}"
+            print(f"    {name}: failed after {time.monotonic() - start:.1f}s: {type(error).__name__}: {error}",
+                  flush=True)
+    await asyncio.gather(*(score_one(name, scorer) for name, scorer in scorers.items()))
+    if errors and not any(value is not None for value in scores.values()):
+        raise RuntimeError(f"All applicable metrics failed: {', '.join(errors)}")
+    return scores, errors
 
-        if start_idx > 0:
-            print(f"  Resuming from question {start_idx + 1} ({start_idx} already scored)")
 
-        for i, item in enumerate(test_set):
-            if i < start_idx:
-                continue
-            q = item["question"]
-            gt = item["ground_truth"]
-            print(f"\n  [{i+1}/{len(test_set)}] {q[:55]}...")
+def get_contexts(item, cache, namespace, point_in_time, delay):
+    question = item["question"]
+    if question in cache:
+        return cache[question]
+    candidates = search(question, top_k=CANDIDATE_COUNT, namespace=namespace, use_rerank=False)
+    if not candidates:
+        raise ValueError(f"No CAR retrieval results for {question!r}")
+    if any(chunk.get("source") != "TC_CAR" or chunk.get("point_in_time") != point_in_time
+           for chunk in candidates):
+        raise ValueError("Retrieved vectors do not match the benchmark CAR snapshot")
+    ranked = rerank(question, candidates, top_n=CONTEXT_COUNT)
+    if not ranked:
+        raise ValueError(f"No Cohere reranking results for {question!r}")
+    if delay:
+        time.sleep(delay)
+    return {"rag": candidates[:CONTEXT_COUNT], "rag_rerank": ranked}
 
-            cached = retrieval_cache[q]
 
-            # --- Bare LLM ---
-            bare_messages = [
-                {"role": "system", "content": "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations."},
-                {"role": "user", "content": q},
-            ]
-            bare_answer, bare_tokens = generate(bare_messages, llm_model, base_url, provider)
-            bare_scores = score_ragas(
-                {k: v for k, v in scorers.items() if k in REFERENCE_METRICS + ANSWER_METRICS},
-                user_input=q, response=bare_answer, reference=gt, retrieved_contexts=[],
-            )
-            bare_results.append({
-                "question": q, "ground_truth": gt, "answer": bare_answer,
-                **bare_scores, "tokens": bare_tokens,
-                "eval_protocol_version": EVAL_PROTOCOL_VERSION,
-            })
+def messages_for(question, contexts):
+    if contexts is None:
+        return [{"role": "system", "content": BARE_SYSTEM}, {"role": "user", "content": question}]
+    context = "\n\n---\n\n".join(f"[CAR {c['section']}]\n{c['text']}" for c in contexts)
+    return [
+        {"role": "system", "content": RAG_SYSTEM},
+        {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question}"},
+    ]
 
-            # --- RAG (no rerank) ---
-            rag_chunks = cached["no_rerank"]
-            rag_messages = build_prompt(q, rag_chunks)
-            rag_answer, rag_tokens = generate(rag_messages, llm_model, base_url, provider)
-            rag_contexts = [c["text"] for c in rag_chunks]
-            rag_scores = score_ragas(
-                scorers, user_input=q, response=rag_answer,
-                reference=gt, retrieved_contexts=rag_contexts,
-            )
-            rag_results.append({
-                "question": q, "ground_truth": gt, "answer": rag_answer,
-                **rag_scores, "tokens": rag_tokens,
-                "eval_protocol_version": EVAL_PROTOCOL_VERSION,
-            })
 
-            # --- RAG + Rerank ---
-            rr_chunks = cached["rerank"]
-            rr_messages = build_prompt(q, rr_chunks)
-            rr_answer, rr_tokens = generate(rr_messages, llm_model, base_url, provider)
-            rr_contexts = [c["text"] for c in rr_chunks]
-            rr_scores = score_ragas(
-                scorers, user_input=q, response=rr_answer,
-                reference=gt, retrieved_contexts=rr_contexts,
-            )
-            rerank_results.append({
-                "question": q, "ground_truth": gt, "answer": rr_answer,
-                **rr_scores, "tokens": rr_tokens,
-                "eval_protocol_version": EVAL_PROTOCOL_VERSION,
-            })
+def generate(client, model, messages, local=False):
+    kwargs = {"model": model, "messages": messages}
+    if local:
+        kwargs["temperature"] = 0
+    response = client.chat.completions.create(**kwargs)
+    if not response.choices or not response.choices[0].message.content:
+        raise ValueError(f"{model} returned an empty answer")
+    return response.choices[0].message.content, response.usage.total_tokens if response.usage else 0
 
-            def format_score(scores, metric):
-                value = scores.get(metric)
-                return f"{value:.2f}" if value is not None else "n/a"
 
-            print(f"    bare_fc={format_score(bare_scores, 'factual_correctness')}  "
-                  f"rag_faith={format_score(rag_scores, 'faithfulness')}  "
-                  f"rr_faith={format_score(rr_scores, 'faithfulness')}")
-
-            # Save after each question (incremental, prevents data loss)
-            with open(f"{results_dir}/bare_results.json", "w") as f:
-                json.dump(bare_results, f, indent=2)
-            with open(f"{results_dir}/rag_no_rerank_results.json", "w") as f:
-                json.dump(rag_results, f, indent=2)
-            with open(f"{results_dir}/rag_rerank_results.json", "w") as f:
-                json.dump(rerank_results, f, indent=2)
-
-        # Aggregate
-        all_metric_names = CONTEXT_METRICS + ANSWER_METRICS + REFERENCE_METRICS
-        bare_metric_names = ANSWER_METRICS + REFERENCE_METRICS
-
-        def avg(results, metric):
-            return metric_summary([r.get(metric) for r in results])["mean"]
-
-        summary = {
-            "num_questions": len(test_set),
-            "eval_protocol_version": EVAL_PROTOCOL_VERSION,
-            "model": llm_model,
-            "bare": {m: avg(bare_results, m) for m in bare_metric_names},
-            "rag": {m: avg(rag_results, m) for m in all_metric_names},
-            "rag_rerank": {m: avg(rerank_results, m) for m in all_metric_names},
-            "uncertainty": {
-                config: {
-                    metric: metric_summary([result.get(metric) for result in results])
-                    for metric in metrics
-                }
-                for config, results, metrics in [
-                    ("bare", bare_results, bare_metric_names),
-                    ("rag", rag_results, all_metric_names),
-                    ("rag_rerank", rerank_results, all_metric_names),
-                ]
-            },
-            "paired_comparisons": {
-                "rag_minus_bare": {
-                    metric: paired_metric_summary(bare_results, rag_results, metric)
-                    for metric in bare_metric_names
-                },
-                "rerank_minus_rag": {
-                    metric: paired_metric_summary(rag_results, rerank_results, metric)
-                    for metric in all_metric_names
-                },
-            },
+def summarize(results, model, manifest):
+    summary = {"model": model, "run": manifest, "num_questions": len(results["bare"])}
+    for config in CONFIGS:
+        metrics = ANSWER_METRICS if config == "bare" else ALL_METRICS
+        summary[config] = {
+            metric: metric_summary([row.get(metric) for row in results[config]])
+            for metric in metrics
         }
+    summary["paired_comparisons"] = {
+        "rag_minus_bare": {
+            metric: paired_metric_summary(results["bare"], results["rag"], metric)
+            for metric in ANSWER_METRICS
+        },
+        "rerank_minus_rag": {
+            metric: paired_metric_summary(results["rag"], results["rag_rerank"], metric)
+            for metric in ALL_METRICS
+        },
+    }
+    return summary
 
-        # Print
-        print(f"\n{'='*70}")
-        print(f"EVAL RESULTS — {llm_model} ({len(test_set)} questions, RAGAS metrics)")
-        print(f"{'='*70}")
-        print(f"\n{'Metric':<25} {'Bare':>10} {'RAG':>10} {'Rerank':>10}")
-        print(f"{'-'*55}")
-        for m in all_metric_names:
-            bare_val = summary["bare"].get(m, "N/A")
-            rag_val = summary["rag"].get(m, "N/A")
-            rr_val = summary["rag_rerank"].get(m, "N/A")
-            bare_str = f"{bare_val:.3f}" if isinstance(bare_val, float) else bare_val
-            rag_str = f"{rag_val:.3f}" if isinstance(rag_val, float) else rag_val
-            rr_str = f"{rr_val:.3f}" if isinstance(rr_val, float) else rr_val
-            print(f"{m:<25} {bare_str:>10} {rag_str:>10} {rr_str:>10}")
-            for config, results in [
-                ("bare", bare_results),
-                ("rag", rag_results),
-                ("rag_rerank", rerank_results),
-            ]:
-                stats = summary["uncertainty"].get(config, {}).get(m)
-                if stats and stats["n"] and stats["ci95"]:
-                    print(
-                        f"  {config:<23} n={stats['n']:<3} "
-                        f"95% bootstrap CI [{stats['ci95'][0]:.3f}, {stats['ci95'][1]:.3f}]"
-                    )
-        print()
 
-        # Save
-        with open(f"{results_dir}/bare_results.json", "w") as f:
-            json.dump(bare_results, f, indent=2)
-        with open(f"{results_dir}/rag_no_rerank_results.json", "w") as f:
-            json.dump(rag_results, f, indent=2)
-        with open(f"{results_dir}/rag_rerank_results.json", "w") as f:
-            json.dump(rerank_results, f, indent=2)
-        with open(f"{results_dir}/summary.json", "w") as f:
-            json.dump(summary, f, indent=2)
+def print_comparison(summaries):
+    print("\nCAR evaluation comparison (mean; valid sample count)", flush=True)
+    if any(summary["run"]["provisional"] for summary in summaries):
+        print("Provisional: the benchmark has not been fully human-reviewed.", flush=True)
+    for metric in ALL_METRICS:
+        print(f"\n{metric}")
+        for summary in summaries:
+            values = []
+            for config in CONFIGS:
+                stats = summary[config].get(metric)
+                if stats is None or stats["mean"] is None:
+                    values.append(f"{config}=n/a")
+                else:
+                    values.append(f"{config}={stats['mean']:.3f} (n={stats['n']})")
+            print(f"  {summary['model']}: {'; '.join(values)}")
 
-        all_summaries.append(summary)
-        print(f"Saved to {results_dir}/")
 
-    # Combined
-    with open("eval/results/all_summaries.json", "w") as f:
-        json.dump(all_summaries, f, indent=2)
+def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=False,
+             limit=None, delay=7, models=(*AZURE_MODELS, LOCAL_MODEL), run_tag="default",
+             results_root=Path("eval/results/car")):
+    slugs = [re.sub(r"[^a-zA-Z0-9._-]", "-", model) for model in models]
+    if not namespace or not models or len(slugs) != len(set(slugs)):
+        raise ValueError("A namespace and uniquely named models are required")
+    benchmark_manifest, questions = load_benchmark(benchmark, allow_unreviewed, limit)
+    stats = get_pinecone_index().describe_index_stats()
+    namespace_info = stats.namespaces.get(namespace)
+    if stats.dimension != 3072 or not namespace_info or not namespace_info.vector_count:
+        raise ValueError("CAR namespace is missing, empty, or not 3072-dimensional")
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+    manifest = {
+        "protocol_version": PROTOCOL_VERSION, "benchmark": benchmark_manifest,
+        "questions_sha256": hashlib.sha256(json.dumps(questions, sort_keys=True).encode()).hexdigest(),
+        "namespace": namespace, "index": os.getenv("PINECONE_INDEX_NAME", "aeroquery"),
+        "namespace_vector_count": namespace_info.vector_count,
+        "azure_endpoint_sha256": hashlib.sha256(endpoint.encode()).hexdigest(),
+        "embedding_model": EMBEDDING_MODEL, "judge_model": JUDGE_MODEL,
+        "ragas_version": ragas.__version__, "reranker": RERANK_MODEL,
+        "candidate_count": CANDIDATE_COUNT, "context_count": CONTEXT_COUNT,
+        "models": list(models), "rag_prompt_sha256": hashlib.sha256(RAG_SYSTEM.encode()).hexdigest(),
+        "bare_prompt_sha256": hashlib.sha256(BARE_SYSTEM.encode()).hexdigest(),
+        "run_tag": run_tag, "provisional": any(not q.get("reviewed") for q in questions),
+    }
+    run_id = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()[:16]
+    directory = Path(results_root) / run_id
+    directory.mkdir(parents=True, exist_ok=True)
+    write_json(directory / "manifest.json", manifest)
+    print(f"CAR evaluation run: {directory} ({len(questions)} questions"
+          f"{', provisional' if manifest['provisional'] else ''})", flush=True)
+    cache_path = directory / "retrieval_cache.json"
+    cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
+    scorers, judge_client, similarity_client = make_scorers()
+    azure = azure_client()
+    local = OpenAI(api_key="ollama", base_url=OLLAMA_BASE_URL, timeout=120) if LOCAL_MODEL in models else None
+    all_summaries = []
 
-    # Final table
-    print(f"\n{'#'*70}")
-    print(f"# FINAL COMPARISON (RAGAS)")
-    print(f"{'#'*70}")
-    for m in all_metric_names:
-        print(f"\n  {m}:")
-        print(f"  {'Model':<20} {'Bare':>8} {'RAG':>8} {'Rerank':>8}")
-        print(f"  {'-'*44}")
-        for s in all_summaries:
-            bare_v = s["bare"].get(m, "—")
-            rag_v = s["rag"].get(m, "—")
-            rr_v = s["rag_rerank"].get(m, "—")
-            b = f"{bare_v:.3f}" if isinstance(bare_v, float) else str(bare_v)
-            r = f"{rag_v:.3f}" if isinstance(rag_v, float) else str(rag_v)
-            rr = f"{rr_v:.3f}" if isinstance(rr_v, float) else str(rr_v)
-            print(f"  {s['model']:<20} {b:>8} {r:>8} {rr:>8}")
-    print()
+    with asyncio.Runner() as runner:
+        try:
+            for model in models:
+                slug = re.sub(r"[^a-zA-Z0-9._-]", "-", model)
+                model_dir = directory / slug
+                model_dir.mkdir(exist_ok=True)
+                results = {}
+                for config in CONFIGS:
+                    path = model_dir / f"{config}_results.json"
+                    results[config] = json.loads(path.read_text()) if path.exists() else []
+                    if len(results[config]) > len(questions) or any(
+                        row["question"] != questions[i]["question"] for i, row in enumerate(results[config])
+                    ):
+                        raise ValueError(f"Stored results do not match this benchmark: {path}")
+                for i, item in enumerate(questions):
+                    if all(len(results[config]) > i for config in CONFIGS):
+                        continue
+                    contexts = get_contexts(item, cache, namespace, benchmark_manifest["point_in_time"], delay)
+                    if item["question"] not in cache:
+                        cache[item["question"]] = contexts
+                        write_json(cache_path, cache)
+                    print(f"{model} [{i + 1}/{len(questions)}]", flush=True)
+                    for config in CONFIGS:
+                        if len(results[config]) > i:
+                            continue
+                        chunks = None if config == "bare" else contexts[config]
+                        client = local if model == LOCAL_MODEL else azure
+                        print(f"  {config}: generating", flush=True)
+                        answer, tokens = generate(client, model, messages_for(item["question"], chunks),
+                                                  local=model == LOCAL_MODEL)
+                        print(f"  {config}: scoring", flush=True)
+                        shared_scores = cache[item["question"]].get("context_scores", {}).get(config)
+                        selected_scorers = {
+                            name: scorer for name, scorer in scorers.items()
+                            if not shared_scores or name not in ("context_precision", "context_recall")
+                        }
+                        scores, errors = runner.run(score_ragas(
+                            selected_scorers, item["question"], answer, item["ground_truth"],
+                            [chunk["text"] for chunk in chunks] if chunks else [],
+                        ))
+                        if shared_scores:
+                            scores.update(shared_scores)
+                        elif config != "bare" and all(
+                            scores.get(name) is not None for name in ("context_precision", "context_recall")
+                        ):
+                            shared_scores = {name: scores[name] for name in ("context_precision", "context_recall")}
+                            cache[item["question"]].setdefault("context_scores", {})[config] = shared_scores
+                            write_json(cache_path, cache)
+                        results[config].append({
+                            "question": item["question"], "ground_truth": item["ground_truth"],
+                            "section": item["section"], "source_url": item["source_url"],
+                            "answer": answer, "tokens": tokens, **scores, "metric_errors": errors,
+                        })
+                        write_json(model_dir / f"{config}_results.json", results[config])
+                        print(f"  {config}: checkpoint saved", flush=True)
+                summary = summarize(results, model, manifest)
+                write_json(model_dir / "summary.json", summary)
+                all_summaries.append(summary)
+                write_json(directory / "all_summaries.json", all_summaries)
+                print(f"Completed {model}; results in {model_dir}", flush=True)
+        finally:
+            runner.run(judge_client.close())
+            similarity_client.close()
+            azure.close()
+            if local:
+                local.close()
+    print_comparison(all_summaries)
+    return directory
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--benchmark", default=BENCHMARK_PATH)
+    parser.add_argument("--namespace", default=NAMESPACE)
+    parser.add_argument("--allow-unreviewed", action="store_true")
+    parser.add_argument("--limit", type=int, help="Evaluate only the first N questions in a separate run")
+    parser.add_argument("--cohere-delay", type=float, default=7)
+    parser.add_argument("--models", nargs="+", default=[*AZURE_MODELS, LOCAL_MODEL])
+    parser.add_argument("--run-tag", default="default", help="Use a new tag after updating vectors in place")
+    parser.add_argument("--results-dir", default="eval/results/car")
+    args = parser.parse_args()
+    if args.cohere_delay < 0:
+        parser.error("--cohere-delay cannot be negative")
+    run_eval(args.benchmark, args.namespace, args.allow_unreviewed, args.limit,
+             args.cohere_delay, args.models, args.run_tag, args.results_dir)
 
 
 if __name__ == "__main__":
-    run_eval()
+    main()

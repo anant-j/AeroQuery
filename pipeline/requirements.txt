@@ -3,6 +3,6 @@ tiktoken
 python-dotenv
 openai
 pinecone
-ragas>=0.4
+ragas==0.4.3
+langchain-community==0.3.31
 cohere
-litellm
