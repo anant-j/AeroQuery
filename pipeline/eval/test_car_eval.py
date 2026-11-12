@@ -189,8 +189,76 @@ class CarEvaluationTests(unittest.TestCase):
                               results_root=directory)
         context_calls = [names for has_context, names in calls if has_context]
         self.assertEqual(len(context_calls), 4)
-        self.assertTrue(all("context_precision" in names for names in context_calls[:2]))
-        self.assertTrue(all("context_precision" not in names for names in context_calls[2:]))
+        self.assertEqual(sum("context_precision" in names for names in context_calls), 2)
+
+    def test_parallel_generations_checkpoint_and_resume_after_failure(self):
+        names = run_eval.CONTEXT_METRICS + run_eval.ANSWER_METRICS
+        scorers = {name: object() for name in names}
+        barrier = threading.Barrier(2)
+        lock = threading.Lock()
+        calls = []
+        fail_once = True
+        active = 0
+        peak = 0
+
+        def generate(client, model, messages, local=False):
+            nonlocal fail_once, active, peak
+            sources = json.loads(messages[1]["content"].split("\n", 1)[1])["sources"]
+            config = "bare" if sources is None else sources[0]["text"]
+            with lock:
+                calls.append((model, config))
+                active += 1
+                peak = max(peak, active)
+                first_two = len(calls) <= 2
+                should_fail = model == "first" and config == "bare" and fail_once
+                if should_fail:
+                    fail_once = False
+            try:
+                if first_two:
+                    barrier.wait(timeout=3)
+                if should_fail:
+                    raise RuntimeError("generation unavailable")
+                return "answer", 1
+            finally:
+                with lock:
+                    active -= 1
+
+        async def score(selected, question, answer, reference, contexts):
+            return {name: 0.5 for name in selected if contexts or name not in run_eval.CONTEXT_METRICS}, {}
+
+        class Client:
+            def close(self):
+                pass
+
+        class JudgeClient:
+            async def close(self):
+                pass
+
+        stats = SimpleNamespace(dimension=3072, namespaces={"car": SimpleNamespace(vector_count=1)})
+        contexts = {"rag": [{"text": "rag", "section": "602.88"}],
+                    "rag_rerank": [{"text": "rag_rerank", "section": "602.88"}]}
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(run_eval, "load_benchmark", return_value=({"point_in_time": "2026-06-17"}, [ITEM])), \
+                patch.object(run_eval, "get_pinecone_index", return_value=SimpleNamespace(
+                    describe_index_stats=lambda: stats)), \
+                patch.object(run_eval, "make_scorers", return_value=(scorers, JudgeClient(), Client())), \
+                patch.object(run_eval, "azure_client", return_value=Client()), \
+                patch.object(run_eval, "get_contexts", return_value=contexts) as retrieve, \
+                patch.object(run_eval, "generate", side_effect=generate), \
+                patch.object(run_eval, "score_ragas", side_effect=score):
+            with self.assertRaisesRegex(RuntimeError, "generation call.*failed"):
+                run_eval.run_eval(namespace="car", models=("first", "second"), delay=0,
+                                  results_root=directory, concurrency=2)
+            run_dir = next(Path(directory).iterdir())
+            self.assertFalse((run_dir / "first" / "bare_results.json").exists())
+            self.assertTrue((run_dir / "second" / "rag_results.json").exists())
+            self.assertEqual(len(calls), 6)
+            self.assertEqual(peak, 2)
+            run_eval.run_eval(namespace="car", models=("first", "second"), delay=0,
+                              results_root=directory, concurrency=2)
+            self.assertEqual(calls[-1], ("first", "bare"))
+            self.assertEqual(len(calls), 7)
+            self.assertEqual(retrieve.call_count, 2)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import math
 import os
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 os.environ["RAGAS_DO_NOT_TRACK"] = "true"
@@ -36,7 +37,7 @@ load_dotenv()
 PROTOCOL_VERSION = 7
 AZURE_MODELS = ("gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.5")
 LOCAL_MODEL = "llama3.2:1b"
-JUDGE_MODEL = "gpt-5.4-mini"
+JUDGE_MODEL = "gpt-5.5"
 EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434/v1")
 NAMESPACE = "canada-car-2026-06-17"
@@ -247,10 +248,12 @@ def print_comparison(summaries):
 
 def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=False,
              limit=None, delay=7, models=(*AZURE_MODELS, LOCAL_MODEL), run_tag="default",
-             results_root=Path("eval/results/car")):
+             results_root=Path("eval/results/car"), concurrency=4):
     slugs = [re.sub(r"[^a-zA-Z0-9._-]", "-", model) for model in models]
     if not namespace or not models or len(slugs) != len(set(slugs)):
         raise ValueError("A namespace and uniquely named models are required")
+    if concurrency < 1:
+        raise ValueError("concurrency must be positive")
     benchmark_manifest, questions = load_benchmark(benchmark, allow_unreviewed, limit)
     stats = get_pinecone_index().describe_index_stats()
     namespace_info = stats.namespaces.get(namespace)
@@ -281,14 +284,15 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
     scorers, judge_client, similarity_client = make_scorers()
     azure = azure_client()
     local = OpenAI(api_key="ollama", base_url=OLLAMA_BASE_URL, timeout=120) if LOCAL_MODEL in models else None
-    all_summaries = []
-
     with asyncio.Runner() as runner:
         try:
+            results_by_model = {}
+            model_dirs = {}
             for model in models:
                 slug = re.sub(r"[^a-zA-Z0-9._-]", "-", model)
                 model_dir = directory / slug
                 model_dir.mkdir(exist_ok=True)
+                model_dirs[model] = model_dir
                 results = {}
                 for config in CONFIGS:
                     path = model_dir / f"{config}_results.json"
@@ -297,23 +301,41 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
                         row["question"] != questions[i]["question"] for i, row in enumerate(results[config])
                     ):
                         raise ValueError(f"Stored results do not match this benchmark: {path}")
+                results_by_model[model] = results
+
+            with ThreadPoolExecutor(max_workers=concurrency) as executor:
                 for i, item in enumerate(questions):
-                    if all(len(results[config]) > i for config in CONFIGS):
+                    pending = [
+                        (model, config)
+                        for model in models for config in CONFIGS
+                        if len(results_by_model[model][config]) <= i
+                    ]
+                    if not pending:
                         continue
                     contexts = get_contexts(item, cache, namespace, benchmark_manifest["point_in_time"], delay)
                     if item["question"] not in cache:
                         cache[item["question"]] = contexts
                         write_json(cache_path, cache)
-                    print(f"{model} [{i + 1}/{len(questions)}]", flush=True)
-                    for config in CONFIGS:
-                        if len(results[config]) > i:
-                            continue
+                    print(f"Question [{i + 1}/{len(questions)}]: generating {len(pending)} answers", flush=True)
+                    futures = {}
+                    for model, config in pending:
                         chunks = None if config == "bare" else contexts[config]
                         client = local if model == LOCAL_MODEL else azure
-                        print(f"  {config}: generating", flush=True)
-                        answer, tokens = generate(client, model, messages_for(item["question"], chunks),
-                                                  local=model == LOCAL_MODEL)
-                        print(f"  {config}: scoring", flush=True)
+                        future = executor.submit(
+                            generate, client, model, messages_for(item["question"], chunks),
+                            local=model == LOCAL_MODEL,
+                        )
+                        futures[future] = (model, config, chunks)
+                    failures = []
+                    for future in as_completed(futures):
+                        model, config, chunks = futures[future]
+                        try:
+                            answer, tokens = future.result()
+                        except Exception as error:
+                            print(f"  {model} {config}: generation failed: {type(error).__name__}: {error}", flush=True)
+                            failures.append((model, config, error))
+                            continue
+                        print(f"  {model} {config}: scoring", flush=True)
                         shared_scores = cache[item["question"]].get("context_scores", {}).get(config)
                         selected_scorers = {
                             name: scorer for name, scorer in scorers.items()
@@ -331,18 +353,26 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
                             shared_scores = {name: scores[name] for name in ("context_precision", "context_recall")}
                             cache[item["question"]].setdefault("context_scores", {})[config] = shared_scores
                             write_json(cache_path, cache)
-                        results[config].append({
+                        results_by_model[model][config].append({
                             "question": item["question"], "ground_truth": item["ground_truth"],
                             "section": item["section"], "source_url": item["source_url"],
                             "answer": answer, "tokens": tokens, **scores, "metric_errors": errors,
                         })
-                        write_json(model_dir / f"{config}_results.json", results[config])
-                        print(f"  {config}: checkpoint saved", flush=True)
-                summary = summarize(results, model, manifest)
-                write_json(model_dir / "summary.json", summary)
+                        write_json(model_dirs[model] / f"{config}_results.json", results_by_model[model][config])
+                        print(f"  {model} {config}: checkpoint saved", flush=True)
+                    if failures:
+                        model, config, error = failures[0]
+                        raise RuntimeError(
+                            f"{len(failures)} generation call(s) failed; first: {model} {config}. Rerun to resume."
+                        ) from error
+
+            all_summaries = []
+            for model in models:
+                summary = summarize(results_by_model[model], model, manifest)
+                write_json(model_dirs[model] / "summary.json", summary)
                 all_summaries.append(summary)
                 write_json(directory / "all_summaries.json", all_summaries)
-                print(f"Completed {model}; results in {model_dir}", flush=True)
+                print(f"Completed {model}; results in {model_dirs[model]}", flush=True)
         finally:
             runner.run(judge_client.close())
             similarity_client.close()
@@ -363,11 +393,15 @@ def main():
     parser.add_argument("--models", nargs="+", default=[*AZURE_MODELS, LOCAL_MODEL])
     parser.add_argument("--run-tag", default="default", help="Use a new tag after updating vectors in place")
     parser.add_argument("--results-dir", default="eval/results/car")
+    parser.add_argument("--concurrency", type=int, default=4,
+                        help="Maximum concurrent answer-generation calls (default: 4)")
     args = parser.parse_args()
     if args.cohere_delay < 0:
         parser.error("--cohere-delay cannot be negative")
+    if args.concurrency < 1:
+        parser.error("--concurrency must be positive")
     run_eval(args.benchmark, args.namespace, args.allow_unreviewed, args.limit,
-             args.cohere_delay, args.models, args.run_tag, args.results_dir)
+             args.cohere_delay, args.models, args.run_tag, args.results_dir, args.concurrency)
 
 
 if __name__ == "__main__":
