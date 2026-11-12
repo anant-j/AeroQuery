@@ -7,6 +7,7 @@ import { BARE_SYSTEM_PROMPT, EVAL_DATA, getTurnstileSiteKey, MAX_SESSION_REQUEST
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
+const DefaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
 
 function getRemainingRequests() {
   try {
@@ -165,7 +166,6 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
 }
 
 export default function Home() {
-  const defaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
   const [query, setQuery] = useState("");
   const [modelOption, setModelOption] = useState<ModelOption>("openai");
   const [loading, setLoading] = useState(false);
@@ -315,7 +315,7 @@ export default function Home() {
       setError("Not enough requests remain in this session.");
       return;
     }
-    const effectiveQuery = query.trim() || defaultQuery;
+    const effectiveQuery = query.trim() || DefaultQuery;
 
     setLoading(true);
     setError("");
@@ -325,9 +325,9 @@ export default function Home() {
     setBareStreaming(false);
 
     try {
-      const firstToken = await getTurnstileToken();
+      const firstToken = getTurnstileToken();
       if (modelOption === "openai") {
-        const secondToken = await getTurnstileToken();
+        const secondToken = getTurnstileToken();
         // Initialize results with empty answers for streaming
         setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
         setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
@@ -337,13 +337,13 @@ export default function Home() {
         // Stream both RAG and bare LLM in parallel
         await Promise.all([
           readSSEStream(
-            { query: effectiveQuery, use_rag: true, turnstile_token: firstToken },
+            { query: effectiveQuery, use_rag: true, turnstile_token: await firstToken },
             (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             (sources, agent) => setRagResult(prev => prev ? { ...prev, sources, agent } : null),
             (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
           ).finally(() => setRagStreaming(false)),
           readSSEStream(
-            { query: effectiveQuery, use_rag: false, turnstile_token: secondToken },
+            { query: effectiveQuery, use_rag: false, turnstile_token: await secondToken },
             (token) => setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             undefined,
             (meta) => setBareResult(prev => prev ? { ...prev, ...meta } : null),
@@ -355,7 +355,7 @@ export default function Home() {
         const retrieveRes = await fetch("/api/retrieve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: effectiveQuery, turnstile_token: firstToken }),
+          body: JSON.stringify({ query: effectiveQuery, turnstile_token: await firstToken }),
         });
 
         if (!retrieveRes.ok) {
@@ -481,7 +481,7 @@ export default function Home() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={defaultQuery}
+            placeholder={DefaultQuery}
             aria-label="Search Canadian aviation regulations"
             className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
