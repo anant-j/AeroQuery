@@ -410,8 +410,6 @@ async def _log_question(env, query, mode, question_sha, correlation_id, answered
     now = datetime.now(timezone.utc)
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
     log_event = {"event": "question_received", "correlation_id": correlation_id, "mode": mode, "answered_from_cache": answered_from_cache}
-    if query_text is not None:
-        log_event["query_text"] = query_text
     print(json.dumps(log_event))
     try:
         await env.DB.prepare(

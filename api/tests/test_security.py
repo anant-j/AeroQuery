@@ -365,7 +365,8 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                 await worker._log_question(env, "test question", "openai_rag", "sha", "correlation")
             event = json.loads(output.call_args.args[0])
             self.assertEqual(event["correlation_id"], bound_values[0])
-            self.assertEqual(event.get("query_text"), "test question" if enabled == "true" else None)
+            self.assertNotIn("test question", output.call_args.args[0])
+            self.assertNotIn("query_text", event)
             self.assertEqual(bound_values[3], "test question" if enabled == "true" else None)
 
     async def test_unauthorized_requests_are_rejected(self):
