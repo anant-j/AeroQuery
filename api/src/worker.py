@@ -377,7 +377,7 @@ async def _cache_get(env, key):
     if not _cache_ttl(env):
         return None
     try:
-        value = await env.ANSWER_CACHE.get(key)
+        value = await env.AEROQUERY_ANSWER_CACHE.get(key)
         return json.loads(value) if value is not None else None
     except Exception as error:
         print(json.dumps({"event": "cache_read_failed", "error_type": type(error).__name__}))
@@ -389,7 +389,7 @@ async def _cache_put(env, key, value):
     if not ttl:
         return
     try:
-        await env.ANSWER_CACHE.put(key, json.dumps(value), _js_options({"expirationTtl": max(60, ttl)}))
+        await env.AEROQUERY_ANSWER_CACHE.put(key, json.dumps(value), _js_options({"expirationTtl": max(60, ttl)}))
     except Exception as error:
         print(json.dumps({"event": "cache_write_failed", "error_type": type(error).__name__}))
 

@@ -2,6 +2,7 @@ import importlib.util
 import json
 import sqlite3
 import sys
+import tomllib
 import types
 import unittest
 from pathlib import Path
@@ -78,9 +79,18 @@ with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), 
 
 
 class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_configured_kv_binding_supports_cache_reads_and_writes(self):
+        config_path = Path(__file__).parents[1] / "wrangler.toml"
+        with config_path.open("rb") as config_file:
+            config = tomllib.load(config_file)
+        cache = Cache()
+        env = types.SimpleNamespace(**{config["kv_namespaces"][0]["binding"]: cache})
+        await worker._cache_put(env, "key", {"answer": "test"})
+        self.assertEqual(await worker._cache_get(env, "key"), {"answer": "test"})
+
     async def test_kv_cache_uses_ttl_and_fails_open(self):
         cache = types.SimpleNamespace(get=AsyncMock(return_value='{"answer":"cached"}'), put=AsyncMock())
-        env = types.SimpleNamespace(ANSWER_CACHE=cache, CACHE_TTL_SECONDS="120")
+        env = types.SimpleNamespace(AEROQUERY_ANSWER_CACHE=cache, CACHE_TTL_SECONDS="120")
         with patch.object(worker, "_js_options", lambda value: value):
             await worker._cache_put(env, "key", {"answer": "cached"})
         cache.put.assert_awaited_once_with("key", '{"answer": "cached"}', {"expirationTtl": 120})
@@ -93,17 +103,17 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(cache.put.await_count, 1)
 
     async def test_cache_hit_expiration_and_disabled_cache(self):
-        env = types.SimpleNamespace(ANSWER_CACHE=Cache(), CACHE_TTL_SECONDS="60")
+        env = types.SimpleNamespace(AEROQUERY_ANSWER_CACHE=Cache(), CACHE_TTL_SECONDS="60")
         key = worker._cache_key(env, "/retrieve", "question", False)
         await worker._cache_put(env, key, {"answer": "test"})
         self.assertEqual(await worker._cache_get(env, key), {"answer": "test"})
-        self.assertEqual(env.ANSWER_CACHE.ttls[key], 60)
-        del env.ANSWER_CACHE.values[key]
+        self.assertEqual(env.AEROQUERY_ANSWER_CACHE.ttls[key], 60)
+        del env.AEROQUERY_ANSWER_CACHE.values[key]
         self.assertIsNone(await worker._cache_get(env, key))
         env.CACHE_TTL_SECONDS = "0"
         await worker._cache_put(env, key, {"answer": "new"})
         self.assertIsNone(await worker._cache_get(env, key))
-        self.assertNotIn(key, env.ANSWER_CACHE.values)
+        self.assertNotIn(key, env.AEROQUERY_ANSWER_CACHE.values)
 
     async def test_cache_keys_separate_paths_modes_models_and_questions(self):
         env = types.SimpleNamespace(AZURE_OPENAI_DEPLOYMENT="model-a")
@@ -117,7 +127,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
     async def test_repeated_retrieval_uses_cache_and_still_logs(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(
-            DB=Database(), ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
+            DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         self.addCleanup(entry.env.DB.connection.close)
@@ -139,7 +149,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(rows[0][0], rows[1][0])
 
     async def test_stream_cache_only_stores_complete_successful_answers(self):
-        env = types.SimpleNamespace(ANSWER_CACHE=Cache())
+        env = types.SimpleNamespace(AEROQUERY_ANSWER_CACHE=Cache())
         for finish_reason, done, should_cache in (("stop", True, True), ("length", True, False), ("stop", False, False)):
             with self.subTest(finish_reason=finish_reason, done=done):
                 lines = [
@@ -166,12 +176,12 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                     replay = worker._cached_stream(cached)
                     self.assertIn('"token":"answer"', replay.body)
                     self.assertIn('"type":"done"', replay.body)
-                    env.ANSWER_CACHE.values.clear()
+                    env.AEROQUERY_ANSWER_CACHE.values.clear()
 
     async def test_stream_cache_hit_skips_agent_and_generation(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(
-            DB=Database(), ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
+            DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         self.addCleanup(entry.env.DB.connection.close)
