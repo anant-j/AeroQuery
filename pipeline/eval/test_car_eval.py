@@ -37,6 +37,7 @@ class CarEvaluationTests(unittest.TestCase):
         self.assertEqual(bare[0], rag[0])
         self.assertEqual(bare[0], empty[0])
         self.assertEqual(bare[1]["content"].split("\n", 1)[0], rag[1]["content"].split("\n", 1)[0])
+        self.assertIn("Answer the question in Markdown, not JSON:", bare[1]["content"].split("\n", 1)[0])
         self.assertEqual(json.loads(bare[1]["content"].split("\n", 1)[1])["sources"], None)
         self.assertEqual(json.loads(rag[1]["content"].split("\n", 1)[1])["sources"], [source])
         self.assertEqual(json.loads(empty[1]["content"].split("\n", 1)[1])["sources"], [])
