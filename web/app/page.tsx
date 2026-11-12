@@ -335,9 +335,9 @@ export default function Home() {
     setBareStreaming(false);
 
     try {
-      const firstToken = getTurnstileToken();
+      const firstToken = await getTurnstileToken();
       if (modelOption === "openai") {
-        const secondToken = getTurnstileToken();
+        const secondToken = await getTurnstileToken();
         // Initialize results with empty answers for streaming
         setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
         setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
@@ -347,13 +347,13 @@ export default function Home() {
         // Stream both RAG and bare LLM in parallel
         await Promise.all([
           readSSEStream(
-            { query: effectiveQuery, use_rag: true, turnstile_token: await firstToken },
+            { query: effectiveQuery, use_rag: true, turnstile_token: firstToken },
             (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             (sources, agent) => setRagResult(prev => prev ? { ...prev, sources, agent } : null),
             (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
           ).finally(() => setRagStreaming(false)),
           readSSEStream(
-            { query: effectiveQuery, use_rag: false, turnstile_token: await secondToken },
+            { query: effectiveQuery, use_rag: false, turnstile_token: secondToken },
             (token) => setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
             undefined,
             (meta) => setBareResult(prev => prev ? { ...prev, ...meta } : null),
