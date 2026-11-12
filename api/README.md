@@ -9,7 +9,6 @@ All endpoints are `POST` with a JSON body `{ "query": string, "use_rag"?: boolea
 | Path | Purpose |
 | --- | --- |
 | `/retrieve` | Embed query, search Pinecone, rerank with Cohere; returns top chunks (used by the in-browser WebLLM mode). |
-| `/agent` | Classifies the query as simple/complex, decomposes complex ones into sub-queries, retrieves, and runs a relevance guard. |
 | `/stream` | Streams an Azure OpenAI answer over SSE. With `use_rag: true` it runs the agent and grounds the answer in retrieved sections; otherwise answers without context. |
 
 Pipeline: Azure OpenAI embeddings -> Pinecone (namespace `canada`) -> Cohere `rerank-v4.0-pro` -> Azure OpenAI chat.

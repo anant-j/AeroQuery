@@ -119,7 +119,6 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         env = types.SimpleNamespace(AZURE_OPENAI_DEPLOYMENT="model-a")
         key = worker._cache_key(env, "/stream", "question", True)
         self.assertNotEqual(key, worker._cache_key(env, "/stream", "question", False))
-        self.assertNotEqual(key, worker._cache_key(env, "/agent", "question", False))
         self.assertNotEqual(key, worker._cache_key(env, "/stream", "Question", True))
         env.AZURE_OPENAI_DEPLOYMENT = "model-b"
         self.assertNotEqual(key, worker._cache_key(env, "/stream", "question", True))

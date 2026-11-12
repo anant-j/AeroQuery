@@ -519,7 +519,7 @@ class Default(WorkerEntrypoint):
             if path.startswith("/api/"):
                 path = path[4:]
 
-            if request.method != "POST" or path not in ("/retrieve", "/agent", "/stream"):
+            if request.method != "POST" or path not in ("/retrieve", "/stream"):
                 raise ApiError("Not found", 404)
 
             stage = "request_validation"
@@ -530,7 +530,7 @@ class Default(WorkerEntrypoint):
             if not isinstance(use_rag, bool):
                 raise ApiError("use_rag must be a boolean", 400)
 
-            mode = "webllm" if path == "/retrieve" else "openai_rag" if path == "/agent" or use_rag else "openai_bare"
+            mode = "webllm" if path == "/retrieve" else "openai_rag" if use_rag else "openai_bare"
             cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False)
             cached = await _cache_get(self.env, cache_key)
             stage = "question_logging"
@@ -542,17 +542,6 @@ class Default(WorkerEntrypoint):
                 stage = "retrieval"
                 chunks = await _retrieve_chunks(self.env, query)
                 result = {"query": query, "chunks": _public_chunks(chunks)}
-                await _cache_put(self.env, cache_key, result)
-                return Response.json(result)
-
-            if path == "/agent":
-                stage = "agent_retrieval"
-                result = await _run_agent(self.env, query)
-                result = {
-                    "query": query,
-                    "chunks": _public_chunks(result["chunks"]),
-                    "agent": result["agent"],
-                }
                 await _cache_put(self.env, cache_key, result)
                 return Response.json(result)
 
