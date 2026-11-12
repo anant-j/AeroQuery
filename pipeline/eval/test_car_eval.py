@@ -258,7 +258,63 @@ class CarEvaluationTests(unittest.TestCase):
                               results_root=directory, concurrency=2)
             self.assertEqual(calls[-1], ("first", "bare"))
             self.assertEqual(len(calls), 7)
-            self.assertEqual(retrieve.call_count, 2)
+            self.assertEqual(retrieve.call_count, 1)
+
+    def test_hosted_advances_while_local_generation_waits(self):
+        questions = [dict(ITEM, question=f"Question {i}") for i in range(2)]
+        local_started = threading.Event()
+        hosted_advanced = threading.Event()
+        calls = []
+
+        def generate(client, model, messages, local=False):
+            question = json.loads(messages[1]["content"].split("\n", 1)[1])["question"]
+            if local and question == "Question 0":
+                local_started.set()
+                if not hosted_advanced.wait(timeout=5):
+                    raise RuntimeError("hosted generation did not advance")
+            elif not local:
+                if not local_started.wait(timeout=5):
+                    raise RuntimeError("local generation did not start")
+                if question == "Question 1":
+                    calls.append((model, question))
+                    hosted_advanced.set()
+                    return "answer", 1
+            calls.append((model, question))
+            return "answer", 1
+
+        async def score(selected, question, answer, reference, contexts):
+            return {name: 0.5 for name in selected if contexts or name not in run_eval.CONTEXT_METRICS}, {}
+
+        class Client:
+            def close(self):
+                pass
+
+        class JudgeClient:
+            async def close(self):
+                pass
+
+        stats = SimpleNamespace(dimension=3072, namespaces={"car": SimpleNamespace(vector_count=1)})
+        context = [{"text": "source", "section": "602.88"}]
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(run_eval, "load_benchmark", return_value=({"point_in_time": "2026-06-17"}, questions)), \
+                patch.object(run_eval, "get_pinecone_index", return_value=SimpleNamespace(
+                    describe_index_stats=lambda: stats)), \
+                patch.object(run_eval, "make_scorers", return_value=(
+                    {name: object() for name in run_eval.ALL_METRICS}, JudgeClient(), Client())), \
+                patch.object(run_eval, "azure_client", return_value=Client()), \
+                patch.object(run_eval, "OpenAI", return_value=Client()), \
+                patch.object(run_eval, "get_contexts", side_effect=lambda *args: {"rag": context, "rag_rerank": context}), \
+                patch.object(run_eval, "generate", side_effect=generate), \
+                patch.object(run_eval, "score_ragas", side_effect=score), \
+                patch("builtins.print"):
+            run_eval.run_eval(namespace="car", models=("hosted", run_eval.LOCAL_MODEL), delay=0,
+                              allow_unreviewed=True, results_root=directory, concurrency=2)
+            self.assertLess(calls.index(("hosted", "Question 1")),
+                            calls.index((run_eval.LOCAL_MODEL, "Question 0")))
+            for model in ("hosted", "llama3.2-1b"):
+                for config in run_eval.CONFIGS:
+                    rows = json.loads((Path(directory) / model / f"{config}_results.json").read_text())
+                    self.assertEqual([row["question"] for row in rows], ["Question 0", "Question 1"])
 
     def test_limit_can_expand_without_regenerating_and_rejects_incompatible_runs(self):
         questions = [dict(ITEM, question=f"Question {i}") for i in range(150)]

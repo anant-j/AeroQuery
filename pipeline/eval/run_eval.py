@@ -8,7 +8,7 @@ import math
 import os
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
 os.environ["RAGAS_DO_NOT_TRACK"] = "true"
@@ -34,8 +34,8 @@ from retrieval.search import RERANK_MODEL, get_pinecone_index, rerank, search
 
 load_dotenv()
 
-PROTOCOL_VERSION = 7
-AZURE_MODELS = ("gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.5")
+PROTOCOL_VERSION = 8
+AZURE_MODELS = ("gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4")
 LOCAL_MODEL = "llama3.2:1b"
 JUDGE_MODEL = "gpt-5.5"
 EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
@@ -254,6 +254,8 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
         raise ValueError("A namespace and uniquely named models are required")
     if concurrency < 1:
         raise ValueError("concurrency must be positive")
+    if LOCAL_MODEL in models and len(models) > 1 and concurrency < 2:
+        raise ValueError("concurrency must be at least 2 when evaluating local and hosted models together")
     if limit is not None and limit < 1:
         raise ValueError("limit must be positive")
     benchmark_manifest, all_questions = load_benchmark(benchmark, allow_unreviewed=True)
@@ -318,32 +320,53 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
                         raise ValueError("Stored results exceed the requested limit; use a larger --limit or a different --results-dir")
                 results_by_model[model] = results
 
-            with ThreadPoolExecutor(max_workers=concurrency) as executor:
-                for i, item in enumerate(questions):
-                    pending = [
-                        (model, config)
-                        for model in models for config in CONFIGS
-                        if len(results_by_model[model][config]) <= i
-                    ]
-                    if not pending:
+            summaries = {}
+
+            def save_completed_summaries():
+                for model in models:
+                    if model in summaries or any(len(results_by_model[model][config]) < len(questions) for config in CONFIGS):
                         continue
-                    contexts = get_contexts(item, cache, namespace, benchmark_manifest["point_in_time"], delay)
-                    if item["question"] not in cache:
+                    summary = summarize(results_by_model[model], model, manifest)
+                    write_json(model_dirs[model] / "summary.json", summary)
+                    summaries[model] = summary
+                    write_json(directory / "all_summaries.json", [summaries[name] for name in models if name in summaries])
+                    print(f"Completed {model}; results in {model_dirs[model]}", flush=True)
+
+            hosted_workers = concurrency - 1 if local and len(models) > 1 else concurrency
+            with ThreadPoolExecutor(max_workers=hosted_workers) as hosted_executor, \
+                    ThreadPoolExecutor(max_workers=1) as local_executor:
+                futures = {}
+
+                def schedule_next(model, config):
+                    i = len(results_by_model[model][config])
+                    if i >= len(questions):
+                        return
+                    item = questions[i]
+                    if item["question"] in cache:
+                        contexts = cache[item["question"]]
+                    else:
+                        contexts = get_contexts(item, cache, namespace, benchmark_manifest["point_in_time"], delay)
                         cache[item["question"]] = contexts
                         write_json(cache_path, cache)
-                    print(f"Question [{i + 1}/{len(questions)}]: generating {len(pending)} answers", flush=True)
-                    futures = {}
-                    for model, config in pending:
-                        chunks = None if config == "bare" else contexts[config]
-                        client = local if model == LOCAL_MODEL else azure
-                        future = executor.submit(
-                            generate, client, model, messages_for(item["question"], chunks),
-                            local=model == LOCAL_MODEL,
-                        )
-                        futures[future] = (model, config, chunks)
-                    failures = []
-                    for future in as_completed(futures):
-                        model, config, chunks = futures[future]
+                    chunks = None if config == "bare" else contexts[config]
+                    is_local = model == LOCAL_MODEL
+                    executor = local_executor if is_local else hosted_executor
+                    print(f"{model} {config} [{i + 1}/{len(questions)}]: generating", flush=True)
+                    future = executor.submit(
+                        generate, local if is_local else azure, model, messages_for(item["question"], chunks),
+                        local=is_local,
+                    )
+                    futures[future] = (model, config, item, chunks)
+
+                save_completed_summaries()
+                for model in models:
+                    for config in CONFIGS:
+                        schedule_next(model, config)
+                failures = []
+                while futures:
+                    completed, _ = wait(futures, return_when=FIRST_COMPLETED)
+                    for future in completed:
+                        model, config, item, chunks = futures.pop(future)
                         try:
                             answer, tokens = future.result()
                         except Exception as error:
@@ -375,19 +398,15 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
                         })
                         write_json(model_dirs[model] / f"{config}_results.json", results_by_model[model][config])
                         print(f"  {model} {config}: checkpoint saved", flush=True)
-                    if failures:
-                        model, config, error = failures[0]
-                        raise RuntimeError(
-                            f"{len(failures)} generation call(s) failed; first: {model} {config}. Rerun to resume."
-                        ) from error
+                        save_completed_summaries()
+                        schedule_next(model, config)
+                if failures:
+                    model, config, error = failures[0]
+                    raise RuntimeError(
+                        f"{len(failures)} generation call(s) failed; first: {model} {config}. Rerun to resume."
+                    ) from error
 
-            all_summaries = []
-            for model in models:
-                summary = summarize(results_by_model[model], model, manifest)
-                write_json(model_dirs[model] / "summary.json", summary)
-                all_summaries.append(summary)
-                write_json(directory / "all_summaries.json", all_summaries)
-                print(f"Completed {model}; results in {model_dirs[model]}", flush=True)
+            all_summaries = [summaries[model] for model in models]
         finally:
             runner.run(judge_client.close())
             similarity_client.close()
@@ -409,7 +428,7 @@ def main():
     parser.add_argument("--run-tag", default="default", help="Identify the index state; use a different results directory after changing it")
     parser.add_argument("--results-dir", default="eval/results/car")
     parser.add_argument("--concurrency", type=int, default=4,
-                        help="Maximum concurrent answer-generation calls (default: 4)")
+                        help="Maximum concurrent answer-generation calls; one slot is reserved for local when selected (default: 4)")
     args = parser.parse_args()
     if args.cohere_delay < 0:
         parser.error("--cohere-delay cannot be negative")
