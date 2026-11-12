@@ -129,7 +129,9 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(security.time, "time", return_value=1000):
             token, expires = await worker._issue_session(env, "https://example.test")
             self.assertEqual(expires, 1300)
-            await worker._verify_session(env, f"Bearer {token}", "https://example.test")
+            anon_id = await worker._verify_session(env, f"Bearer {token}", "https://example.test")
+            self.assertEqual(len(anon_id), 32)
+            self.assertEqual(anon_id, json.loads(security._unb64url(token.split(".")[1]))["anon_id"])
             for candidate, origin in [
                 (token.rsplit(".", 1)[0] + "." + ("A" if token.rsplit(".", 1)[1][0] != "A" else "B") + token.rsplit(".", 1)[1][1:], "https://example.test"),
                 (token, "https://evil.test"),
@@ -162,6 +164,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             ALLOWED_ORIGINS="https://example.test", API_WORKER_KEY="a" * 32,
             SESSION_JWT_SECRET="secret-" * 8,
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+            SESSION_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         request = types.SimpleNamespace(method="OPTIONS", url="https://worker.test/api/retrieve", headers={"origin": "https://example.test"})
         response = await entry.fetch(request)
@@ -176,6 +179,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status, 401)
         self.assertEqual(response.headers["Access-Control-Allow-Origin"], "https://example.test")
         entry.env.API_RATE_LIMITER.limit.assert_awaited_with({"key": "192.0.2.1"})
+        entry.env.SESSION_RATE_LIMITER.limit.assert_not_awaited()
 
     async def test_auth_exchange_and_protected_request(self):
         entry = worker.Default()
@@ -183,6 +187,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             ALLOWED_ORIGINS="https://example.test", API_WORKER_KEY="a" * 32,
             SESSION_JWT_SECRET="secret-" * 8,
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+            SESSION_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         request = types.SimpleNamespace(
             method="POST", url="https://worker.test/auth/anonymous",
@@ -192,10 +197,38 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             response = await entry.fetch(request)
         self.assertEqual(response.status, 200)
         verify.assert_awaited_once_with(entry.env, "single-use", "https://example.test", "192.0.2.1")
+        entry.env.SESSION_RATE_LIMITER.limit.assert_not_awaited()
         request.headers["authorization"] = "Bearer " + response.body["token"]
         request.url = "https://worker.test/api/retrieve"
         with patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "test"})), patch.object(worker, "_cache_get", AsyncMock(return_value={"chunks": []})), patch.object(worker, "_log_question", AsyncMock()):
             self.assertEqual((await entry.fetch(request)).status, 200)
+        anon_id = json.loads(security._unb64url(response.body["token"].split(".")[1]))["anon_id"]
+        entry.env.SESSION_RATE_LIMITER.limit.assert_awaited_once_with({"key": anon_id})
+
+    async def test_session_limit_rejects_before_retrieval_or_logging(self):
+        entry = worker.Default()
+        limiter = types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=False)))
+        entry.env = types.SimpleNamespace(
+            ALLOWED_ORIGINS="https://example.test", API_WORKER_KEY="a" * 32,
+            API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+            SESSION_RATE_LIMITER=limiter,
+        )
+        request = types.SimpleNamespace(
+            method="POST", url="https://example.test/api/retrieve",
+            headers={"origin": "https://example.test", "x-aeroquery-key": "a" * 32, "authorization": "Bearer token"},
+        )
+        with (
+            patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "test"})),
+            patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
+            patch.object(worker, "_retrieve_chunks", AsyncMock()) as retrieve,
+            patch.object(worker, "_log_question", AsyncMock()) as log_question,
+        ):
+            response = await entry.fetch(request)
+        self.assertEqual(response.status, 429)
+        self.assertEqual(response.headers["Access-Control-Allow-Origin"], "https://example.test")
+        limiter.limit.assert_awaited_once_with({"key": "verified-id"})
+        retrieve.assert_not_awaited()
+        log_question.assert_not_awaited()
 
     async def test_configured_kv_binding_supports_cache_reads_and_writes(self):
         config_path = Path(__file__).parents[1] / "wrangler.toml"
@@ -246,6 +279,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         entry.env = types.SimpleNamespace(
             DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32, ALLOWED_ORIGINS="https://example.test",
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+            SESSION_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         self.addCleanup(entry.env.DB.connection.close)
         request = types.SimpleNamespace(
@@ -254,7 +288,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         chunks = [{"section": "1", "title": "Title", "text": "Text", "score": 1}]
         with (
             patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": " question "})),
-            patch.object(worker, "_verify_session", AsyncMock()),
+            patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
             patch.object(worker, "_retrieve_chunks", AsyncMock(return_value=chunks)) as retrieve,
         ):
             first = await entry.fetch(request)
@@ -301,6 +335,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         entry.env = types.SimpleNamespace(
             DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32, ALLOWED_ORIGINS="https://example.test",
             API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+            SESSION_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
         )
         self.addCleanup(entry.env.DB.connection.close)
         key = worker._cache_key(entry.env, "/stream", "question", True)
@@ -313,7 +348,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         )
         with (
             patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "question", "use_rag": True})),
-            patch.object(worker, "_verify_session", AsyncMock()),
+            patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
             patch.object(worker, "_run_agent", AsyncMock()) as agent,
             patch.object(worker, "_stream_generation", AsyncMock()) as generation,
         ):
@@ -382,7 +417,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
     async def test_requests_do_not_require_a_quota_binding(self):
         entry = worker.Default()
         limiter = types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True)))
-        entry.env = types.SimpleNamespace(API_WORKER_KEY="a" * 32, API_RATE_LIMITER=limiter, ALLOWED_ORIGINS="https://example.test")
+        entry.env = types.SimpleNamespace(API_WORKER_KEY="a" * 32, API_RATE_LIMITER=limiter, SESSION_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))), ALLOWED_ORIGINS="https://example.test")
         request = types.SimpleNamespace(
             headers={"origin": "https://example.test", "x-aeroquery-key": "a" * 32, "cf-connecting-ip": "127.0.0.1"},
             method="POST",
@@ -390,7 +425,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         )
         with (
             patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "test"})),
-            patch.object(worker, "_verify_session", AsyncMock()),
+            patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
             patch.object(worker, "_log_question", AsyncMock()) as log_question,
             patch.object(worker, "_retrieve_chunks", AsyncMock(return_value=[])),
             patch.object(worker, "_stream_generation", AsyncMock(return_value=Response("stream"))),

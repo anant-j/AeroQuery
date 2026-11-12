@@ -65,6 +65,7 @@ async def _verify_session(env, authorization, origin):
         type(claims.get("iat")) is not int or type(claims.get("exp")) is not int or
         claims["iat"] > now or claims["exp"] <= now or claims["exp"] - claims["iat"] != 300):
         raise ApiError("Invalid or expired session", 401)
+    return claims["anon_id"]
 
 
 async def _verify_turnstile(env, token, origin, client_ip):

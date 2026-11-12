@@ -75,7 +75,11 @@ class Default(WorkerEntrypoint):
                 token, expires_at = await _issue_session(self.env, origin)
                 return Response.json({"token": token, "expires_at": expires_at})
             stage = "session_authentication"
-            await _verify_session(self.env, request.headers.get("authorization", ""), origin)
+            anon_id = await _verify_session(self.env, request.headers.get("authorization", ""), origin)
+            stage = "session_rate_limit"
+            session_limit = await self.env.SESSION_RATE_LIMITER.limit({"key": anon_id})
+            if not session_limit.success:
+                raise ApiError("Too many session requests. Please wait a minute and try again.", 429)
             query = _validate_query(body.get("query"))
 
             use_rag = body.get("use_rag", False)

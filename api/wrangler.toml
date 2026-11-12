@@ -49,3 +49,11 @@ namespace_id = "913847210"
 	[ratelimits.simple]
 	limit = 30
 	period = 60
+
+[[ratelimits]]
+name = "SESSION_RATE_LIMITER"
+namespace_id = "913847211"
+
+	[ratelimits.simple]
+	limit = 16
+	period = 60
