@@ -706,8 +706,7 @@ export default function Home() {
             { name: "Next.js", desc: "Frontend", url: "https://nextjs.org" },
             { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
             { name: "Netlify", desc: "Hosting", url: "https://www.netlify.com" },
-            { name: "Docker", desc: "Pipeline", url: "https://www.docker.com" },
-            { name: "PyMuPDF", desc: "PDF parsing", url: "https://pymupdf.readthedocs.io" },
+            { name: "Docker", desc: "Pipeline", url: "https://www.docker.com" }
           ]},
         ].map((section) => (
           <div key={section.label} className="mb-2">
