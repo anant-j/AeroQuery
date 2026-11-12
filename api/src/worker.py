@@ -325,20 +325,25 @@ async def _read_json_body(request):
 
 async def _log_question(env, query, mode):
     now = datetime.now(timezone.utc)
+    question_id = uuid.uuid4().hex
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
+    log_event = {"event": "question_received", "question_id": question_id, "mode": mode}
+    if query_text is not None:
+        log_event["query_text"] = query_text
+    print(json.dumps(log_event))
     try:
         await env.DB.prepare(
             "INSERT INTO question_logs (id, created_at, query_length, mode, query_text) "
             "VALUES (?, ?, ?, ?, ?)"
         ).bind(
-            uuid.uuid4().hex,
+            question_id,
             now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             len(query),
             mode,
             query_text,
         ).run()
     except Exception as error:
-        print(json.dumps({"event": "question_log_failed", "error_type": type(error).__name__}))
+        print(json.dumps({"event": "question_log_failed", "question_id": question_id, "error_type": type(error).__name__}))
 
 
 def _public_chunks(chunks):
@@ -500,6 +505,8 @@ class Default(WorkerEntrypoint):
                     )},
                 ]
             else:
+                stage = "question_logging"
+                await _log_question(self.env, query, "openai_bare")
                 messages = [
                     {"role": "system", "content": BARE_SYSTEM_PROMPT},
                     {"role": "user", "content": query},

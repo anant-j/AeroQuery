@@ -52,7 +52,9 @@ In Netlify, set `CLOUDFLARE_WORKER_API_URL` to the Worker origin (without `/api`
 - `POST /api/agent` classifies and retrieves context, including decomposition for complex queries.
 - `POST /api/stream` optionally retrieves context, then streams Foundry chat-completion events as SSE.
 
-Each request requires `x-aeroquery-key`; the Next.js server routes add it. The Worker enforces a Cloudflare Rate Limiting binding per validated client IP (30 requests per minute, approximate per Cloudflare location). Keep the shared key private and rotate it if exposed. D1 stores timestamp, query length, mode, and optional query text; query-text logging is off by default. The Cron Trigger at 03:00 UTC deletes rows older than `QUESTIONS_RETENTION_DAYS` (30 by default).
+Each request requires `x-aeroquery-key`; the Next.js server routes add it. The Worker enforces a Cloudflare Rate Limiting binding per validated client IP (30 requests per minute, approximate per Cloudflare location). Keep the shared key private and rotate it if exposed. D1 stores timestamp, query length, mode, and optional query text. The Cron Trigger at 03:00 UTC deletes rows older than `QUESTIONS_RETENTION_DAYS` (30 by default).
+
+Each accepted query emits a `question_received` Worker log event with a `question_id` matching the D1 row's `id`. Find the event within the Worker invocation to associate it with Cloudflare's request metadata. A hosted comparison creates separate RAG (`openai`) and bare (`openai_bare`) rows. If D1 insertion fails, `question_log_failed` includes the same ID but there is no corresponding row. When `QUESTIONS_LOG_QUERY_TEXT` is `true`, question text appears in both D1 and Worker logs; otherwise it is omitted from the log and stored as null in D1. The setting is currently enabled in `wrangler.toml`. D1 retention does not control Worker log retention or sampling; review Cloudflare observability settings and your privacy policy separately.
 
 ## Abuse and usage limits
 

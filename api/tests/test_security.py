@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 import types
 import unittest
@@ -32,6 +33,19 @@ with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), 
 
 
 class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
+    async def test_question_log_matches_database_id_and_respects_text_setting(self):
+        for enabled in ("true", "false"):
+            statement = types.SimpleNamespace(bind=lambda *args: types.SimpleNamespace(run=AsyncMock()))
+            bound_values = []
+            statement.bind = lambda *args: (bound_values.extend(args) or types.SimpleNamespace(run=AsyncMock()))
+            env = types.SimpleNamespace(DB=types.SimpleNamespace(prepare=lambda sql: statement), QUESTIONS_LOG_QUERY_TEXT=enabled)
+            with patch("builtins.print") as output:
+                await worker._log_question(env, "test question", "openai")
+            event = json.loads(output.call_args.args[0])
+            self.assertEqual(event["question_id"], bound_values[0])
+            self.assertEqual(event.get("query_text"), "test question" if enabled == "true" else None)
+            self.assertEqual(bound_values[4], "test question" if enabled == "true" else None)
+
     async def test_unauthorized_requests_are_rejected(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(API_WORKER_KEY="a" * 32)
@@ -48,14 +62,17 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             method="POST",
             url="https://example.test/api/retrieve",
         )
-        with patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "test"})), \
-             patch.object(worker, "_log_question", AsyncMock()), \
-             patch.object(worker, "_retrieve_chunks", AsyncMock(return_value=[])), \
-             patch.object(worker, "_stream_generation", AsyncMock(return_value="stream")):
+        with (
+            patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "test"})),
+            patch.object(worker, "_log_question", AsyncMock()) as log_question,
+            patch.object(worker, "_retrieve_chunks", AsyncMock(return_value=[])),
+            patch.object(worker, "_stream_generation", AsyncMock(return_value="stream")),
+        ):
             response = await entry.fetch(request)
             self.assertEqual(response["status"], 200)
             request.url = "https://example.test/api/stream"
             self.assertEqual(await entry.fetch(request), "stream")
+            log_question.assert_any_await(entry.env, "test", "openai_bare")
 
 
 if __name__ == "__main__":
