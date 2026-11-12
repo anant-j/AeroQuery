@@ -16,7 +16,7 @@ Pipeline: Azure OpenAI embeddings -> Pinecone (namespace `canada`) -> Cohere `re
 
 ## Security and limits
 
-- Requests need the `x-aeroquery-key` header matching `API_WORKER_KEY` (min 32 chars).
+- Requests need the `x-aeroquery-key` header matching `API_WORKER_KEY` (min 32 chars) [for instance generated via `openssl rand -hex 32`].
 - Per-IP rate limit of 30 requests/minute (client IP forwarded via `x-aeroquery-client-ip`).
 - Max query length 1500 chars, max body 32 KB.
 - Questions are logged to D1 (`question_logs`, schema in `schema/`); a daily cron deletes rows older than `QUESTIONS_RETENTION_DAYS` (default 30). Set `QUESTIONS_LOG_QUERY_TEXT` to `false` to avoid storing query text.
