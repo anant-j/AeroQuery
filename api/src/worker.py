@@ -534,7 +534,7 @@ class Default(WorkerEntrypoint):
             if not isinstance(use_rag, bool):
                 raise ApiError("use_rag must be a boolean", 400)
 
-            mode = "webllm" if path == "/retrieve" else "openai" if path == "/agent" or use_rag else "openai_bare"
+            mode = "webllm" if path == "/retrieve" else "openai_rag" if path == "/agent" or use_rag else "openai_bare"
             cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False)
             cached = await _cache_get(self.env, cache_key)
             stage = "question_logging"

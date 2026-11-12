@@ -1,0 +1,1 @@
+UPDATE question_logs SET mode = 'openai_rag' WHERE mode = 'openai';

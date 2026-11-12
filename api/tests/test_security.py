@@ -150,7 +150,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         )
         self.addCleanup(entry.env.DB.connection.close)
         key = worker._cache_key(entry.env, "/stream", "question", True)
-        question_id = await worker._log_question(entry.env, "question", "openai", key)
+        question_id = await worker._log_question(entry.env, "question", "openai_rag", key)
         await worker._cache_put(entry.env, question_id, {
             "answer": "cached answer", "sources": [{"section": "1", "title": "Title", "text": "Text"}],
             "agent": {"context_sufficient": True}, "model": "gpt-5.4-mini",
@@ -168,7 +168,20 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         generation.assert_not_awaited()
         self.assertIn('"token":"cached answer"', response.body)
         self.assertIn('"type":"sources"', response.body)
-        self.assertEqual(entry.env.DB.connection.execute("SELECT answered_from_cache FROM question_logs ORDER BY rowid DESC LIMIT 1").fetchone()[0], 1)
+        self.assertEqual(entry.env.DB.connection.execute("SELECT mode, answered_from_cache FROM question_logs ORDER BY rowid DESC LIMIT 1").fetchone(), ("openai_rag", 1))
+
+    def test_mode_migration_renames_existing_rag_logs(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        schema_dir = Path(__file__).parents[1] / "schema"
+        for name in ("0001_question_logs.sql", "0002_answer_cache.sql"):
+            connection.executescript((schema_dir / name).read_text())
+        connection.executemany(
+            "INSERT INTO question_logs (id, created_at, query_length, mode) VALUES (?, ?, ?, ?)",
+            [("rag", "2026-01-01", 1, "openai"), ("bare", "2026-01-01", 1, "openai_bare")],
+        )
+        connection.executescript((schema_dir / "0003_rename_openai_rag.sql").read_text())
+        self.assertEqual(connection.execute("SELECT mode FROM question_logs ORDER BY id").fetchall(), [("openai_bare",), ("openai_rag",)])
 
     async def test_question_log_matches_database_id_and_respects_text_setting(self):
         for enabled in ("true", "false"):
@@ -177,7 +190,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             statement.bind = lambda *args: (bound_values.extend(args) or types.SimpleNamespace(run=AsyncMock()))
             env = types.SimpleNamespace(DB=types.SimpleNamespace(prepare=lambda sql: statement), QUESTIONS_LOG_QUERY_TEXT=enabled)
             with patch("builtins.print") as output:
-                await worker._log_question(env, "test question", "openai")
+                await worker._log_question(env, "test question", "openai_rag")
             event = json.loads(output.call_args.args[0])
             self.assertEqual(event["question_id"], bound_values[0])
             self.assertEqual(event.get("query_text"), "test question" if enabled == "true" else None)
