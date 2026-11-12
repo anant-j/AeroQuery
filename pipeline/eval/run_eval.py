@@ -254,7 +254,12 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
         raise ValueError("A namespace and uniquely named models are required")
     if concurrency < 1:
         raise ValueError("concurrency must be positive")
-    benchmark_manifest, questions = load_benchmark(benchmark, allow_unreviewed, limit)
+    if limit is not None and limit < 1:
+        raise ValueError("limit must be positive")
+    benchmark_manifest, all_questions = load_benchmark(benchmark, allow_unreviewed=True)
+    questions = all_questions[:limit] if limit is not None else all_questions
+    if not allow_unreviewed and any(q.get("reviewed") is not True for q in questions):
+        raise ValueError("Benchmark contains unreviewed questions; use --allow-unreviewed for a provisional run")
     stats = get_pinecone_index().describe_index_stats()
     namespace_info = stats.namespaces.get(namespace)
     if stats.dimension != 3072 or not namespace_info or not namespace_info.vector_count:
@@ -262,7 +267,7 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
     endpoint = os.getenv("AZURE_OPENAI_ENDPOINT", "")
     manifest = {
         "protocol_version": PROTOCOL_VERSION, "benchmark": benchmark_manifest,
-        "questions_sha256": hashlib.sha256(json.dumps(questions, sort_keys=True).encode()).hexdigest(),
+        "questions_sha256": hashlib.sha256(json.dumps(all_questions, sort_keys=True).encode()).hexdigest(),
         "namespace": namespace, "index": os.getenv("PINECONE_INDEX_NAME", "aeroquery"),
         "namespace_vector_count": namespace_info.vector_count,
         "azure_endpoint_sha256": hashlib.sha256(endpoint.encode()).hexdigest(),
@@ -271,12 +276,20 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
         "candidate_count": CANDIDATE_COUNT, "context_count": CONTEXT_COUNT,
         "models": list(models), "rag_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
         "bare_prompt_sha256": hashlib.sha256(SYSTEM_PROMPT.encode()).hexdigest(),
-        "run_tag": run_tag, "provisional": any(not q.get("reviewed") for q in questions),
+        "run_tag": run_tag, "provisional": any(not q.get("reviewed") for q in all_questions),
     }
-    run_id = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()[:16]
-    directory = Path(results_root) / run_id
+    directory = Path(results_root)
     directory.mkdir(parents=True, exist_ok=True)
-    write_json(directory / "manifest.json", manifest)
+    manifest_path = directory / "manifest.json"
+    if manifest_path.exists():
+        if json.loads(manifest_path.read_text()) != manifest:
+            raise ValueError("Existing results use different evaluation settings or benchmark; choose a different --results-dir")
+    else:
+        if (directory / "retrieval_cache.json").exists() or (directory / "all_summaries.json").exists() or any(
+            directory.glob("*/bare_results.json")
+        ) or any(directory.glob("*/rag_results.json")) or any(directory.glob("*/rag_rerank_results.json")):
+            raise ValueError("Existing results have no manifest; choose a different --results-dir")
+        write_json(manifest_path, manifest)
     print(f"CAR evaluation run: {directory} ({len(questions)} questions"
           f"{', provisional' if manifest['provisional'] else ''})", flush=True)
     cache_path = directory / "retrieval_cache.json"
@@ -297,10 +310,12 @@ def run_eval(benchmark=BENCHMARK_PATH, namespace=NAMESPACE, allow_unreviewed=Fal
                 for config in CONFIGS:
                     path = model_dir / f"{config}_results.json"
                     results[config] = json.loads(path.read_text()) if path.exists() else []
-                    if len(results[config]) > len(questions) or any(
-                        row["question"] != questions[i]["question"] for i, row in enumerate(results[config])
+                    if len(results[config]) > len(all_questions) or any(
+                        row["question"] != all_questions[i]["question"] for i, row in enumerate(results[config])
                     ):
                         raise ValueError(f"Stored results do not match this benchmark: {path}")
+                    if len(results[config]) > len(questions):
+                        raise ValueError("Stored results exceed the requested limit; use a larger --limit or a different --results-dir")
                 results_by_model[model] = results
 
             with ThreadPoolExecutor(max_workers=concurrency) as executor:
@@ -388,10 +403,10 @@ def main():
     parser.add_argument("--benchmark", default=BENCHMARK_PATH)
     parser.add_argument("--namespace", default=NAMESPACE)
     parser.add_argument("--allow-unreviewed", action="store_true")
-    parser.add_argument("--limit", type=int, help="Evaluate only the first N questions in a separate run")
+    parser.add_argument("--limit", type=int, help="Evaluate the first N questions, resuming existing results")
     parser.add_argument("--cohere-delay", type=float, default=7)
     parser.add_argument("--models", nargs="+", default=[*AZURE_MODELS, LOCAL_MODEL])
-    parser.add_argument("--run-tag", default="default", help="Use a new tag after updating vectors in place")
+    parser.add_argument("--run-tag", default="default", help="Identify the index state; use a different results directory after changing it")
     parser.add_argument("--results-dir", default="eval/results/car")
     parser.add_argument("--concurrency", type=int, default=4,
                         help="Maximum concurrent answer-generation calls (default: 4)")

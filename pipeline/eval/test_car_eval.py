@@ -185,7 +185,7 @@ class CarEvaluationTests(unittest.TestCase):
                 patch.object(run_eval, "get_contexts", return_value=contexts), \
                 patch.object(run_eval, "generate", return_value=("answer", 1)), \
                 patch.object(run_eval, "score_ragas", side_effect=score):
-            run_eval.run_eval(namespace="car", models=("first", "second"), delay=0,
+            run_eval.run_eval(namespace="car", models=("first", "second"), delay=0, allow_unreviewed=True,
                               results_root=directory)
         context_calls = [names for has_context, names in calls if has_context]
         self.assertEqual(len(context_calls), 4)
@@ -247,18 +247,66 @@ class CarEvaluationTests(unittest.TestCase):
                 patch.object(run_eval, "generate", side_effect=generate), \
                 patch.object(run_eval, "score_ragas", side_effect=score):
             with self.assertRaisesRegex(RuntimeError, "generation call.*failed"):
-                run_eval.run_eval(namespace="car", models=("first", "second"), delay=0,
+                run_eval.run_eval(namespace="car", models=("first", "second"), delay=0, allow_unreviewed=True,
                                   results_root=directory, concurrency=2)
-            run_dir = next(Path(directory).iterdir())
+            run_dir = Path(directory)
             self.assertFalse((run_dir / "first" / "bare_results.json").exists())
             self.assertTrue((run_dir / "second" / "rag_results.json").exists())
             self.assertEqual(len(calls), 6)
             self.assertEqual(peak, 2)
-            run_eval.run_eval(namespace="car", models=("first", "second"), delay=0,
+            run_eval.run_eval(namespace="car", models=("first", "second"), delay=0, allow_unreviewed=True,
                               results_root=directory, concurrency=2)
             self.assertEqual(calls[-1], ("first", "bare"))
             self.assertEqual(len(calls), 7)
             self.assertEqual(retrieve.call_count, 2)
+
+    def test_limit_can_expand_without_regenerating_and_rejects_incompatible_runs(self):
+        questions = [dict(ITEM, question=f"Question {i}") for i in range(150)]
+        calls = []
+
+        def generate(client, model, messages, local=False):
+            calls.append(json.loads(messages[1]["content"].split("\n", 1)[1])["question"])
+            return "answer", 1
+
+        async def score(selected, question, answer, reference, contexts):
+            return {name: 0.5 for name in selected if contexts or name not in run_eval.CONTEXT_METRICS}, {}
+
+        class Client:
+            def close(self):
+                pass
+
+        class JudgeClient:
+            async def close(self):
+                pass
+
+        stats = SimpleNamespace(dimension=3072, namespaces={"car": SimpleNamespace(vector_count=1)})
+        context = [{"text": "source", "section": "602.88"}]
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(run_eval, "load_benchmark", return_value=({"point_in_time": "2026-06-17"}, questions)), \
+                patch.object(run_eval, "get_pinecone_index", return_value=SimpleNamespace(
+                    describe_index_stats=lambda: stats)), \
+                patch.object(run_eval, "make_scorers", return_value=(
+                    {name: object() for name in run_eval.ALL_METRICS}, JudgeClient(), Client())), \
+                patch.object(run_eval, "azure_client", return_value=Client()), \
+                patch.object(run_eval, "get_contexts", side_effect=lambda *args: {"rag": context, "rag_rerank": context}), \
+                patch.object(run_eval, "generate", side_effect=generate), \
+                patch.object(run_eval, "score_ragas", side_effect=score), \
+                patch("builtins.print"):
+            options = {"namespace": "car", "models": ("first",), "delay": 0,
+                       "allow_unreviewed": True, "results_root": directory}
+            run_eval.run_eval(limit=75, **options)
+            self.assertEqual(len(calls), 75 * 3)
+            run_eval.run_eval(limit=150, **options)
+            self.assertEqual(len(calls), 150 * 3)
+            self.assertTrue(all(int(question.split()[-1]) >= 75 for question in calls[75 * 3:]))
+            results = json.loads((Path(directory) / "first" / "bare_results.json").read_text())
+            self.assertEqual(len(results), 150)
+            with self.assertRaisesRegex(ValueError, "exceed the requested limit"):
+                run_eval.run_eval(limit=75, **options)
+            questions[0] = dict(questions[0], ground_truth="Different answer")
+            with self.assertRaisesRegex(ValueError, "different evaluation settings or benchmark"):
+                run_eval.run_eval(limit=150, **options)
+            self.assertEqual(len(calls), 150 * 3)
 
 
 if __name__ == "__main__":
