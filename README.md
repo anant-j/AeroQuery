@@ -48,7 +48,9 @@ flowchart LR
 ### Query flow
 ```mermaid
 flowchart LR
-    A["📝 Question"] --> B["LangGraph\nAgent"]
+    A["📝 Question"] --> V["Browser → Cloudflare Worker\nTurnstile session"]
+    V -->|RAG stream| B["LangGraph\nAgent"]
+    V -->|bare stream| I["Bare generation"]
     B --> C{Route}
     C -->|simple| D["Retrieve\n1 query"]
     C -->|complex| E["Decompose\n→ Retrieve N"]
@@ -64,7 +66,7 @@ flowchart LR
 ### WebLLM browser flow
 ```mermaid
 flowchart LR
-    A["📝 Question"] --> B["Next.js\n/api/retrieve"]
+    A["📝 Question"] --> B["Browser → Cloudflare Worker\nTurnstile session"]
     B --> C["Cloudflare Worker /retrieve\nAzure Foundry → Pinecone → Cohere"]
     C --> D["Chunks"]
     D --> E["WebLLM\nLlama 3.2 1B\nin browser"]
@@ -166,14 +168,14 @@ Use server-managed settings for live credentials and keep them out of browser bu
 
 Required runtime values include:
 
-- `CLOUDFLARE_WORKER_API_URL` and `CLOUDFLARE_WORKER_KEY` for server-side Next.js calls to the protected Worker
-- Azure Foundry, Pinecone, and Cohere credentials as Cloudflare Worker secrets; see `api/README.md`
+- `NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL`, `NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY`, and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` for direct browser calls. The application key is public; rotate the previous private gateway key.
+- Worker `ALLOWED_ORIGINS`, Turnstile and JWT signing secrets, and Azure Foundry, Pinecone, and Cohere credentials; see `api/README.md`.
 
 Never expose secret values in `NEXT_PUBLIC_*` variables and never commit real credentials.
 
 ## Privacy and safety
 
-The Cloudflare Worker records question timestamps, mode, and query length in D1. Query text logging is disabled by default; when enabled, a Cron Trigger purges entries older than 30 days. Adjust the retention setting to match your privacy policy.
+The Cloudflare Worker records question timestamps and mode in D1. The checked-in configuration also stores question text in D1, but not in Worker application logs. A Cron Trigger purges entries older than 30 days. Set `QUESTIONS_LOG_QUERY_TEXT` to `false` to omit question text from D1, and adjust retention to match your privacy policy.
 
 ## Notes
 
