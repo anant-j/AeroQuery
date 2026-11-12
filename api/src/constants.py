@@ -4,7 +4,7 @@ MAX_CHUNK_LENGTH = 8000
 MAX_COMPLETION_TOKENS = 2048
 RERANK_MODEL = "rerank-v4.0-pro"
 NAMESPACE = "canada-car-2026-06-17"
-CACHE_VERSION = "4"
+CACHE_VERSION = "5"
 DEFAULT_CACHE_TTL_SECONDS = 86400
 SYSTEM_PROMPT = """You are an expert aviation regulation assistant specializing in Canadian aviation regulations (Transport Canada Canadian Aviation Regulations).
 

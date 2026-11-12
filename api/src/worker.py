@@ -110,7 +110,10 @@ class Default(WorkerEntrypoint):
                 result = await _run_agent(self.env, query)
                 agent = result["agent"]
                 sources = _public_chunks(result["chunks"])
-                prompt_sources = sources
+                prompt_sources = [
+                    {"section": source["section"], "title": source["title"], "text": source["text"]}
+                    for source in sources
+                ]
                 context_sufficient = agent["context_sufficient"]
             messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},

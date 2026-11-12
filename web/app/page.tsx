@@ -7,6 +7,7 @@ import { formatComparisonMessage, getTurnstileSiteKey, SESSION_LIMIT_EVENT, SYST
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
+import { officialSourceUrl } from "./lib/source-url.js";
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
@@ -67,6 +68,7 @@ interface Source {
   section: string;
   title: string;
   text?: string;
+  source_url?: string;
 }
 
 interface AskResponse {
@@ -88,10 +90,12 @@ interface Chunk {
   section: string;
   title: string;
   text: string;
+  source_url?: string;
 }
 
 function SourceItem({ source }: { source: Source }) {
   const [expanded, setExpanded] = useState(false);
+  const sourceUrl = officialSourceUrl(source.source_url);
 
   return (
     <div>
@@ -106,6 +110,17 @@ function SourceItem({ source }: { source: Source }) {
           </svg>
         )}
       </button>
+      {sourceUrl && (
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View regulation ${source.section} on Justice Canada (opens in a new tab)`}
+          className="ml-2 text-xs text-blue-700 dark:text-blue-400 hover:underline"
+        >
+          View regulation
+        </a>
+      )}
       {expanded && source.text && (
         <div className="mt-1 ml-1 px-3 py-2 text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
           {source.text}
@@ -142,6 +157,7 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
       {result.sources && result.sources.length > 0 && (
         <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Sources</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Official links open current regulations; indexed excerpts may differ.</p>
           <div className="flex flex-col gap-1.5">
             {result.sources.map((s, i) => (
               <SourceItem key={i} source={s} />
@@ -383,7 +399,7 @@ export default function Home() {
 
         const ragMessages = [
           { role: "system" as const, content: SYSTEM_PROMPT },
-          { role: "user" as const, content: formatComparisonMessage(effectiveQuery, chunks) },
+          { role: "user" as const, content: formatComparisonMessage(effectiveQuery, chunks.map(({ section, title, text }) => ({ section, title, text }))) },
         ];
         const bareMessages = [
           { role: "system" as const, content: SYSTEM_PROMPT },
@@ -395,7 +411,7 @@ export default function Home() {
         // RAG with streaming (WebLLM is single-threaded, run sequentially)
         setRagResult({
           query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: true,
-          sources: chunks.map((c) => ({ section: c.section, title: c.title, text: c.text })),
+          sources: chunks,
         });
         setRagStreaming(true);
 

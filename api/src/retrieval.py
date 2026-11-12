@@ -124,6 +124,7 @@ async def _search_pinecone(env, vector, top_k=10):
             "text": metadata.get("text", "")[:MAX_CHUNK_LENGTH],
             "section": metadata.get("section", ""),
             "title": metadata.get("title", ""),
+            "source_url": metadata.get("source_url", ""),
         })
     return chunks
 
@@ -252,6 +253,9 @@ async def _run_agent(env, query):
 
 def _public_chunks(chunks):
     return [
-        {"section": chunk["section"], "title": chunk["title"], "text": chunk["text"]}
+        {
+            "section": chunk["section"], "title": chunk["title"], "text": chunk["text"],
+            **({"source_url": chunk["source_url"]} if chunk.get("source_url") else {}),
+        }
         for chunk in chunks
     ]
