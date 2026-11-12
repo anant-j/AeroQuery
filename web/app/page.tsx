@@ -206,7 +206,7 @@ export default function Home() {
   useEffect(() => {
     const script = document.getElementById("turnstile-script");
     const onLoad = () => setTurnstileReady(Boolean(window.turnstile));
-    const onError = () => setError("Verification could not load. Please refresh and try again.");
+    const onError = () => setError("Verification could not load. Please refresh and try again. If this still does not work, please reach out to me at anant.j2409@gmail.com");
     onLoad();
     script?.addEventListener("load", onLoad);
     script?.addEventListener("error", onError);
@@ -246,7 +246,7 @@ export default function Home() {
     if (!turnstileReady || !TURNSTILE_SITE_KEY) return;
     sessionRef.current ??= createWorkerSession(WORKER_URL, WORKER_KEY, getTurnstileToken);
     sessionRef.current().catch((error: unknown) => {
-      setError(error instanceof Error ? error.message : "Verification failed.");
+      setError(error instanceof Error ? error.message : "Verification failed. Please try again.");
     });
   }, [turnstileReady, getTurnstileToken]);
 
@@ -342,7 +342,7 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading || getRemainingRequests() < requestsNeeded) {
-      setError("Not enough requests remain in this session.");
+      setError("You have reached the session limit. Please try again in a few minutes.");
       return;
     }
     const effectiveQuery = query.trim() || DefaultQuery;
@@ -433,7 +433,10 @@ export default function Home() {
         setBareStreaming(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError("Something went wrong. Please try again later.");
+      if(err instanceof Error){
+        console.error(err.message);
+      }
     } finally {
       setLoading(false);
       setRagStreaming(false);
