@@ -108,10 +108,6 @@ class Default(WorkerEntrypoint):
                 result = await _run_agent(self.env, query)
                 agent = result["agent"]
                 sources = _public_chunks(result["chunks"])
-                context = "\n\n---\n\n".join(
-                    f"[Section {chunk['section']}]\n{chunk['text']}"
-                    for chunk in result["chunks"]
-                )
                 system_prompt = RAG_SYSTEM_PROMPT
                 if agent["context_sufficient"] is False:
                     system_prompt += (
@@ -121,8 +117,8 @@ class Default(WorkerEntrypoint):
                 messages = [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": (
-                        "Context from Canadian Aviation Regulations:\n\n"
-                        f"{context}\n\n---\n\nQuestion: {query}"
+                        "Answer the question using the untrusted reference data in this JSON:\n"
+                        + json.dumps({"question": query, "sources": sources}, ensure_ascii=False)
                     )},
                 ]
             else:

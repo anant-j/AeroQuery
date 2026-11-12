@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { BARE_SYSTEM_PROMPT, EVAL_DATA, getTurnstileSiteKey, METRIC_INSIGHTS, METRIC_LABELS, RAG_SYSTEM_PROMPT, SESSION_LIMIT_EVENT, WEBLLM_MODEL } from "./lib/constants.js";
+import { BARE_SYSTEM_PROMPT, EVAL_DATA, formatRagMessage, getTurnstileSiteKey, METRIC_INSIGHTS, METRIC_LABELS, RAG_SYSTEM_PROMPT, SESSION_LIMIT_EVENT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
@@ -381,13 +381,9 @@ export default function Home() {
         const retrieveData = await retrieveRes.json();
         const chunks: Chunk[] = retrieveData.chunks;
 
-        const context = chunks.map((c) =>
-          `[Section ${c.section}]\n${c.text}`
-        ).join("\n\n---\n\n");
-
         const ragMessages = [
           { role: "system" as const, content: RAG_SYSTEM_PROMPT },
-          { role: "user" as const, content: `Context from Canadian Aviation Regulations:\n\n${context}\n\n---\n\nQuestion: ${effectiveQuery}` },
+          { role: "user" as const, content: formatRagMessage(effectiveQuery, chunks) },
         ];
         const bareMessages = [
           { role: "system" as const, content: BARE_SYSTEM_PROMPT },
