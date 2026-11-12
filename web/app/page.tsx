@@ -8,6 +8,7 @@ import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-l
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const DefaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
+const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
 function getRemainingRequests() {
   try {
@@ -24,6 +25,15 @@ function subscribeToSessionRequests(callback: () => void) {
     window.removeEventListener(SESSION_LIMIT_EVENT, callback);
     window.removeEventListener("storage", callback);
   };
+}
+
+function getThemeSnapshot() {
+  return document.documentElement.classList.contains("dark");
+}
+
+function subscribeToTheme(callback: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, callback);
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, callback);
 }
 
 function reserveSessionRequest() {
@@ -425,13 +435,13 @@ export default function Home() {
     }
   };
 
-  const [isDark, setIsDark] = useState(() => typeof document !== "undefined" ? document.documentElement.classList.contains("dark") : false);
+  const isDark = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, () => false);
 
   const toggleTheme = () => {
     const next = !isDark;
-    setIsDark(next);
     document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("theme", next ? "dark" : "light");
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   };
 
   return (
@@ -478,6 +488,7 @@ export default function Home() {
         {!TURNSTILE_SITE_KEY && <p role="alert" className="mb-3 text-sm text-red-600">Verification is not configured.</p>}
         <div className="flex gap-3 mb-3">
           <input
+            name="questionBox"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
