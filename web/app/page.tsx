@@ -685,24 +685,22 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mt-8">
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Built With</h2>
         {[
-          { label: "AI & Retrieval", items: [
-            { name: "OpenAI", desc: "Embeddings & LLM", url: "https://platform.openai.com" },
+          { label: "AI", items: [
+            { name: "Azure AI Foundry", desc: "Azure OpenAI models, embeddings & judge", url: "https://ai.azure.com" },
+            { name: "Ollama", desc: "Local evaluation model", url: "https://ollama.com" },
             { name: "Pinecone", desc: "Vector DB", url: "https://www.pinecone.io" },
             { name: "Cohere Rerank", desc: "Reranking", url: "https://cohere.com" },
-            { name: "WebLLM", desc: "In-browser LLM", url: "https://webllm.mlc.ai" },
-            { name: "Ollama", desc: "Local inference", url: "https://ollama.com" },
-          ]},
-          { label: "Eval & Ops", items: [
-            { name: "RAGAS", desc: "6 metrics", url: "https://docs.ragas.io" },
-            { name: "LiteLLM", desc: "Multi-provider", url: "https://docs.litellm.ai" },
-            { name: "Azure AI Foundry", desc: "Judge model", url: "https://ai.azure.com" },
+            { name: "WebLLM", desc: "In-browser model inference", url: "https://webllm.mlc.ai" },
+            { name: "RAGAS", desc: "Evaluation Harness", url: "https://docs.ragas.io" }
           ]},
           { label: "Infra", items: [
-            { name: "Cloudflare Workers", desc: "API", url: "https://workers.cloudflare.com/" },
-            { name: "Next.js", desc: "Frontend", url: "https://nextjs.org" },
-            { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
             { name: "Netlify", desc: "Hosting", url: "https://www.netlify.com" },
-            { name: "Docker", desc: "Pipeline", url: "https://www.docker.com" }
+            { name: "Cloudflare Turnstile", desc: "Request verification", url: "https://developers.cloudflare.com/turnstile/" },
+            { name: "Cloudflare Workers", desc: "API/Backend", url: "https://workers.cloudflare.com/" },
+            { name: "Cloudflare D1 & KV", desc: "Question logs & answer cache", url: "https://developers.cloudflare.com/d1/" },
+            { name: "Next.js", desc: "React & TypeScript frontend", url: "https://nextjs.org" },
+            { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
+            { name: "Docker", desc: "Ingestion Pipeline", url: "https://www.docker.com" }
           ]},
         ].map((section) => (
           <div key={section.label} className="mb-2">
