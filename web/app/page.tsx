@@ -1,12 +1,42 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
+import { consumeSessionRequest, MAX_SESSION_REQUESTS, remainingSessionRequests } from "./lib/session-limit.js";
 
 const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const SESSION_LIMIT_EVENT = "aeroquery-session-requests";
+
+function getRemainingRequests() {
+  try {
+    return remainingSessionRequests(window.sessionStorage);
+  } catch {
+    return 0;
+  }
+}
+
+function subscribeToSessionRequests(callback: () => void) {
+  window.addEventListener(SESSION_LIMIT_EVENT, callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener(SESSION_LIMIT_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+function reserveSessionRequest() {
+  let accepted = false;
+  try {
+    accepted = consumeSessionRequest(window.sessionStorage);
+  } catch {
+    accepted = false;
+  }
+  window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
+  if (!accepted) throw new Error("Session request limit reached or session storage is unavailable.");
+}
 
 declare global {
   interface Window {
@@ -200,6 +230,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [ragStreaming, setRagStreaming] = useState(false);
   const [bareStreaming, setBareStreaming] = useState(false);
+  const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
+  const requestsNeeded = modelOption === "openai" ? 2 : 1;
 
   // WebLLM state
   const [webllmReady, setWebllmReady] = useState(false);
@@ -286,6 +318,7 @@ export default function Home() {
     onSources?: (sources: Source[], agent?: AskResponse["agent"]) => void,
     onMeta?: (meta: { tokens?: number; model?: string }) => void,
   ) {
+    reserveSessionRequest();
     const res = await fetch("/api/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -334,6 +367,10 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading || getRemainingRequests() < requestsNeeded) {
+      setError("Not enough requests remain in this session.");
+      return;
+    }
     const effectiveQuery = query.trim() || defaultQuery;
 
     setLoading(true);
@@ -370,6 +407,7 @@ export default function Home() {
         ]);
       } else {
         // WebLLM: retrieve chunks from server, generate locally with streaming
+        reserveSessionRequest();
         const retrieveRes = await fetch("/api/retrieve", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -505,7 +543,7 @@ export default function Home() {
           />
           <button
             type="submit"
-            disabled={loading || !TURNSTILE_SITE_KEY || !turnstileReady || (modelOption === "webllm" && !webllmReady)}
+            disabled={loading || !TURNSTILE_SITE_KEY || !turnstileReady || remainingRequests < requestsNeeded || (modelOption === "webllm" && !webllmReady)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Searching..." : "Compare"}
@@ -554,6 +592,10 @@ export default function Home() {
 
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
           Runs the same question with and without RAG so you can compare the answers side by side.
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
+          {remainingRequests} of {MAX_SESSION_REQUESTS} requests remaining this tab.
+          {remainingRequests < requestsNeeded && " Not enough requests remain for this model."}
         </p>
       </form>
 

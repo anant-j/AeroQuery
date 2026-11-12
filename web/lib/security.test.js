@@ -2,6 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { MAX_BODY_BYTES, PayloadTooLargeError, RequestSecurityError, readJsonBody, validateQueryPayload, validateRequestHeaders, verifyTurnstile } from "../app/lib/security.js";
+import { consumeSessionRequest, remainingSessionRequests } from "../app/lib/session-limit.js";
+
+test("limits each session to eight requests and persists the count", () => {
+  const values = new Map();
+  const storage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  assert.equal(remainingSessionRequests(storage), 8);
+  for (let count = 0; count < 8; count++) {
+    assert.equal(consumeSessionRequest(storage), true);
+    assert.equal(remainingSessionRequests(storage), 7 - count);
+  }
+  assert.equal(consumeSessionRequest(storage), false);
+});
+
+test("fails closed when session storage is malformed or unavailable", () => {
+  const malformed = { getItem: () => "-1", setItem: () => {} };
+  const unavailable = { getItem: () => { throw new Error("unavailable"); } };
+  assert.equal(remainingSessionRequests(malformed), 0);
+  assert.equal(consumeSessionRequest(unavailable), false);
+  assert.equal(consumeSessionRequest({ getItem: () => null, setItem: () => { throw new Error("unavailable"); } }), false);
+});
 
 test("accepts a realistic aviation query", () => {
   const result = validateQueryPayload({ query: "How long after alcohol can I fly?", use_rag: true });
