@@ -10,7 +10,7 @@ export function proxy(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' blob: data: https:",
     "font-src 'self' data: https:",
-    `connect-src 'self' https: wss:${isDevelopment ? " ws:" : ""}`,
+    `connect-src 'self' https: wss:${isDevelopment ? " ws: http://localhost:* http://127.0.0.1:* http://[::1]:*" : ""}`,
     "worker-src 'self' blob:",
     "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",

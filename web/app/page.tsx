@@ -3,10 +3,14 @@
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { BARE_SYSTEM_PROMPT, EVAL_DATA, getTurnstileSiteKey, MAX_SESSION_REQUESTS, METRIC_INSIGHTS, METRIC_LABELS, RAG_SYSTEM_PROMPT, SESSION_LIMIT_EVENT, WEBLLM_MODEL } from "./lib/constants.js";
+import { BARE_SYSTEM_PROMPT, EVAL_DATA, getTurnstileSiteKey, METRIC_INSIGHTS, METRIC_LABELS, RAG_SYSTEM_PROMPT, SESSION_LIMIT_EVENT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
+import { streamComparison } from "./lib/query-gateway.js";
+import { createWorkerSession } from "./lib/worker-session.js";
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
+const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
+const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
 const DefaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
@@ -197,6 +201,7 @@ export default function Home() {
   const webllmStartedRef = useRef(false);
   const turnstileContainer = useRef<HTMLDivElement>(null);
   const [turnstileReady, setTurnstileReady] = useState(false);
+  const sessionRef = useRef<ReturnType<typeof createWorkerSession> | null>(null);
 
   useEffect(() => {
     const script = document.getElementById("turnstile-script");
@@ -211,7 +216,7 @@ export default function Home() {
     };
   }, []);
 
-  async function getTurnstileToken() {
+  const getTurnstileToken = useCallback(async () => {
     const turnstile = window.turnstile;
     const container = turnstileContainer.current;
     if (!turnstile || !container || !TURNSTILE_SITE_KEY) throw new Error("Verification is unavailable.");
@@ -235,7 +240,15 @@ export default function Home() {
       clearTimeout(timer!);
       if (widget) turnstile.remove(widget);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (!turnstileReady || !TURNSTILE_SITE_KEY) return;
+    sessionRef.current ??= createWorkerSession(WORKER_URL, WORKER_KEY, getTurnstileToken);
+    sessionRef.current().catch((error: unknown) => {
+      setError(error instanceof Error ? error.message : "Verification failed.");
+    });
+  }, [turnstileReady, getTurnstileToken]);
 
   const startWebLLM = useCallback(async () => {
     if (webllmStartedRef.current || webllmReady) return;
@@ -266,56 +279,63 @@ export default function Home() {
     }
   }, [webllmReady]);
 
-  async function readSSEStream(
-    body: { query: string; use_rag: boolean; turnstile_token: string },
-    onToken: (token: string) => void,
-    onSources?: (sources: Source[], agent?: AskResponse["agent"]) => void,
-    onMeta?: (meta: { tokens?: number; model?: string }) => void,
-  ) {
+  async function readComparisonStream(query: string, sessionToken: string) {
+    // Keep the existing session budget: a comparison uses two backend requests.
     reserveSessionRequest();
-    const res = await fetch("/api/stream", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      const error = await res.json().catch(() => null);
-      throw new Error(error?.error || "Stream request failed");
-    }
-    if (!res.body) throw new Error("No response body");
-
-    const reader = res.body.getReader();
+    reserveSessionRequest();
+    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, new AbortController().signal).getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    const upstreamBuffers = { rag: "", bare: "" };
+    const completed = { rag: false, bare: false };
     let tokensSincePaint = 0;
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.type === "token") {
-              onToken(data.token);
-              tokensSincePaint += 1;
-              if (tokensSincePaint >= 8) {
-                tokensSincePaint = 0;
-                await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const event = JSON.parse(line.slice(6));
+            if (event.mode !== "rag" && event.mode !== "bare") throw new Error("Invalid stream response");
+            const mode: "rag" | "bare" = event.mode;
+            if (event.error) throw new Error(`${mode === "rag" ? "RAG" : "Bare"}: ${event.error}`);
+            if (typeof event.chunk !== "string") throw new Error("Invalid stream response");
+            upstreamBuffers[mode] += event.chunk;
+            const upstreamLines = upstreamBuffers[mode].split("\n");
+            upstreamBuffers[mode] = upstreamLines.pop() || "";
+            for (const upstreamLine of upstreamLines) {
+              if (!upstreamLine.startsWith("data: ")) continue;
+              const data = JSON.parse(upstreamLine.slice(6));
+              const update = mode === "rag" ? setRagResult : setBareResult;
+              if (data.type === "token") {
+                update(prev => prev ? { ...prev, answer: prev.answer + data.token } : null);
+                tokensSincePaint += 1;
+                if (tokensSincePaint >= 8) {
+                  tokensSincePaint = 0;
+                  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+                }
+              } else if (data.type === "sources" && mode === "rag") {
+                setRagResult(prev => prev ? { ...prev, sources: data.sources, agent: data.agent } : null);
+              } else if (data.type === "usage") {
+                update(prev => prev ? { ...prev, tokens: data.tokens, model: data.model } : null);
+              } else if (data.type === "done") {
+                completed[mode] = true;
+                if (mode === "rag") setRagStreaming(false);
+                else setBareStreaming(false);
               }
-            } else if (data.type === "sources" && onSources) onSources(data.sources, data.agent);
-            else if (data.type === "usage" && onMeta) onMeta({ tokens: data.tokens, model: data.model });
-          } catch {
-            // Skip malformed SSE events
+            }
           }
         }
       }
+      if (!completed.rag || !completed.bare) throw new Error("Generation stream ended unexpectedly");
+    } finally {
+      await reader.cancel().catch(() => {});
     }
   }
 
@@ -335,37 +355,23 @@ export default function Home() {
     setBareStreaming(false);
 
     try {
-      const firstToken = await getTurnstileToken();
+      if (!sessionRef.current) throw new Error("Verification is unavailable.");
+      const sessionToken = await sessionRef.current();
       if (modelOption === "openai") {
-        const secondToken = await getTurnstileToken();
         // Initialize results with empty answers for streaming
         setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
         setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
         setRagStreaming(true);
         setBareStreaming(true);
 
-        // Stream both RAG and bare LLM in parallel
-        await Promise.all([
-          readSSEStream(
-            { query: effectiveQuery, use_rag: true, turnstile_token: firstToken },
-            (token) => setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
-            (sources, agent) => setRagResult(prev => prev ? { ...prev, sources, agent } : null),
-            (meta) => setRagResult(prev => prev ? { ...prev, ...meta } : null),
-          ).finally(() => setRagStreaming(false)),
-          readSSEStream(
-            { query: effectiveQuery, use_rag: false, turnstile_token: secondToken },
-            (token) => setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null),
-            undefined,
-            (meta) => setBareResult(prev => prev ? { ...prev, ...meta } : null),
-          ).finally(() => setBareStreaming(false)),
-        ]);
+        await readComparisonStream(effectiveQuery, sessionToken);
       } else {
         // WebLLM: retrieve chunks from server, generate locally with streaming
         reserveSessionRequest();
-        const retrieveRes = await fetch("/api/retrieve", {
+        const retrieveRes = await fetch(`${WORKER_URL}/api/retrieve`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: effectiveQuery, turnstile_token: await firstToken }),
+          headers: { "Content-Type": "application/json", "x-aeroquery-key": WORKER_KEY, "Authorization": `Bearer ${sessionToken}` },
+          body: JSON.stringify({ query: effectiveQuery }),
         });
 
         if (!retrieveRes.ok) {

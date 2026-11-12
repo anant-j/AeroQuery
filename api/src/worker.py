@@ -1,12 +1,15 @@
+import base64
+import binascii
 import hashlib
 import hmac
 import ipaddress
 import json
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
-from js import AbortSignal, Object, ReadableStream, TextEncoder
+from js import AbortSignal, Object, ReadableStream, TextEncoder, Uint8Array, crypto
 from pyodide.ffi import create_proxy, to_js
 from workers import Response, WorkerEntrypoint, fetch
 
@@ -32,6 +35,88 @@ class ApiError(Exception):
 
 def _js_options(options):
     return to_js(options, dict_converter=Object.fromEntries)
+
+
+def _b64url(value):
+    return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")
+
+
+def _unb64url(value):
+    return base64.b64decode(value + "=" * (-len(value) % 4), altchars=b"-_", validate=True)
+
+
+async def _jwt_key(env):
+    secret = getattr(env, "SESSION_JWT_SECRET", "")
+    if not isinstance(secret, str) or len(secret.encode("utf-8")) < 32:
+        raise ApiError("Session authentication is not configured", 503)
+    return await crypto.subtle.importKey(
+        "raw", TextEncoder.new().encode(secret),
+        _js_options({"name": "HMAC", "hash": "SHA-256"}), False, to_js(["sign", "verify"]),
+    )
+
+
+async def _issue_session(env, origin):
+    now = int(time.time())
+    header = _b64url(b'{"alg":"HS256","typ":"JWT"}')
+    payload = _b64url(json.dumps({
+        "anon_id": uuid.uuid4().hex, "origin": origin, "iat": now, "exp": now + 300,
+    }, separators=(",", ":")).encode())
+    message = f"{header}.{payload}"
+    signature = await crypto.subtle.sign("HMAC", await _jwt_key(env), TextEncoder.new().encode(message))
+    return f"{message}.{_b64url(Uint8Array.new(signature).to_bytes())}", now + 300
+
+
+async def _verify_session(env, authorization, origin):
+    if not authorization.startswith("Bearer ") or len(authorization) > 4096:
+        raise ApiError("Session authentication is required", 401)
+    try:
+        header, payload, signature = authorization[7:].split(".")
+        if json.loads(_unb64url(header)) != {"alg": "HS256", "typ": "JWT"}:
+            raise ValueError("Invalid JWT header")
+        claims = json.loads(_unb64url(payload))
+        signature_bytes = _unb64url(signature)
+        if not isinstance(claims, dict) or len(signature_bytes) != 32:
+            raise ValueError("Invalid JWT")
+    except (ValueError, UnicodeError, binascii.Error, json.JSONDecodeError):
+        raise ApiError("Invalid session", 401)
+    valid = await crypto.subtle.verify(
+        "HMAC", await _jwt_key(env), to_js(signature_bytes),
+        TextEncoder.new().encode(f"{header}.{payload}"),
+    )
+    now = int(time.time())
+    if (not valid or claims.get("origin") != origin or
+        not isinstance(claims.get("anon_id"), str) or len(claims["anon_id"]) != 32 or
+        type(claims.get("iat")) is not int or type(claims.get("exp")) is not int or
+        claims["iat"] > now or claims["exp"] <= now or claims["exp"] - claims["iat"] != 300):
+        raise ApiError("Invalid or expired session", 401)
+
+
+async def _verify_turnstile(env, token, origin, client_ip):
+    secret = getattr(env, "TURNSTILE_SECRET_KEY", "")
+    allow_test = getattr(env, "TURNSTILE_ALLOW_TEST_KEYS", "false").lower() == "true"
+    is_test_key = isinstance(secret, str) and secret.startswith(("1x0000000000000000000000000000000", "2x0000000000000000000000000000000", "3x0000000000000000000000000000000"))
+    if not secret or (is_test_key and not allow_test):
+        raise ApiError("Verification is not configured", 503)
+    if not isinstance(token, str) or not token or len(token) > 2048:
+        raise ApiError("Verification is required", 403)
+    try:
+        response = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            method="POST", headers={"Content-Type": "application/json"},
+            body=json.dumps({"secret": secret, "response": token, **({"remoteip": client_ip} if client_ip != "unknown" else {})}),
+            signal=AbortSignal.timeout(5000),
+        )
+        if not response.ok:
+            raise ValueError("Siteverify failed")
+        result = await response.json()
+    except Exception as error:
+        print(json.dumps({"event": "turnstile_unavailable", "error_type": type(error).__name__}))
+        raise ApiError("Verification is unavailable", 503)
+    test_response = allow_test and is_test_key and result.get("hostname") == "example.com"
+    if not result.get("success") or (not test_response and (
+        result.get("hostname") != urlparse(origin).hostname or result.get("action") != "aeroquery"
+    )):
+        raise ApiError("Verification failed", 403)
 
 
 async def _json_request(url, payload, service, headers=None):
@@ -491,12 +576,31 @@ def _cached_stream(value):
 
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
+        origin = request.headers.get("origin", "")
+        allowed = [value.strip() for value in getattr(self.env, "ALLOWED_ORIGINS", "").split(",") if value.strip()]
+        if not allowed:
+            return Response.json({"error": "Allowed origins are not configured"}, status=503)
+        if origin not in allowed:
+            return Response.json({"error": "Origin is not allowed"}, status=403)
+
+        if request.method == "OPTIONS":
+            response = Response(None, status=204)
+        else:
+            response = await self._handle_request(request, origin)
+        response.js_object.headers.set("Access-Control-Allow-Origin", origin)
+        response.js_object.headers.set("Vary", "Origin")
+        response.js_object.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS")
+        response.js_object.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Aeroquery-Key")
+        response.js_object.headers.set("Cache-Control", "no-store")
+        return response
+
+    async def _handle_request(self, request, origin):
         correlation_id = uuid.uuid4().hex
         stage = "authentication"
         try:
             expected_key = getattr(self.env, "API_WORKER_KEY", "")
             provided_key = request.headers.get("x-aeroquery-key", "")
-            if not isinstance(expected_key, str) or len(expected_key) < 32:
+            if not isinstance(expected_key, str) or len(expected_key) < 32 or not expected_key.isascii():
                 raise ApiError("Worker authentication is not configured", 503)
             if (
                 not provided_key.isascii()
@@ -506,7 +610,7 @@ class Default(WorkerEntrypoint):
                 raise ApiError("Unauthorized", 401)
 
             stage = "rate_limit"
-            forwarded_ip = (request.headers.get("x-aeroquery-client-ip", "") or "").strip()
+            forwarded_ip = (request.headers.get("cf-connecting-ip", "") or "").strip()
             try:
                 client_ip = ipaddress.ip_address(forwarded_ip).compressed
             except ValueError:
@@ -519,11 +623,18 @@ class Default(WorkerEntrypoint):
             if path.startswith("/api/"):
                 path = path[4:]
 
-            if request.method != "POST" or path not in ("/retrieve", "/stream"):
+            if request.method != "POST" or path not in ("/auth/anonymous", "/retrieve", "/stream"):
                 raise ApiError("Not found", 404)
 
             stage = "request_validation"
             body = await _read_json_body(request)
+            if path == "/auth/anonymous":
+                stage = "turnstile_verification"
+                await _verify_turnstile(self.env, body.get("turnstile_token"), origin, client_ip)
+                token, expires_at = await _issue_session(self.env, origin)
+                return Response.json({"token": token, "expires_at": expires_at})
+            stage = "session_authentication"
+            await _verify_session(self.env, request.headers.get("authorization", ""), origin)
             query = _validate_query(body.get("query"))
 
             use_rag = body.get("use_rag", False)
