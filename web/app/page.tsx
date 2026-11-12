@@ -3,12 +3,10 @@
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { RAG_SYSTEM_PROMPT, BARE_SYSTEM_PROMPT } from "./lib/prompts";
-import { consumeSessionRequest, MAX_SESSION_REQUESTS, remainingSessionRequests } from "./lib/session-limit.js";
+import { BARE_SYSTEM_PROMPT, EVAL_DATA, getTurnstileSiteKey, MAX_SESSION_REQUESTS, METRIC_INSIGHTS, METRIC_LABELS, RAG_SYSTEM_PROMPT, SESSION_LIMIT_EVENT, WEBLLM_MODEL } from "./lib/constants.js";
+import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
 
-const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-const SESSION_LIMIT_EVENT = "aeroquery-session-requests";
+const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 
 function getRemainingRequests() {
   try {
@@ -47,60 +45,6 @@ declare global {
     };
   }
 }
-
-const EVAL_DATA = [
-  {
-    model: "GPT-5.4-mini (Azure)",
-    metrics: {
-      factual_correctness: { bare: 0.321, rag: 0.399, rerank: 0.427 },
-      faithfulness: { rag: 0.824, rerank: 0.884 },
-      context_precision: { rag: 0.784, rerank: 0.921 },
-      context_recall: { rag: 0.88, rerank: 0.92 },
-      answer_relevancy: { bare: 0.839, rag: 0.783, rerank: 0.788 },
-      semantic_similarity: { bare: 0.688, rag: 0.766, rerank: 0.772 },
-    },
-  },
-  {
-    model: "GPT-3.5-turbo (OpenAI)",
-    metrics: {
-      factual_correctness: { bare: 0.225, rag: 0.439, rerank: 0.438 },
-      faithfulness: { rag: 0.82, rerank: 0.851 },
-      context_precision: { rag: 0.783, rerank: 0.922 },
-      context_recall: { rag: 0.93, rerank: 0.93 },
-      answer_relevancy: { bare: 0.827, rag: 0.863, rerank: 0.867 },
-      semantic_similarity: { bare: 0.74, rag: 0.8, rerank: 0.792 },
-    },
-  },
-  {
-    model: "Llama 3.2 1B (Ollama)",
-    metrics: {
-      factual_correctness: { bare: 0.071, rag: 0.181, rerank: 0.215 },
-      faithfulness: { rag: 0.516, rerank: 0.55 },
-      context_precision: { rag: 0.781, rerank: 0.926 },
-      context_recall: { rag: 0.94, rerank: 0.90 },
-      answer_relevancy: { bare: 0.791, rag: 0.584, rerank: 0.616 },
-      semantic_similarity: { bare: 0.66, rag: 0.672, rerank: 0.685 },
-    },
-  },
-];
-
-const METRIC_LABELS: Record<string, string> = {
-  factual_correctness: "Factual Correctness",
-  faithfulness: "Faithfulness",
-  context_precision: "Context Precision",
-  context_recall: "Context Recall",
-  answer_relevancy: "Answer Relevancy",
-  semantic_similarity: "Semantic Similarity",
-};
-
-const METRIC_INSIGHTS: Record<string, string> = {
-  factual_correctness: "In this small exploratory sample, factual-correctness means varied by model and condition.",
-  faithfulness: "Faithfulness is an LLM-judge estimate of support from retrieved context, not a human-verified rate.",
-  context_precision: "Observed reranked context-precision means were higher in this sample; confidence intervals were not available for this historical run.",
-  context_recall: "Observed context-recall means on this 50-question sample; not an estimate of real-world coverage.",
-  answer_relevancy: "Relevance does not measure factual accuracy or safety.",
-  semantic_similarity: "Embedding similarity to one reference answer does not establish factual correctness.",
-};
 
 type ModelOption = "openai" | "webllm";
 

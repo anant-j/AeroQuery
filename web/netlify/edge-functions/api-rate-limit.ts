@@ -1,6 +1,8 @@
+import { MAX_BODY_BYTES } from "../../app/lib/constants.js";
+
 export default async function apiRateLimit(request: Request) {
   const contentLength = request.headers.get("content-length");
-  if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > 32768) {
+  if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > MAX_BODY_BYTES) {
     return Response.json({ error: "request body is too large" }, { status: 413 });
   }
 }

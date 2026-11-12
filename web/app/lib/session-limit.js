@@ -1,5 +1,6 @@
-export const MAX_SESSION_REQUESTS = 8;
-const STORAGE_KEY = "aeroquery.sessionRequests";
+import { MAX_SESSION_REQUESTS, STORAGE_KEY } from "./constants.js";
+
+export { MAX_SESSION_REQUESTS } from "./constants.js";
 
 export function remainingSessionRequests(storage) {
   try {

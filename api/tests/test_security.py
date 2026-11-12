@@ -57,7 +57,7 @@ workers.WorkerEntrypoint = WorkerEntrypoint
 workers.Response = Response
 workers.fetch = None
 
-with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), "pyodide.ffi": ffi, "workers": workers}):
+with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), "pyodide.ffi": ffi, "workers": workers}), patch.object(sys, "path", [str(Path(__file__).parents[1] / "src"), *sys.path]):
     spec = importlib.util.spec_from_file_location("worker_under_test", Path(__file__).parents[1] / "src" / "worker.py")
     worker = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(worker)

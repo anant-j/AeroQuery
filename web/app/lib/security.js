@@ -1,5 +1,6 @@
-export const MAX_QUERY_LENGTH = 1500;
-export const MAX_BODY_BYTES = 32 * 1024;
+import { MAX_QUERY_LENGTH, MAX_BODY_BYTES } from "./constants.js";
+
+export { MAX_QUERY_LENGTH, MAX_BODY_BYTES } from "./constants.js";
 
 export class PayloadTooLargeError extends Error {}
 export class RequestSecurityError extends Error {

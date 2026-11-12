@@ -1,0 +1,78 @@
+export const MAX_QUERY_LENGTH = 1500;
+export const MAX_BODY_BYTES = 32 * 1024;
+export const MAX_SESSION_REQUESTS = 8;
+export const STORAGE_KEY = "aeroquery.sessionRequests";
+export const SESSION_LIMIT_EVENT = "aeroquery-session-requests";
+export const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+
+export function getTurnstileSiteKey() {
+  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+}
+
+export const RAG_SYSTEM_PROMPT = `You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
+
+Rules:
+1. Answer ONLY based on the provided context. Do not use any outside knowledge.
+2. Cite specific section numbers (e.g., "Section 2.3.1") in your answer.
+3. If the context does not contain enough information to answer the question, say: "I don't have enough information in the available regulations to answer this question."
+4. Be precise and concise. Pilots need clear, unambiguous answers.
+5. If multiple sections are relevant, reference all of them.`;
+
+export const BARE_SYSTEM_PROMPT =
+  "You are an aviation regulation expert. Answer based on your knowledge of Canadian aviation regulations.";
+
+export const EVAL_DATA = [
+  {
+    model: "GPT-5.4-mini (Azure)",
+    metrics: {
+      factual_correctness: { bare: 0.321, rag: 0.399, rerank: 0.427 },
+      faithfulness: { rag: 0.824, rerank: 0.884 },
+      context_precision: { rag: 0.784, rerank: 0.921 },
+      context_recall: { rag: 0.88, rerank: 0.92 },
+      answer_relevancy: { bare: 0.839, rag: 0.783, rerank: 0.788 },
+      semantic_similarity: { bare: 0.688, rag: 0.766, rerank: 0.772 },
+    },
+  },
+  {
+    model: "GPT-3.5-turbo (OpenAI)",
+    metrics: {
+      factual_correctness: { bare: 0.225, rag: 0.439, rerank: 0.438 },
+      faithfulness: { rag: 0.82, rerank: 0.851 },
+      context_precision: { rag: 0.783, rerank: 0.922 },
+      context_recall: { rag: 0.93, rerank: 0.93 },
+      answer_relevancy: { bare: 0.827, rag: 0.863, rerank: 0.867 },
+      semantic_similarity: { bare: 0.74, rag: 0.8, rerank: 0.792 },
+    },
+  },
+  {
+    model: "Llama 3.2 1B (Ollama)",
+    metrics: {
+      factual_correctness: { bare: 0.071, rag: 0.181, rerank: 0.215 },
+      faithfulness: { rag: 0.516, rerank: 0.55 },
+      context_precision: { rag: 0.781, rerank: 0.926 },
+      context_recall: { rag: 0.94, rerank: 0.90 },
+      answer_relevancy: { bare: 0.791, rag: 0.584, rerank: 0.616 },
+      semantic_similarity: { bare: 0.66, rag: 0.672, rerank: 0.685 },
+    },
+  },
+];
+
+/** @type {Record<string, string>} */
+export const METRIC_LABELS = {
+  factual_correctness: "Factual Correctness",
+  faithfulness: "Faithfulness",
+  context_precision: "Context Precision",
+  context_recall: "Context Recall",
+  answer_relevancy: "Answer Relevancy",
+  semantic_similarity: "Semantic Similarity",
+};
+
+/** @type {Record<string, string>} */
+export const METRIC_INSIGHTS = {
+  factual_correctness: "In this small exploratory sample, factual-correctness means varied by model and condition.",
+  faithfulness: "Faithfulness is an LLM-judge estimate of support from retrieved context, not a human-verified rate.",
+  context_precision: "Observed reranked context-precision means were higher in this sample; confidence intervals were not available for this historical run.",
+  context_recall: "Observed context-recall means on this 50-question sample; not an estimate of real-world coverage.",
+  answer_relevancy: "Relevance does not measure factual accuracy or safety.",
+  semantic_similarity: "Embedding similarity to one reference answer does not establish factual correctness.",
+};
