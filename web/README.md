@@ -1,12 +1,17 @@
 # AeroQuery Web
 
-Next.js app (deployed on Netlify) for asking questions about Canadian aviation regulations (TC AIM).
+A Next.js app (deployed on Netlify) for asking questions to an LLM about Canadian aviation regulations (TC AIM).
 
 ## What it does
 
-- Chat UI that compares answer modes: a local model in the browser (WebLLM, Llama 3.2 1B) and a hosted Azure OpenAI model, each with or without RAG.
+- Chat UI that compares answer modes: either using a local model in the browser (WebLLM, Llama 3.2 1B) or a hosted Azure OpenAI model, each with or without RAG.
 - Server routes `app/api/retrieve` and `app/api/stream` validate the request (origin check, Cloudflare Turnstile, session limits) and proxy to the Cloudflare Worker in [../api](../api), which does retrieval and generation.
-- `proxy.ts` sets a nonce-based CSP; `netlify/edge-functions/api-rate-limit.ts` rate-limits API routes.
+
+### Security
+- Cloudflare Tunnstile
+- `proxy.ts` sets a nonce-based CSP
+- `netlify/edge-functions/api-rate-limit.ts` rate-limits API routes.
+- In session rate-limit using browser localStorage 
 
 ## Run locally
 
