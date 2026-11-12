@@ -5,7 +5,11 @@ export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher =
     if (session && session.expires_at * 1000 > Date.now() + 10000) return session.token;
     if (!pending) {
       pending = (async () => {
-        if (!apiUrl || !apiKey) throw new Error("Worker authentication is not configured.");
+        const missing = [
+          !apiUrl && "NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL",
+          !apiKey && "NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY",
+        ].filter(Boolean);
+        if (missing.length) throw new Error(`Missing build environment variables: ${missing.join(", ")}.`);
         const endpoint = new URL(apiUrl);
         if (endpoint.protocol !== "https:" &&
             !(endpoint.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(endpoint.hostname))) {

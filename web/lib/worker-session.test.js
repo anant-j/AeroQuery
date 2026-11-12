@@ -43,3 +43,12 @@ test("refuses to send tokens or keys over insecure non-local URLs", async () => 
   await assert.rejects(session(), /must use HTTPS/);
   assert.equal(called, false);
 });
+
+test("identifies missing build-time Worker configuration", async () => {
+  const missingUrl = createWorkerSession("", "key", async () => "token");
+  await assert.rejects(missingUrl(), /NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL/);
+  const missingKey = createWorkerSession("https://worker.test", "", async () => "token");
+  await assert.rejects(missingKey(), /NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY/);
+  const missingBoth = createWorkerSession("", "", async () => "token");
+  await assert.rejects(missingBoth(), /NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL, NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY/);
+});
