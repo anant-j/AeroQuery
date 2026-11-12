@@ -1,6 +1,6 @@
 # AeroQuery
 
-AeroQuery is a research project focused on answering aviation questions grounded in Canadian aviation regulations (TC AIM), combining dense retrieval, reranking, and evaluation.
+AeroQuery is a research project focused on answering aviation questions grounded in Canadian aviation regulations (TC CARs), combining dense retrieval, reranking, and evaluation.
 
 The project is served as a live demo at https://aeroquery.anant-j.com.
 
@@ -8,13 +8,13 @@ The project is served as a live demo at https://aeroquery.anant-j.com.
 
 I am a Canadian Private Pilot Licence holder and a Software Engineer. While training for my licence, I realized that aviation regulations are hierarchical, repetitive, and difficult to navigate without context.
 
-At the same time, I wanted to explore how RAG systems work in production environments. I also noticed that the smaller open-source on-device models I had access to were not really trained on Canadian aviation regulations (TC AIM), but instead on American aviation regulations (FAA FAR).
+At the same time, I wanted to explore how RAG systems work in production environments. I also noticed that the smaller open-source on-device models I had access to were not really trained on Canadian aviation regulations (TC CARs), but instead on American aviation regulations (FAA FAR).
 
 This project is a learning and research prototype. It is not a validated aviation decision-support system and should not be relied on as operational guidance.
 
 ## What the system does
 
-AeroQuery is a retrieval-augmented QA system for TC AIM. It ingests regulatory PDFs, chunks and embeds the content, retrieves relevant passages, reranks them, and generates answers grounded in source sections.
+AeroQuery is a retrieval-augmented QA system for TC CAR. It ingests regulatory PDFs, chunks and embeds the content, retrieves relevant passages, reranks them, and generates answers grounded in source sections.
 
 The project explores several core AI engineering questions:
 
@@ -123,7 +123,7 @@ The project includes an exploratory evaluation benchmark over a set of aviation 
 
 ### Benchmark framing
 
-These are historical point estimates from a single run and should not be interpreted as a final or generalizable performance claim. The benchmark currently includes 50 questions across 40 TC AIM sections, without a documented held-out split or independent human scoring process. The evaluator also uses an LLM judge and the historical results reflect earlier scoring behavior.
+These are historical point estimates from a single run and should not be interpreted as a final or generalizable performance claim. The benchmark currently includes 75 questions across TC CAR sections, without a documented held-out split or independent human scoring process. The evaluator also uses an LLM judge and the historical results reflect earlier scoring behavior.
 
 ### Representative results
 

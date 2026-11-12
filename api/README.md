@@ -1,6 +1,6 @@
 # AeroQuery API
 
-Cloudflare Python Worker that powers retrieval and generation for AeroQuery (Canadian TC AIM regulations).
+Cloudflare Python Worker that powers retrieval and generation for AeroQuery (Canadian TC CAR regulations).
 
 ## What it does
 

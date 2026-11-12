@@ -1,6 +1,6 @@
 # AeroQuery Web
 
-A Next.js app (deployed on Netlify) for asking questions to an LLM about Canadian aviation regulations (TC AIM).
+A Next.js app (deployed on Netlify) for asking questions to an LLM about Canadian aviation regulations (TC CARs).
 
 ## What it does
 
