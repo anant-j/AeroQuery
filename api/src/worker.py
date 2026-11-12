@@ -1,3 +1,4 @@
+import hashlib
 import hmac
 import ipaddress
 import json
@@ -16,6 +17,8 @@ MAX_CHUNK_LENGTH = 8000
 MAX_COMPLETION_TOKENS = 2048
 RERANK_MODEL = "rerank-v4.0-pro"
 NAMESPACE = "canada"
+CACHE_VERSION = "1"
+DEFAULT_CACHE_TTL_SECONDS = 86400
 RAG_SYSTEM_PROMPT = """You are an expert aviation regulation assistant specializing in Canadian aviation regulations (TC AIM - Transport Canada Aeronautical Information Manual).
 
 Rules:
@@ -323,27 +326,30 @@ async def _read_json_body(request):
     return body
 
 
-async def _log_question(env, query, mode):
+async def _log_question(env, query, mode, cache_key=None, answered_from_cache=False):
     now = datetime.now(timezone.utc)
     question_id = uuid.uuid4().hex
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
-    log_event = {"event": "question_received", "question_id": question_id, "mode": mode}
+    log_event = {"event": "question_received", "question_id": question_id, "mode": mode, "answered_from_cache": answered_from_cache}
     if query_text is not None:
         log_event["query_text"] = query_text
     print(json.dumps(log_event))
     try:
         await env.DB.prepare(
-            "INSERT INTO question_logs (id, created_at, query_length, mode, query_text) "
-            "VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO question_logs (id, created_at, query_length, mode, query_text, cache_key, answered_from_cache) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)"
         ).bind(
             question_id,
             now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             len(query),
             mode,
             query_text,
+            cache_key,
+            int(answered_from_cache),
         ).run()
     except Exception as error:
         print(json.dumps({"event": "question_log_failed", "question_id": question_id, "error_type": type(error).__name__}))
+    return question_id
 
 
 def _public_chunks(chunks):
@@ -353,11 +359,56 @@ def _public_chunks(chunks):
     ]
 
 
+def _cache_key(env, path, query, use_rag):
+    settings = [
+        CACHE_VERSION, path, query, use_rag,
+        getattr(env, "AZURE_OPENAI_DEPLOYMENT", "") or getattr(env, "LLM_MODEL", "") or "gpt-5.4-mini",
+        getattr(env, "AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large"),
+        getattr(env, "AZURE_OPENAI_ENDPOINT", ""),
+        getattr(env, "PINECONE_INDEX_HOST", ""), NAMESPACE, RERANK_MODEL,
+    ]
+    return hashlib.sha256(json.dumps(settings, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def _cache_ttl(env):
+    try:
+        return max(0, int(getattr(env, "CACHE_TTL_SECONDS", DEFAULT_CACHE_TTL_SECONDS)))
+    except (TypeError, ValueError):
+        return DEFAULT_CACHE_TTL_SECONDS
+
+
+async def _cache_get(env, key):
+    if not _cache_ttl(env):
+        return None
+    try:
+        row = await env.DB.prepare(
+            "SELECT cache_value FROM question_logs WHERE cache_key = ? "
+            "AND cache_value IS NOT NULL AND cache_expires_at > ? "
+            "ORDER BY cache_expires_at DESC LIMIT 1"
+        ).bind(key, int(datetime.now(timezone.utc).timestamp())).first()
+        return json.loads(row.cache_value) if row else None
+    except Exception as error:
+        print(json.dumps({"event": "cache_read_failed", "error_type": type(error).__name__}))
+        return None
+
+
+async def _cache_put(env, question_id, value):
+    ttl = _cache_ttl(env)
+    if not ttl:
+        return
+    try:
+        await env.DB.prepare(
+            "UPDATE question_logs SET cache_value = ?, cache_expires_at = ? WHERE id = ?"
+        ).bind(json.dumps(value), int(datetime.now(timezone.utc).timestamp()) + ttl, question_id).run()
+    except Exception as error:
+        print(json.dumps({"event": "cache_write_failed", "error_type": type(error).__name__}))
+
+
 def _sse_event(event):
     return f"data: {json.dumps(event, separators=(',', ':'))}\n\n"
 
 
-async def _stream_generation(env, messages, model, sources=None, agent=None):
+async def _stream_generation(env, messages, model, sources=None, agent=None, question_id=None):
     response, _ = await _azure_chat(env, messages, stream=True)
     if not response.ok:
         raise ApiError("Azure Foundry generation failed", 502)
@@ -366,19 +417,31 @@ async def _stream_generation(env, messages, model, sources=None, agent=None):
 
     async def start(controller):
         buffer = b""
+        tokens = []
+        completed = False
+        finish_reason = None
 
         def emit_line(raw_line):
+            nonlocal completed, finish_reason
             line = raw_line.decode("utf-8").rstrip("\r")
             if not line.startswith("data: "):
                 return
             data = line[6:].strip()
-            if not data or data == "[DONE]":
+            if data == "[DONE]":
+                completed = True
+                return
+            if not data:
                 return
             event = json.loads(data)
+            if event.get("error"):
+                raise ValueError("Upstream stream error")
             choices = event.get("choices") or []
             token = choices[0].get("delta", {}).get("content") if choices else None
             if token:
+                tokens.append(token)
                 controller.enqueue(encoder.encode(_sse_event({"type": "token", "token": token})))
+            if choices and choices[0].get("finish_reason"):
+                finish_reason = choices[0]["finish_reason"]
             usage = event.get("usage")
             if usage:
                 controller.enqueue(encoder.encode(_sse_event({
@@ -406,6 +469,8 @@ async def _stream_generation(env, messages, model, sources=None, agent=None):
                     emit_line(line)
             if buffer:
                 emit_line(buffer)
+            if question_id and completed and finish_reason == "stop" and tokens:
+                await _cache_put(env, question_id, {"answer": "".join(tokens), "sources": sources, "agent": agent, "model": model})
             controller.enqueue(encoder.encode(_sse_event({"type": "done"})))
             controller.close()
         except Exception as error:
@@ -414,6 +479,20 @@ async def _stream_generation(env, messages, model, sources=None, agent=None):
 
     stream = ReadableStream.new(_js_options({"start": create_proxy(start)}))
     return Response(stream, headers={
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Content-Type-Options": "nosniff",
+    })
+
+
+def _cached_stream(value):
+    events = []
+    if value.get("sources"):
+        events.append({"type": "sources", "sources": value["sources"], "model": value["model"], "agent": value.get("agent")})
+    events.append({"type": "token", "token": value["answer"]})
+    events.append({"type": "usage", "tokens": 0, "model": value["model"]})
+    events.append({"type": "done"})
+    return Response("".join(_sse_event(event) for event in events), headers={
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
         "X-Content-Type-Options": "nosniff",
@@ -460,29 +539,35 @@ class Default(WorkerEntrypoint):
             if not isinstance(use_rag, bool):
                 raise ApiError("use_rag must be a boolean", 400)
 
+            mode = "webllm" if path == "/retrieve" else "openai" if path == "/agent" or use_rag else "openai_bare"
+            cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False)
+            cached = await _cache_get(self.env, cache_key)
+            stage = "question_logging"
+            question_id = await _log_question(self.env, query, mode, cache_key, cached is not None)
+            if cached is not None:
+                return _cached_stream(cached) if path == "/stream" else Response.json(cached)
+
             if path == "/retrieve":
-                stage = "question_logging"
-                await _log_question(self.env, query, "webllm")
                 stage = "retrieval"
                 chunks = await _retrieve_chunks(self.env, query)
-                return Response.json({"query": query, "chunks": _public_chunks(chunks)})
+                result = {"query": query, "chunks": _public_chunks(chunks)}
+                await _cache_put(self.env, question_id, result)
+                return Response.json(result)
 
             if path == "/agent":
-                stage = "question_logging"
-                await _log_question(self.env, query, "openai")
                 stage = "agent_retrieval"
                 result = await _run_agent(self.env, query)
-                return Response.json({
+                result = {
                     "query": query,
                     "chunks": _public_chunks(result["chunks"]),
                     "agent": result["agent"],
-                })
+                }
+                await _cache_put(self.env, question_id, result)
+                return Response.json(result)
 
             agent = None
             sources = []
             if use_rag:
-                stage = "question_logging"
-                await _log_question(self.env, query, "openai")
                 stage = "agent_retrieval"
                 result = await _run_agent(self.env, query)
                 agent = result["agent"]
@@ -505,8 +590,6 @@ class Default(WorkerEntrypoint):
                     )},
                 ]
             else:
-                stage = "question_logging"
-                await _log_question(self.env, query, "openai_bare")
                 messages = [
                     {"role": "system", "content": BARE_SYSTEM_PROMPT},
                     {"role": "user", "content": query},
@@ -518,7 +601,7 @@ class Default(WorkerEntrypoint):
                 or "gpt-5.4-mini"
             )
             stage = "generation"
-            return await _stream_generation(self.env, messages, model, sources, agent)
+            return await _stream_generation(self.env, messages, model, sources, agent, question_id)
         except ApiError as error:
             return Response.json({"error": str(error)}, status=error.status)
         except Exception as error:
@@ -535,3 +618,6 @@ class Default(WorkerEntrypoint):
         await worker_env.DB.prepare(
             "DELETE FROM question_logs WHERE created_at < ?"
         ).bind(cutoff.isoformat(timespec="milliseconds").replace("+00:00", "Z")).run()
+        await worker_env.DB.prepare(
+            "UPDATE question_logs SET cache_value = NULL, cache_expires_at = NULL WHERE cache_expires_at <= ?"
+        ).bind(int(datetime.now(timezone.utc).timestamp())).run()
