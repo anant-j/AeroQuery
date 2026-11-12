@@ -538,8 +538,7 @@ export default function Home() {
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
-          {remainingRequests} of {MAX_SESSION_REQUESTS} requests remaining this tab.
-          {remainingRequests < requestsNeeded && " Not enough requests remain for this model."}
+          {remainingRequests < requestsNeeded && " You have reached the session limits. Please try again later."}
         </p>
       </form>
 

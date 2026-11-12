@@ -1,9 +1,10 @@
 export const MAX_QUERY_LENGTH = 1500;
 export const MAX_BODY_BYTES = 32 * 1024;
-export const MAX_SESSION_REQUESTS = 8;
+export const MAX_SESSION_REQUESTS = 16;
 export const STORAGE_KEY = "aeroquery.sessionRequests";
 export const SESSION_LIMIT_EVENT = "aeroquery-session-requests";
 export const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+export const REQUEST_LIMIT_TTL = 5 * 60 * 1000; // 5 minutes
 
 export function getTurnstileSiteKey() {
   return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
