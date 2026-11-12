@@ -3,7 +3,7 @@
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { EVAL_DATA, formatComparisonMessage, getTurnstileSiteKey, METRIC_INSIGHTS, METRIC_LABELS, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
+import { formatComparisonMessage, getTurnstileSiteKey, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
@@ -576,105 +576,9 @@ export default function Home() {
       )}
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark (RAGAS v0.4)</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Exploratory historical run · 50 questions · 3 models · single GPT-5.4-mini judge
-        </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-2 pr-3 font-medium text-gray-500 dark:text-gray-400">Metric</th>
-                {EVAL_DATA.map((row, i) => (
-                  <th key={i} colSpan={3} className="text-center py-2 px-1 font-medium text-gray-500 dark:text-gray-400 border-l border-gray-100 dark:border-gray-800">
-                    {row.model}
-                  </th>
-                ))}
-              </tr>
-              <tr className="border-b border-gray-100 dark:border-gray-800">
-                <th></th>
-                {EVAL_DATA.map((_, i) => (
-                  <React.Fragment key={i}>
-                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-400 border-l border-gray-100 dark:border-gray-800">Bare</th>
-                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-400">RAG</th>
-                    <th className="text-center py-1 px-1 font-normal text-gray-500 dark:text-gray-400">+Rerank</th>
-                  </React.Fragment>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Object.keys(METRIC_LABELS).map((metric) => {
-                return (
-                <React.Fragment key={metric}>
-                <tr className="border-b border-gray-50 dark:border-gray-800">
-                  <td className="py-2 pr-3 text-gray-700 dark:text-gray-300 whitespace-nowrap font-medium">{METRIC_LABELS[metric]}</td>
-                  {EVAL_DATA.map((row, i) => {
-                    const m = row.metrics[metric as keyof typeof row.metrics];
-                    const bare = "bare" in m ? m.bare : null;
-                    const rag = "rag" in m ? m.rag : null;
-                    const rerank = "rerank" in m ? m.rerank : null;
-                    const vals = [bare, rag, rerank].filter((v) => v !== null && v !== undefined) as number[];
-                    const maxVal = vals.length > 0 ? Math.max(...vals) : 0;
-                    const minVal = vals.length > 0 ? Math.min(...vals) : 0;
-                    const delta = minVal > 0 ? Math.round(((maxVal - minVal) / minVal) * 100) : 0;
-
-                    const cellClass = (val: number | null | undefined, isFirst: boolean, isBare: boolean) => {
-                      const border = isFirst ? " border-l border-gray-100 dark:border-gray-800" : "";
-                      if (val === null || val === undefined) return `text-gray-400 dark:text-gray-600${border}`;
-                      if (val === maxVal && vals.length > 1) return `text-gray-800 dark:text-gray-100 font-bold${border}`;
-                      if (!isBare && val === minVal && vals.length > 1 && bare !== null && bare !== undefined && val < bare) return `text-gray-800 dark:text-gray-100 font-bold${border}`;
-                      return `text-gray-600 dark:text-gray-400${border}`;
-                    };
-
-                    const cellBg = (val: number | null | undefined, isBare: boolean): string | undefined => {
-                      if (val === null || val === undefined) return undefined;
-                      if (val === maxVal && vals.length > 1) return isDark ? "rgba(16, 185, 129, 0.15)" : "rgba(16, 185, 129, 0.08)";
-                      if (!isBare && val === minVal && vals.length > 1 && bare !== null && bare !== undefined && val < bare) return isDark ? "rgba(239, 68, 68, 0.15)" : "rgba(239, 68, 68, 0.08)";
-                      return undefined;
-                    };
-
-                    const renderCell = (val: number | null | undefined, isFirst: boolean, isBare: boolean) => {
-                      if (val === null || val === undefined) return <td className={`text-center py-2 px-2 font-mono ${cellClass(val, isFirst, isBare)}`}>—</td>;
-                      const isMax = val === maxVal && vals.length > 1;
-                      const isRegression = !isBare && bare !== null && bare !== undefined && val < bare;
-                      const regressionDelta = isRegression && bare ? Math.round(((bare - val) / bare) * 100) : 0;
-                      const bg = cellBg(val, isBare);
-                      return (
-                        <td className={`text-center py-2 px-2 font-mono ${cellClass(val, isFirst, isBare)}`} style={bg ? { background: bg } : undefined}>
-                          {val.toFixed(2)}
-                          {isMax && delta > 0 && (
-                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">↑{delta}%</span>
-                          )}
-                          {isRegression && regressionDelta > 0 && (
-                            <span className="text-red-500 dark:text-red-400 font-semibold ml-1">↓{regressionDelta}%</span>
-                          )}
-                        </td>
-                      );
-                    };
-
-                    return (
-                      <React.Fragment key={i}>
-                        {renderCell(bare, true, true)}
-                        {renderCell(rag, false, false)}
-                        {renderCell(rerank, false, false)}
-                      </React.Fragment>
-                    );
-                  })}
-                </tr>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <td colSpan={1 + EVAL_DATA.length * 3} className="py-1.5 px-1 text-xs text-gray-500 dark:text-gray-400 italic">
-                    {METRIC_INSIGHTS[metric]}
-                  </td>
-                </tr>
-                </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
-          <span className="text-emerald-600 dark:text-emerald-400">↑ Green</span> = highest observed score. <span className="text-red-500 dark:text-red-400">↓ Red</span> = lower than the bare baseline. These descriptive comparisons are not statistical significance tests.
+        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          CAR benchmark results are pending a new evaluation run.
         </p>
       </div>
 
