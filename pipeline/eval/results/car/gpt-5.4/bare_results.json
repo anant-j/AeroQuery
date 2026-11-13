@@ -214,5 +214,77 @@
     "answer_relevancy": 0.6725,
     "factual_correctness": 0.0,
     "metric_errors": {}
+  },
+  {
+    "question": "May a private pilot licence holder receive reimbursement for a flight’s costs when carrying passengers, and what limit applies to who provides that reimbursement and what it covers?",
+    "ground_truth": "Yes, but only if the holder is the owner or operator of the aircraft, the flight is not for hire or reward, and any reimbursement is provided only by the passengers carried incidentally to the flight’s purpose and is only for sharing fuel, oil, and applicable fees.",
+    "section": "401.28",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+    "answer": "Yes — **a Private Pilot Licence (PPL) holder may receive reimbursement** in a limited case, but **not from the passengers**.\n\nUnder the Canadian Aviation Regulations, a PPL holder may act as PIC of an aircraft carrying passengers only if the flight is conducted **without remuneration**, subject to specific exceptions. One key exception allows reimbursement of certain costs by the **holder’s employer or a charitable, not-for-profit, or public security organization**, provided the flight is **incidental to the pilot’s employment or duties** and not for hire or reward in the air service sense.\n\nThe important limits are:\n\n- **Who may reimburse:**  \n  Reimbursement may come only from:\n  - the pilot’s **employer**, or\n  - a **charitable organization**,\n  - a **not-for-profit organization**, or\n  - a **public security organization**.\n\n- **What reimbursement may cover:**  \n  It is limited to the **operating costs of the flight** and may include:\n  - **fuel**\n  - **oil**\n  - **airport expenditures**\n  - **aircraft rental fees**\n\nSo, if you are asking whether a PPL holder may have **passengers reimburse the flight cost**, the answer is generally **no**. The permitted reimbursement is narrowly limited both as to **source** and **eligible expenses**.\n\nThis is based on **CAR 401.28** (privileges of private pilot licence holders), as commonly understood, especially the exception concerning reimbursement of operating costs by specified organizations or an employer.",
+    "tokens": 686,
+    "semantic_similarity": 0.7184,
+    "answer_relevancy": 0.8214,
+    "factual_correctness": 0.14,
+    "metric_errors": {}
+  },
+  {
+    "question": "Can a private pilot with a private aircraft be reimbursed by an employer for a flight done on the employer’s business, and how is the reimbursement limited?",
+    "ground_truth": "Yes, if the pilot is employed full-time for purposes other than flying, the flight is on the employer’s business and incidental to the pilot’s duties, and for an owned aircraft the payment is based on distance or hours flown and does not exceed direct operating costs plus fees charged against the aircraft for the flight.",
+    "section": "401.28",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+    "answer": "Yes — **but only on a limited cost-recovery basis**.\n\nUnder the **Canadian Aviation Regulations**, a **private operator/pilot using a privately registered aircraft** may be reimbursed by an employer for a flight conducted on the employer’s business **if the reimbursement does not exceed the operating costs of the flight**. The key rule is in **CAR 401.28** (reimbursement of costs by an employer).\n\n## What is allowed\nA private pilot may conduct the flight and be reimbursed by the employer for the employer’s business travel, provided that:\n\n- the flight is for the employer’s business, and\n- the reimbursement is **limited to the operating costs of that flight**.\n\n## What the reimbursement cannot be\nThe reimbursement cannot amount to:\n\n- a **profit**,\n- compensation beyond permitted cost recovery, or\n- payment that would make the operation effectively a **commercial air service**.\n\n## Practical limit on reimbursement\nThe reimbursement is generally limited to **actual operating costs**, such as items directly related to that flight, for example:\n\n- fuel and oil,\n- airport or landing fees,\n- aircraft rental (if applicable),\n- other direct operating expenses.\n\nIt is **not** meant to include profit, pilot salary for the flight as such, or broader ownership costs beyond what is permitted as operating cost recovery.\n\n## Important caution\nIf the arrangement goes beyond simple employer reimbursement of operating costs, it may trigger requirements applicable to **commercial operations** under the CARs. Also, if the aircraft is not a privately registered aircraft, or the circumstances involve carriage of passengers or goods for hire or reward, additional rules may apply.\n\nIf you want, I can also give you the exact wording and a plain-language breakdown of **CAR 401.28** and how it interacts with the **hire or reward / commercial air service** rules.",
+    "tokens": 745,
+    "semantic_similarity": 0.6886,
+    "answer_relevancy": 0.8727,
+    "factual_correctness": 0.4,
+    "metric_errors": {}
+  },
+  {
+    "question": "May a holder of a commercial pilot licence — aeroplane with a daylight-flying-only restriction exercise private pilot licence — aeroplane privileges by night?",
+    "ground_truth": "No. A holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall not exercise the private pilot licence — aeroplane privileges by night.",
+    "section": "401.30",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+    "answer": "No.\n\nA **commercial pilot licence — aeroplane** that carries a **daylight-flying-only restriction** does **not** permit the holder to exercise **private pilot licence — aeroplane** privileges at night unless the pilot also holds the required night qualification.\n\nUnder the CARs licensing framework, night privileges for aeroplanes depend on the pilot being qualified for night flight, not simply on choosing to operate under “private” rather than “commercial” privileges. A daylight-only restriction limits the licence holder from exercising aeroplane privileges at night.\n\nIn practical terms:\n\n- **By day:** the holder may exercise the privileges allowed by the licence and rating/restriction combination.\n- **By night:** **not permitted** unless the pilot has the appropriate night privileges/qualification and the daylight-only restriction no longer prevents night operation.\n\nSo the answer is **no — not by virtue of the PPL privileges alone**.",
+    "tokens": 558,
+    "semantic_similarity": 0.8571,
+    "answer_relevancy": 0.9472,
+    "factual_correctness": 0.5,
+    "metric_errors": {}
+  },
+  {
+    "question": "Until when may a commercial pilot licence — aeroplane holder exercise private pilot licence — aeroplane privileges?",
+    "ground_truth": "They may exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.",
+    "section": "401.30",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+    "answer": "A **Commercial Pilot Licence — Aeroplane (CPL-A)** holder may exercise **Private Pilot Licence — Aeroplane (PPL-A)** privileges **as long as the licence itself remains valid**, even if the commercial privileges cannot currently be exercised.\n\nIn practical Canadian CARs terms, that means the pilot must still meet the normal requirements to act as flight crew, including:\n\n- holding the **appropriate licence**\n- holding a **valid medical certificate** for the privileges exercised\n- meeting the **recency requirements**\n- holding any required **ratings**\n\nA CPL is a higher licence than a PPL, so if the pilot no longer meets the requirements for commercial privileges, they may still generally exercise **private** aeroplane privileges provided they still meet the requirements applicable to private operations.\n\n## Key limitation\nThe main practical limit is usually the **medical**:\n\n- To exercise **commercial** privileges, a CPL holder normally needs a **Category 1 medical**.\n- If the pilot no longer has a valid Category 1 medical but it has reverted in a way that still supports lower licence privileges, the pilot may still be able to exercise **private** privileges, subject to the medical validity rules and recency requirements.\n\n## Short answer\nA CPL-A holder may exercise PPL-A privileges **until they no longer meet the requirements applicable to private pilot privileges**—most importantly, licence validity, medical validity, and recency.\n\nIf you want, I can give you the specific **CARs section numbers** that govern:\n- CPL privileges,\n- use of a higher licence to exercise lower-licence privileges,\n- medical validity,\n- and recency requirements.",
+    "tokens": 698,
+    "semantic_similarity": 0.6386,
+    "answer_relevancy": 0.8306,
+    "factual_correctness": 0.33,
+    "metric_errors": {}
+  },
+  {
+    "question": "May the holder of a multi-crew pilot licence — aeroplane act as co-pilot of a turbine-powered aeroplane operated at night under VFR?",
+    "ground_truth": "Yes, but only if the aeroplane also meets all listed conditions: it is a transport category aircraft, has a minimum flight crew document specifying two pilots, is of a type endorsed on the holder’s licence, and is operated under subpart 4 of Part VI or Part VII.",
+    "section": "401.32",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+    "answer": "**Yes — provided the licence is valid and the operation otherwise complies with the applicable operating rules.**\n\nA **Multi-crew Pilot Licence — Aeroplane (MPL(A))** is a Canadian flight crew permit/licence that authorizes the holder to act as **co-pilot of an aeroplane required to be operated with a co-pilot in multi-crew operations**. The fact that the aeroplane is **turbine-powered** does not, by itself, prevent this.\n\nFor **night VFR**, the key issue is not the MPL itself, but whether:\n\n- the aircraft may legally be operated **VFR at night** under the applicable operating rules,\n- the operation requires or permits a **co-pilot**,\n- the pilot meets any required **night recency**, ratings, and medical requirements, and\n- any required **type rating** or operator training/checking has been completed.\n\nIn practical terms, an MPL(A) holder may act as **co-pilot** of a turbine-powered aeroplane at night under VFR **if**:\n\n- the aircraft is being operated in a context where a co-pilot is required,\n- the MPL privileges cover that co-pilot role,\n- the holder has any required **type rating**,\n- the holder holds the appropriate **medical certificate**, and\n- all applicable **CARs operating rules** for **VFR OTT/night VFR**, equipment, and operator requirements are met.\n\n## Important limitation\nAn MPL(A) is **not a general command licence** like a CPL or ATPL. Its privileges are tied to acting as **co-pilot in multi-crew operations**, subject to ratings and endorsements.\n\n## Likely relevant CAR references\nI’m answering from knowledge rather than supplied source text, so I won’t overstate citation certainty. The relevant provisions are generally found in:\n\n- **CAR Part IV, Subpart 1** — flight crew permits, licences and ratings (including MPL privileges and type-rating requirements)\n- **CAR 401 series** — licence privileges, recency, medical validity\n- **CAR 602 series** — night VFR operating rules and aircraft equipment requirements\n\nIf you want, I can give you a **section-by-section CAR breakdown** for:\n1. **MPL privileges**, and  \n2. **whether turbine aeroplanes may be operated VFR at night in Canada**.",
+    "tokens": 861,
+    "semantic_similarity": 0.5809,
+    "answer_relevancy": 0.9078,
+    "factual_correctness": 0.33,
+    "metric_errors": {}
+  },
+  {
+    "question": "Can the holder of a multi-crew pilot licence — aeroplane act as pilot-in-command of any aircraft for their own flight training?",
+    "ground_truth": "Yes, but only for the purpose of the holder’s flight training and only if the flight training is conducted in accordance with section 401.19.",
+    "section": "401.32",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+    "answer": "No.\n\nA **Multi-crew Pilot Licence — Aeroplane (MPL)** is a **restricted** licence. The holder may act as **co-pilot** of an aeroplane required to be operated with a co-pilot, but **not as pilot-in-command** unless they also hold another licence or rating that authorizes PIC privileges.\n\nFor **their own flight training**, an MPL holder cannot simply act as PIC of “any aircraft.” PIC privileges depend on the licence and ratings held.\n\nThe key CAR provision is **CAR 401.30** (Multi-crew Pilot Licence — Aeroplane), which limits the privileges of the MPL. In general, it authorizes the holder to:\n\n- exercise the privileges of a **co-pilot** in an aeroplane required to be operated with a co-pilot; and\n- exercise those privileges only with the appropriate ratings and valid medical.\n\nSo, if the question is whether an MPL holder may act as **PIC of any aircraft for their own training**, the answer is **no**.\n\n## Practical implication\n\nAn MPL holder may:\n\n- receive flight training;\n- manipulate the controls under appropriate supervision/instruction;\n\nbut may **not** act as **PIC** unless separately authorized by another licence/permit/rating that grants PIC privileges for that aircraft and operation.\n\nIf you want, I can also break this down against the distinctions between **acting as PIC**, **logging PIC**, and **receiving dual instruction** under the CARs.",
+    "tokens": 672,
+    "semantic_similarity": 0.5329,
+    "answer_relevancy": 0.9663,
+    "factual_correctness": 0.25,
+    "metric_errors": {}
   }
 ]

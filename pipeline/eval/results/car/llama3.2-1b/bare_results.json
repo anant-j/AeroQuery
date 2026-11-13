@@ -202,5 +202,77 @@
     "answer_relevancy": 0.8597,
     "factual_correctness": 0.0,
     "metric_errors": {}
+  },
+  {
+    "question": "For the holder’s own flight training, when may the holder act as pilot-in-command or co-pilot of any aircraft?",
+    "ground_truth": "Only for the sole purpose of the holder’s flight training, and only if it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and no passenger is carried on board.",
+    "section": "401.26",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+    "answer": "According to Canadian Aviation Regulations (CARs) Part 1, Section 5.10, a holder of a valid private pilot's license can act as pilot-in-command or co-pilot for an aircraft when the flight is for their own training purposes.\n\nHowever, this requirement only applies if the flight is being conducted under the supervision of a certified flight instructor (CFI) who has been authorized to conduct such flights. The CFI must be present and available to provide guidance and assistance as needed during the flight.\n\nAdditionally, the holder must not be operating an aircraft that is being used for commercial purposes or any other activity where the holder's primary responsibility is not to act as pilot-in-command or co-pilot.\n\nIt's worth noting that if the flight is being conducted under a different type of authorization (e.g. a student pilot's solo flight), the requirements may be different.\n\nSources:\n- CARs Part 1, Section 5.10\n- Transport Canada Aviation Regulations (CARs) Manual, Chapter 2, Section 3",
+    "tokens": 590,
+    "semantic_similarity": 0.6917,
+    "answer_relevancy": 0.6519,
+    "factual_correctness": 0.22,
+    "metric_errors": {}
+  },
+  {
+    "question": "May a private pilot licence holder receive reimbursement for a flight’s costs when carrying passengers, and what limit applies to who provides that reimbursement and what it covers?",
+    "ground_truth": "Yes, but only if the holder is the owner or operator of the aircraft, the flight is not for hire or reward, and any reimbursement is provided only by the passengers carried incidentally to the flight’s purpose and is only for sharing fuel, oil, and applicable fees.",
+    "section": "401.28",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Canadian Aviation Regulations (CARs) do not specifically address private pilot licence holders receiving reimbursement for flight costs when carrying passengers. However, section 6 of CAR 61 states that a person may be reimbursed for expenses incurred while flying under the authority of a private pilot licence if those expenses are reasonable and necessary to carry out the flight.\n\nThe reimbursement limit is specified in section 7 of CAR 61, which states that a person may not receive more than $1,000 in reimbursement per flight for carrying passengers. This applies to individuals who are not employed by an airline or other carrier.\n\nIt's worth noting that section 8 of CAR 61 also provides that a person may be reimbursed for expenses incurred while flying under the authority of a private pilot licence if those expenses are reasonable and necessary to carry out the flight, but it does not specify any limits on reimbursement amounts.",
+    "tokens": 578,
+    "semantic_similarity": 0.667,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {}
+  },
+  {
+    "question": "Can a private pilot with a private aircraft be reimbursed by an employer for a flight done on the employer’s business, and how is the reimbursement limited?",
+    "ground_truth": "Yes, if the pilot is employed full-time for purposes other than flying, the flight is on the employer’s business and incidental to the pilot’s duties, and for an owned aircraft the payment is based on distance or hours flown and does not exceed direct operating costs plus fees charged against the aircraft for the flight.",
+    "section": "401.28",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Canadian Aviation Regulations (CARs) do not explicitly address whether private pilots can be reimbursed by their employers for flights done on the employer's business. However, section 6 of CAR 501 defines \"business\" as any activity that is carried out with the intention of making a profit or generating revenue. If an employer intends to make a profit from the flight, it may be considered a commercial activity and therefore subject to the regulations.\n\nSection 7 of CAR 501 also states that employers are not required to reimburse private pilots for flights done on their business if such reimbursement would be in conflict with the interests of the employer or the organization. However, this section does not provide any guidance on what constitutes a conflict of interest.\n\nThe Air Transport Association (ATA) and the Canadian Aviation Safety Authority (CASA) also have guidelines that may be relevant to this question. The ATA recommends that employers ensure that their employees are reimbursed for business-related flights in accordance with applicable laws and regulations, including those related to tax and benefits. CASA's guidelines on reimbursement of business-related expenses for pilots do not provide specific guidance on whether private pilots can be reimbursed by their employers.\n\nIn general, the reimbursement of business-related expenses for private pilots is limited to expenses that are directly related to the flight, such as fuel, maintenance, and insurance. Employers may also need to consider other factors, such as the potential impact on their business reputation or the tax implications of reimbursing employees for business-related flights.\n\nIt's worth noting that the Canadian government has introduced legislation aimed at promoting fair competition in the aviation industry, including the Air Transport Act (ATA) and the Competition Act. These laws may be relevant to this question and could potentially impact employers' ability to reimburse private pilots for business-related flights.",
+    "tokens": 760,
+    "semantic_similarity": 0.6351,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {}
+  },
+  {
+    "question": "May a holder of a commercial pilot licence — aeroplane with a daylight-flying-only restriction exercise private pilot licence — aeroplane privileges by night?",
+    "ground_truth": "No. A holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall not exercise the private pilot licence — aeroplane privileges by night.",
+    "section": "401.30",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe regulation is Transport Canada Canadian Aviation Regulations (CARs) Part 61, Section 3.1 of the Aircraft Operations Handbook, which states that a holder of a commercial pilot licence can exercise aeroplane privileges by night only if they hold an instrument rating and have completed at least 250 hours of flight time, including at least 100 hours of cross-country flight time, 50 hours of night flight time, and 10 hours of instrument flying time. However, this regulation does not explicitly state that a private pilot licence holder cannot exercise aeroplane privileges by night.\n\nTherefore, the correct answer is: **I don't have enough information in the available regulations to answer this question.**",
+    "tokens": 541,
+    "semantic_similarity": 0.6637,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.33,
+    "metric_errors": {}
+  },
+  {
+    "question": "Until when may a commercial pilot licence — aeroplane holder exercise private pilot licence — aeroplane privileges?",
+    "ground_truth": "They may exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.",
+    "section": "401.30",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe regulation is likely from Transport Canada Canadian Aviation Regulations (CARs), specifically Section 14.10 of CAR 61, which deals with the privileges of a commercial pilot licence holder exercising an aeroplane privilege as a private pilot licence holder. However, without further context or information about the specific regulations being referenced, I cannot provide a more detailed answer.\n\nTo clarify, the regulation may specify a time period after which a commercial pilot licence holder must relinquish their aeroplane privileges to exercise a private pilot licence. Without access to the relevant section of CARs, I am unable to provide a definitive answer.",
+    "tokens": 514,
+    "semantic_similarity": 0.5347,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {}
+  },
+  {
+    "question": "May the holder of a multi-crew pilot licence — aeroplane act as co-pilot of a turbine-powered aeroplane operated at night under VFR?",
+    "ground_truth": "Yes, but only if the aeroplane also meets all listed conditions: it is a transport category aircraft, has a minimum flight crew document specifying two pilots, is of a type endorsed on the holder’s licence, and is operated under subpart 4 of Part VI or Part VII.",
+    "section": "401.32",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Canadian Aviation Regulations (CARs) do not explicitly state whether a multi-crew pilot licence holder can operate an aeroplane as co-pilot of a turbine-powered aeroplane under Visual Flight Rules (VFR). However, section 6.01(1)(a) of the CAR states that a multi-crew pilot licence holder may be authorized to fly an aircraft with one or more other pilots on board, but only if they are also licensed as co-pilots.\n\nThe Federal Aviation Administration (FAA) regulations in the United States have a similar provision, section 91.17(a)(1), which allows a multi-crew pilot licence holder to be authorized to fly an aircraft with one or more other pilots on board under VFR conditions.\n\nHowever, it's worth noting that operating an aeroplane as co-pilot under VFR is typically only permitted in exceptional circumstances and requires careful consideration of the risks involved. The Canadian Transport Act (CTA) also provides for the exercise of pilotage privileges, which may include the operation of an aircraft with one or more other pilots on board.\n\nIn summary, while there are no explicit regulations that permit a multi-crew pilot licence holder to operate an aeroplane as co-pilot under VFR, section 6.01(1)(a) of the CAR and FAA regulations provide some guidance on this issue.",
+    "tokens": 682,
+    "semantic_similarity": 0.606,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {}
   }
 ]

@@ -2096,6 +2096,890 @@
         "point_in_time": "2026-06-17",
         "rerank_score": 0.6939709
       }
+    ],
+    "context_scores": {
+      "rag_rerank": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "Can a private pilot with a private aircraft be reimbursed by an employer for a flight done on the employer’s business, and how is the reimbursement limited?": {
+    "rag": [
+      {
+        "score": 0.631096721,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight | 401.28\n401.28\n(1) The holder of a private pilot licence shall not act as the pilot-in-command of an aeroplane or helicopter for hire or reward unless the conditions set out in subsection (2), (3), (4) or (5), as applicable, are met.\n(2) The holder of a private pilot licence may receive reimbursement for costs incurred in respect of a flight if the holder\n(a) is the owner or operator of the aircraft;\n(b) conducts the flight for purposes other than hire or reward;\n(c) carries passengers only incidentally to the purposes of the flight; and\n(d) receives a reimbursement that\n(i) is provided only by the passengers referred to in paragraph (c), and\n(ii) is for the purpose of sharing the costs of fuel, oil and fees charged against the aircraft in respect of the flight, as applicable.\n(3) The holder of a private pilot licence may receive reimbursement from the holder’s employer for costs incurred in respect of a flight if the holder\n(a) is employed on a full-time basis by the employer for purposes other than flying;\n(b) conducts the flight on the employer’s business and the flight is incidental to the execution of the holder’s duties; and\n(c) receives a reimbursement that\n(i) in the case of an aircraft owned by the holder, is paid at a rate based on distance travelled or number of hours flown and that does not exceed the total of the holder’s direct operating costs and the fees charged against the aircraft in respect of the flight, or\n(ii) in the case of a rental aircraft, does not exceed the total of the holder’s rental costs, direct operating costs and the fees charged against the aircraft in respect of the flight.\n(4) The holder of a private pilot licence may receive reimbursement from a charitable, not-for-profit or public security organization in respect of a flight conducted by the holder as a volunteer for that organization if the reimbursement\n(a) in the case of an aircraft owned by the holder, is paid at a rate based on distance travelled or number of hours flown and does not exceed the total of the holder’s direct operating costs and the fees charged against the aircraft in respect of the flight; or",
+        "section": "401.28",
+        "title": "Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.623128891,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight | 401.28\n401.28\n(4) The holder of a private pilot licence may receive reimbursement from a charitable, not-for-profit or public security organization in respect of a flight conducted by the holder as a volunteer for that organization if the reimbursement\n(b) in the case of a rental aircraft, does not exceed the total of the holder’s rental costs, direct operating costs and the fees charged against the aircraft in respect of the flight.\n(5) The holder of a private pilot licence who is a farmer, as defined in section 700.01, may conduct aerial work involving the dispersal of products for agricultural purposes for hire or reward if the holder\n(a) does not hold an air operator certificate;\n(b) owns the aircraft that is used to disperse the products;\n(c) has at least 150 hours of flight time as pilot-in-command, including at least 25 hours of flight time in the type of aircraft being used;\n(d) ensures that no more than the minimum number of crew members needed to disperse the products is on board the aircraft;\n(e) ensures that the dispersal takes place within 25 miles of the centre of the holder’s farm; and\n(f) ensures that no dispersal is conducted within a control zone without the authority of the appropriate air traffic control unit.",
+        "section": "401.28",
+        "title": "Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.448910385,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.439772964,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division IV — Pilot Permits > Recreational — Aeroplanes — Privileges | 401.22\n401.22 The holder of a pilot permit — recreational — aeroplane may, under day VFR, act as\n(a) pilot-in-command of an aeroplane of a class and type in respect of which the permit is endorsed with a rating where\n(i) the aeroplane is a single-engined aeroplane that is not a high-performance aeroplane,\n(ii) the aeroplane is designed, or is authorized by a type certificate, to carry a maximum of four persons, and\n(iii) no more than one passenger is carried on board;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.22",
+        "title": "Recreational — Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.22.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.426917255,
+        "text": "Canadian Aviation Regulations | Part VII — Commercial Air Services > Division I — General > Requirements for Air Operator Certificate | 700.02\n700.02\n(5) Despite subsections (1) and (2), a person who does not hold an air operator certificate may operate an air transport service, or operate an aeroplane or helicopter to conduct aerial work involving the transport of passengers or goods, if\n(d) no payment is made in relation to the air transport service or the aerial work to a party to the management agreement by or on behalf of a passenger or the owner of a transported good unless the passenger or the owner is the person who has transferred legal custody and control of the aircraft.",
+        "section": "700.02",
+        "title": "Requirements for Air Operator Certificate",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-700.02.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.631096721,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight | 401.28\n401.28\n(1) The holder of a private pilot licence shall not act as the pilot-in-command of an aeroplane or helicopter for hire or reward unless the conditions set out in subsection (2), (3), (4) or (5), as applicable, are met.\n(2) The holder of a private pilot licence may receive reimbursement for costs incurred in respect of a flight if the holder\n(a) is the owner or operator of the aircraft;\n(b) conducts the flight for purposes other than hire or reward;\n(c) carries passengers only incidentally to the purposes of the flight; and\n(d) receives a reimbursement that\n(i) is provided only by the passengers referred to in paragraph (c), and\n(ii) is for the purpose of sharing the costs of fuel, oil and fees charged against the aircraft in respect of the flight, as applicable.\n(3) The holder of a private pilot licence may receive reimbursement from the holder’s employer for costs incurred in respect of a flight if the holder\n(a) is employed on a full-time basis by the employer for purposes other than flying;\n(b) conducts the flight on the employer’s business and the flight is incidental to the execution of the holder’s duties; and\n(c) receives a reimbursement that\n(i) in the case of an aircraft owned by the holder, is paid at a rate based on distance travelled or number of hours flown and that does not exceed the total of the holder’s direct operating costs and the fees charged against the aircraft in respect of the flight, or\n(ii) in the case of a rental aircraft, does not exceed the total of the holder’s rental costs, direct operating costs and the fees charged against the aircraft in respect of the flight.\n(4) The holder of a private pilot licence may receive reimbursement from a charitable, not-for-profit or public security organization in respect of a flight conducted by the holder as a volunteer for that organization if the reimbursement\n(a) in the case of an aircraft owned by the holder, is paid at a rate based on distance travelled or number of hours flown and does not exceed the total of the holder’s direct operating costs and the fees charged against the aircraft in respect of the flight; or",
+        "section": "401.28",
+        "title": "Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9638617
+      },
+      {
+        "score": 0.623128891,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight | 401.28\n401.28\n(4) The holder of a private pilot licence may receive reimbursement from a charitable, not-for-profit or public security organization in respect of a flight conducted by the holder as a volunteer for that organization if the reimbursement\n(b) in the case of a rental aircraft, does not exceed the total of the holder’s rental costs, direct operating costs and the fees charged against the aircraft in respect of the flight.\n(5) The holder of a private pilot licence who is a farmer, as defined in section 700.01, may conduct aerial work involving the dispersal of products for agricultural purposes for hire or reward if the holder\n(a) does not hold an air operator certificate;\n(b) owns the aircraft that is used to disperse the products;\n(c) has at least 150 hours of flight time as pilot-in-command, including at least 25 hours of flight time in the type of aircraft being used;\n(d) ensures that no more than the minimum number of crew members needed to disperse the products is on board the aircraft;\n(e) ensures that the dispersal takes place within 25 miles of the centre of the holder’s farm; and\n(f) ensures that no dispersal is conducted within a control zone without the authority of the appropriate air traffic control unit.",
+        "section": "401.28",
+        "title": "Aeroplanes and Helicopters — Reimbursement of Costs Incurred in respect of a Flight",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.28.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8641271
+      },
+      {
+        "score": 0.404621601,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 4 — Private Operators > Division VI — Flight Time and Flight Duty Period > Flight Time Limits | 604.98\n604.98\n(1) No private operator shall assign flight time to a flight crew member, and no flight crew member shall accept such an assignment, if the flight crew member’s total flight time in all flights conducted under this Subpart, Part IV or Part VII would, as a result, exceed\n(a) 1,200 hours in a period of 12 consecutive months;\n(b) 300 hours in a period of 90 consecutive days;\n(c) 120 hours in a period of 30 consecutive days; or\n(d) 8 hours in a period of 24 consecutive hours, if the assignment is for a single-pilot IFR flight.\n(2) If a flight crew’s flight duty period is extended under section 604.101, each flight crew member accumulates, for the purposes of subsection (1), the total flight time for the flight or the total flight time for the series of flights, as the case may be.",
+        "section": "604.98",
+        "title": "Flight Time Limits",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-604.98.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.47813892
+      },
+      {
+        "score": 0.448910385,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.45481113
+      },
+      {
+        "score": 0.426917255,
+        "text": "Canadian Aviation Regulations | Part VII — Commercial Air Services > Division I — General > Requirements for Air Operator Certificate | 700.02\n700.02\n(5) Despite subsections (1) and (2), a person who does not hold an air operator certificate may operate an air transport service, or operate an aeroplane or helicopter to conduct aerial work involving the transport of passengers or goods, if\n(d) no payment is made in relation to the air transport service or the aerial work to a party to the management agreement by or on behalf of a passenger or the owner of a transported good unless the passenger or the owner is the person who has transferred legal custody and control of the aircraft.",
+        "section": "700.02",
+        "title": "Requirements for Air Operator Certificate",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-700.02.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.4126248
+      }
+    ],
+    "context_scores": {
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag_rerank": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "May a holder of a commercial pilot licence — aeroplane with a daylight-flying-only restriction exercise private pilot licence — aeroplane privileges by night?": {
+    "rag": [
+      {
+        "score": 0.730195701,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.689725697,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Helicopters — Privileges and Requirements | 401.31\n401.31\n(1) Subject to subsection (3), the holder of a commercial pilot licence — helicopter may, by day or night,\n(a) exercise the privileges of a private pilot licence — helicopter;\n(b) while engaged in providing a commercial air service by means of a helicopter of a type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the helicopter, if the minimum flight crew document for the helicopter specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the helicopter;\n(c) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(d) exercise private pilot licence — helicopter privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for a commercial pilot licence — helicopter except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — helicopter endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — helicopter whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (b) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.31",
+        "title": "Helicopters — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.31.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.661441565,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XII — Night Rating > Privileges | 401.43\n401.43 The holder of a permit or licence that has been endorsed with a night rating may exercise the privileges of the permit or licence by night.",
+        "section": "401.43",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.43.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.621724725,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.614979267,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XII — Night Rating > Rating | 401.42\n401.42 The Minister shall endorse the following permits and licences with a night rating if the applicant for the rating meets the requirements referred to in section 401.06:\n(a) private pilot licence — aeroplane;\n(b) private pilot licence — helicopter;\n(c) pilot licence — balloon; and\n(d) pilot permit — gyroplane.",
+        "section": "401.42",
+        "title": "Rating",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.42.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.730195701,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9825308
+      },
+      {
+        "score": 0.689725697,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Helicopters — Privileges and Requirements | 401.31\n401.31\n(1) Subject to subsection (3), the holder of a commercial pilot licence — helicopter may, by day or night,\n(a) exercise the privileges of a private pilot licence — helicopter;\n(b) while engaged in providing a commercial air service by means of a helicopter of a type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the helicopter, if the minimum flight crew document for the helicopter specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the helicopter;\n(c) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(d) exercise private pilot licence — helicopter privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for a commercial pilot licence — helicopter except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — helicopter endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — helicopter whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (b) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.31",
+        "title": "Helicopters — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.31.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9372338
+      },
+      {
+        "score": 0.661441565,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XII — Night Rating > Privileges | 401.43\n401.43 The holder of a permit or licence that has been endorsed with a night rating may exercise the privileges of the permit or licence by night.",
+        "section": "401.43",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.43.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.86685556
+      },
+      {
+        "score": 0.614979267,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XII — Night Rating > Rating | 401.42\n401.42 The Minister shall endorse the following permits and licences with a night rating if the applicant for the rating meets the requirements referred to in section 401.06:\n(a) private pilot licence — aeroplane;\n(b) private pilot licence — helicopter;\n(c) pilot licence — balloon; and\n(d) pilot permit — gyroplane.",
+        "section": "401.42",
+        "title": "Rating",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.42.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.82592696
+      },
+      {
+        "score": 0.621724725,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.823101
+      }
+    ],
+    "context_scores": {
+      "rag_rerank": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "Until when may a commercial pilot licence — aeroplane holder exercise private pilot licence — aeroplane privileges?": {
+    "rag": [
+      {
+        "score": 0.656487823,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.642119408,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.62284112,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.606783748,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Helicopters — Privileges and Requirements | 401.31\n401.31\n(1) Subject to subsection (3), the holder of a commercial pilot licence — helicopter may, by day or night,\n(a) exercise the privileges of a private pilot licence — helicopter;\n(b) while engaged in providing a commercial air service by means of a helicopter of a type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the helicopter, if the minimum flight crew document for the helicopter specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the helicopter;\n(c) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(d) exercise private pilot licence — helicopter privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for a commercial pilot licence — helicopter except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — helicopter endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — helicopter whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (b) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.31",
+        "title": "Helicopters — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.31.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.581049144,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Helicopters — Privileges | 401.27\n401.27 The holder of a private pilot licence — helicopter may act as\n(a) pilot-in-command or co-pilot of a helicopter of a type in respect of which the licence is endorsed with ratings; and\n(b) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.27",
+        "title": "Helicopters — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.27.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.656487823,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.97750866
+      },
+      {
+        "score": 0.642119408,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9308616
+      },
+      {
+        "score": 0.606783748,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Helicopters — Privileges and Requirements | 401.31\n401.31\n(1) Subject to subsection (3), the holder of a commercial pilot licence — helicopter may, by day or night,\n(a) exercise the privileges of a private pilot licence — helicopter;\n(b) while engaged in providing a commercial air service by means of a helicopter of a type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the helicopter, if the minimum flight crew document for the helicopter specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the helicopter;\n(c) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(d) exercise private pilot licence — helicopter privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for a commercial pilot licence — helicopter except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — helicopter endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — helicopter whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (b) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.31",
+        "title": "Helicopters — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.31.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8940887
+      },
+      {
+        "score": 0.62284112,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8768876
+      },
+      {
+        "score": 0.556064367,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division X — Aeroplane Class Ratings > Privileges | 401.39\n401.39 The holder of a permit or licence that has been endorsed with an aeroplane class rating may exercise the privileges of the permit or licence in the class of aeroplane for which the permit or licence is endorsed.",
+        "section": "401.39",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.39.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8059989
+      }
+    ],
+    "context_scores": {
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag_rerank": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "May the holder of a multi-crew pilot licence — aeroplane act as co-pilot of a turbine-powered aeroplane operated at night under VFR?": {
+    "rag": [
+      {
+        "score": 0.797487915,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.647058606,
+        "text": "Canadian Aviation Regulations | Part VII — Commercial Air Services > Subpart 3 — Air Taxi Operations > Division VII — Personnel Requirements > Flight Crew Member Qualifications | 703.88\n703.88\n(3) No person shall act as the pilot-in-command of an aircraft with a person other than a flight crew member on board in night VFR flight unless the person acting as the pilot-in-command holds an instrument rating for that class of aircraft.\n(4) No air operator shall permit a person to act and no person shall act as the pilot-in-command of an aircraft with passengers on board unless the person has acquired, prior to designation as pilot-in-command, the following flight time on that type and basic model of aircraft and in the pilot-in-command position:\n(a) in the case of a single-engined aeroplane or a helicopter, five hours; or\n(b) in the case of a multi-engined aeroplane, 15 hours.\n(5) The flight time required by subsection (4) may be reduced by one hour for each take-off and landing completed, up to a maximum of 50 per cent.\n(6) An air operator may permit a person to act and a person may act as a flight crew member in an aircraft if the person does not meet the requirements set out in paragraphs (1)(b) to (d) if the air operator\n(a) is authorized to do so in its air operator certificate; and\n(b) complies with the Commercial Air Service Standards.\n(7) Subparagraph (1)(c)(iv) does not apply in the case of a chief pilot who acts as pilot-in-command of a single-engined aeroplane that is not operated in accordance with subsection 703.22(2).",
+        "section": "703.88",
+        "title": "Flight Crew Member Qualifications",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-703.88.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.62625736,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.604038417,
+        "text": "Canadian Aviation Regulations | Part VII — Commercial Air Services > Subpart 3 — Air Taxi Operations > Division III — Flight Operations > Enroute Limitations | 703.32\n703.32 No person shall operate a multi-engined aircraft with passengers on board in IFR flight or in night VFR flight if the weight of the aircraft is greater than the weight that will allow the aircraft to maintain, with any engine inoperative, the MOCA of the route to be flown.",
+        "section": "703.32",
+        "title": "Enroute Limitations",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-703.32.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.597236454,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Helicopters — Privileges and Requirements | 401.31\n401.31\n(1) Subject to subsection (3), the holder of a commercial pilot licence — helicopter may, by day or night,\n(a) exercise the privileges of a private pilot licence — helicopter;\n(b) while engaged in providing a commercial air service by means of a helicopter of a type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the helicopter, if the minimum flight crew document for the helicopter specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the helicopter;\n(c) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(d) exercise private pilot licence — helicopter privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for a commercial pilot licence — helicopter except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — helicopter endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — helicopter whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (b) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.31",
+        "title": "Helicopters — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.31.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.797487915,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.98725766
+      },
+      {
+        "score": 0.647058606,
+        "text": "Canadian Aviation Regulations | Part VII — Commercial Air Services > Subpart 3 — Air Taxi Operations > Division VII — Personnel Requirements > Flight Crew Member Qualifications | 703.88\n703.88\n(3) No person shall act as the pilot-in-command of an aircraft with a person other than a flight crew member on board in night VFR flight unless the person acting as the pilot-in-command holds an instrument rating for that class of aircraft.\n(4) No air operator shall permit a person to act and no person shall act as the pilot-in-command of an aircraft with passengers on board unless the person has acquired, prior to designation as pilot-in-command, the following flight time on that type and basic model of aircraft and in the pilot-in-command position:\n(a) in the case of a single-engined aeroplane or a helicopter, five hours; or\n(b) in the case of a multi-engined aeroplane, 15 hours.\n(5) The flight time required by subsection (4) may be reduced by one hour for each take-off and landing completed, up to a maximum of 50 per cent.\n(6) An air operator may permit a person to act and a person may act as a flight crew member in an aircraft if the person does not meet the requirements set out in paragraphs (1)(b) to (d) if the air operator\n(a) is authorized to do so in its air operator certificate; and\n(b) complies with the Commercial Air Service Standards.\n(7) Subparagraph (1)(c)(iv) does not apply in the case of a chief pilot who acts as pilot-in-command of a single-engined aeroplane that is not operated in accordance with subsection 703.22(2).",
+        "section": "703.88",
+        "title": "Flight Crew Member Qualifications",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-703.88.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8546907
+      },
+      {
+        "score": 0.62625736,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.84826964
+      },
+      {
+        "score": 0.594831765,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XII — Night Rating > Privileges | 401.43\n401.43 The holder of a permit or licence that has been endorsed with a night rating may exercise the privileges of the permit or licence by night.",
+        "section": "401.43",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.43.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.74879336
+      },
+      {
+        "score": 0.583223403,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.7383673
+      }
+    ],
+    "context_scores": {
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag_rerank": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "Can the holder of a multi-crew pilot licence — aeroplane act as pilot-in-command of any aircraft for their own flight training?": {
+    "rag": [
+      {
+        "score": 0.681181431,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.629310966,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.602574646,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 4 — Private Operators > Division IX — Personnel Requirements > Flight Crew Member Qualifications and Training | 604.143\n604.143\n(1) No private operator shall permit a person to act — and no person shall act — as a pilot-in-command or second-in-command unless\n(a) the person holds the licence, ratings and medical certificate required by Part IV;\n(b) in the case of a pilot-in-command,\n(i) the person has received, in respect of the aircraft type that the person will operate, the training set out in subsections 604.169(1) and 604.170(1) and, if applicable, the training set out in subsection 604.169(3) and sections 604.177 and 604.178, or equivalent training that meets the requirements of subsection 604.140(1), as the case may be, and\n(ii) the validity period of the training has not expired;\n(c) in the case of a second-in-command,\n(i) the person has received, in respect of the aircraft type that the person will operate, the training set out in subsections 604.169(1) and 604.170(1) and, if applicable, the training set out in subsection 604.169(3) and section 604.177, or equivalent training that meets the requirements of subsection 604.140(1), as the case may be, and\n(ii) the validity period of the training has not expired;\n(d) the person has received, in respect of the aircraft type that the person will operate, training in the performance of the emergency procedures referred to in subsection 604.169(2) or equivalent training that meets the requirements of subsection 604.140(1), and the validity period of the training has not expired;\n(e) the person has successfully completed, in respect of the aircraft type that the person will operate, a competency check that meets the requirements of this section or a competency check or pilot proficiency check that meets the requirements of subsection 604.140(2), and the validity period of the competency check or pilot proficiency check has not expired; and\n(f) if the person is required to operate an aircraft above 13,000 feet ASL, the person has received the training set out in section 604.176 or equivalent training that meets the requirements of subsection 604.140(1).",
+        "section": "604.143",
+        "title": "Flight Crew Member Qualifications and Training",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-604.143.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.58305788,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 4 — Private Operators > Division X — Training Program > Flight Crew Members — Upgrade to Pilot-in-Command | 604.178\n604.178 The component of the training program for flight crew members who have served as second-in-command and who are to be upgraded to pilot-in-command shall include the following elements:\n(a) the elements of the training referred to in subsection 604.170(1) that are related to the duties of a pilot-in-command;\n(b) training on the responsibilities of a pilot-in-command in relation to the use and operation of an aircraft;\n(c) in the case of a flight crew member who will conduct an operation under a special authorization, the training required to conduct that operation as pilot-in-command; and\n(d) crew resource management.",
+        "section": "604.178",
+        "title": "Flight Crew Members — Upgrade to Pilot-in-Command",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-604.178.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.579244852,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XVIII — Flight Instructor Rating — Aeroplane > Class 3 — Privileges | 401.70\n401.70 The holder of a pilot licence endorsed with a Class 3 flight instructor rating — aeroplane may\n(a) exercise the privileges of a Class 4 flight instructor rating — aeroplane; and\n(b) act as chief flight instructor of a flight training unit where there is no other flight instructor for the flight training unit.",
+        "section": "401.70",
+        "title": "Class 3 — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.70.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.681181431,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.98357177
+      },
+      {
+        "score": 0.629310966,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9238263
+      },
+      {
+        "score": 0.573682845,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Helicopters — Privileges | 401.27\n401.27 The holder of a private pilot licence — helicopter may act as\n(a) pilot-in-command or co-pilot of a helicopter of a type in respect of which the licence is endorsed with ratings; and\n(b) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.27",
+        "title": "Helicopters — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.27.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8336498
+      },
+      {
+        "score": 0.568895698,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8225315
+      },
+      {
+        "score": 0.578593194,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division III — Student Pilot Permits > Privileges | 401.19\n401.19\n(1) The holder of a student pilot permit may act as pilot-in-command of an aircraft of the category for which the permit is endorsed if\n(a) the flight is conducted for the purpose of the holder’s flight training;\n(b) the flight is conducted in Canada;\n(c) the flight is conducted under day VFR;\n(d) the flight is conducted under the direction and supervision of a person qualified to provide training toward the permit, licence or rating for which the pilot-in-command experience is required; and\n(e) no passenger is carried on board.\n(2) Despite paragraph (1)(c), the holder of a student pilot permit who is enrolled in an integrated course may act as pilot-in-command during a flight that is conducted under day or night VFR.",
+        "section": "401.19",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.19.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.80660903
+      }
+    ],
+    "context_scores": {
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag_rerank": {
+        "context_precision": 0.7,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "Under CAR 401.34, what aeroplane pilot licence privileges does the holder of an airline transport pilot licence — aeroplane have, subject to subsection (2)?": {
+    "rag": [
+      {
+        "score": 0.830847502,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.726892471,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Helicopters — Privileges | 401.35\n401.35\n(1) The holder of an airline transport pilot licence — helicopter may\n(a) exercise the privileges of a private pilot licence — helicopter and a commercial pilot licence — helicopter; and\n(b) while engaged in providing a commercial air service by means of a helicopter of a type for which the licence is endorsed with ratings, act as pilot-in-command or co-pilot of the helicopter.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for an airline transport pilot licence — helicopter except the night and instrument flight time requirements, the Minister shall issue to the applicant an airline transport pilot licence — helicopter restricted to aerial work only.",
+        "section": "401.35",
+        "title": "Helicopters — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.35.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.690909088,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.681645036,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.67026329,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division X — Aeroplane Class Ratings > Privileges | 401.39\n401.39 The holder of a permit or licence that has been endorsed with an aeroplane class rating may exercise the privileges of the permit or licence in the class of aeroplane for which the permit or licence is endorsed.",
+        "section": "401.39",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.39.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.830847502,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9895755
+      },
+      {
+        "score": 0.690909088,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8715186
+      },
+      {
+        "score": 0.726892471,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Helicopters — Privileges | 401.35\n401.35\n(1) The holder of an airline transport pilot licence — helicopter may\n(a) exercise the privileges of a private pilot licence — helicopter and a commercial pilot licence — helicopter; and\n(b) while engaged in providing a commercial air service by means of a helicopter of a type for which the licence is endorsed with ratings, act as pilot-in-command or co-pilot of the helicopter.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards for an airline transport pilot licence — helicopter except the night and instrument flight time requirements, the Minister shall issue to the applicant an airline transport pilot licence — helicopter restricted to aerial work only.",
+        "section": "401.35",
+        "title": "Helicopters — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.35.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.85126173
+      },
+      {
+        "score": 0.658267796,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8298232
+      },
+      {
+        "score": 0.681645036,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VI — Private Pilot Licence > Aeroplanes — Privileges | 401.26\n401.26 The holder of a private pilot licence — aeroplane may act as\n(a) pilot-in-command or co-pilot of an aeroplane of a class and type in respect of which the licence is endorsed with ratings;\n(b) pilot-in-command of an ultra-light aeroplane; and\n(c) pilot-in-command or co-pilot of any aircraft for the sole purpose of the holder’s flight training or flight test where\n(i) in the case of flight training,\n(A) it is conducted under the direction and supervision of a flight instructor qualified in accordance with section 425.21 of Standard 425 — Flight Training, and\n(B) no passenger is carried on board, and\n(ii) in the case of a flight test,\n(A) it is conducted in accordance with section 401.15, and\n(B) no passenger is carried on board.",
+        "section": "401.26",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.26.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.7915634
+      }
+    ],
+    "context_scores": {
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      },
+      "rag_rerank": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "When may the holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating act as pilot-in-command of the aeroplane under CAR 401.34(2)(a)?": {
+    "rag": [
+      {
+        "score": 0.703439236,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.6763767,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XIV — Instrument Rating > Privileges | 401.47\n401.47 The holder of a licence endorsed with an instrument rating may exercise\n(a) the privileges of the licence under IFR in accordance with Part VI, Subpart 2, Division VII in respect of the group of aircraft endorsed on the licence; and\n(b) the privileges accorded by a VFR OTT rating.",
+        "section": "401.47",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.47.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.64624548,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.645174205,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XIV — Instrument Rating > Rating | 401.46\n401.46\n(1) The Minister shall endorse the following licences with an instrument rating if the applicant for the rating meets the requirements referred to in section 401.06:\n(a) pilot licence — aeroplane; and\n(b) pilot licence — helicopter.\n(2) Where the Minister has endorsed a licence with an instrument rating, the Minister shall endorse the licence with the group of aircraft in respect of which the privileges may be exercised.",
+        "section": "401.46",
+        "title": "Rating",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.46.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.643417239,
+        "text": "Canadian Aviation Regulations | Part VII — Commercial Air Services > Subpart 3 — Air Taxi Operations > Division VII — Personnel Requirements > Flight Crew Member Qualifications | 703.88\n703.88\n(3) No person shall act as the pilot-in-command of an aircraft with a person other than a flight crew member on board in night VFR flight unless the person acting as the pilot-in-command holds an instrument rating for that class of aircraft.\n(4) No air operator shall permit a person to act and no person shall act as the pilot-in-command of an aircraft with passengers on board unless the person has acquired, prior to designation as pilot-in-command, the following flight time on that type and basic model of aircraft and in the pilot-in-command position:\n(a) in the case of a single-engined aeroplane or a helicopter, five hours; or\n(b) in the case of a multi-engined aeroplane, 15 hours.\n(5) The flight time required by subsection (4) may be reduced by one hour for each take-off and landing completed, up to a maximum of 50 per cent.\n(6) An air operator may permit a person to act and a person may act as a flight crew member in an aircraft if the person does not meet the requirements set out in paragraphs (1)(b) to (d) if the air operator\n(a) is authorized to do so in its air operator certificate; and\n(b) complies with the Commercial Air Service Standards.\n(7) Subparagraph (1)(c)(iv) does not apply in the case of a chief pilot who acts as pilot-in-command of a single-engined aeroplane that is not operated in accordance with subsection 703.22(2).",
+        "section": "703.88",
+        "title": "Flight Crew Member Qualifications",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-703.88.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.703439236,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VIII — Airline Transport Pilot Licence > Aeroplanes — Privileges | 401.34\n401.34\n(1) Subject to subsection (2), the holder of an airline transport pilot licence — aeroplane may exercise the privileges of a private pilot licence — aeroplane and a commercial pilot licence — aeroplane.\n(2) The holder of an airline transport pilot licence — aeroplane endorsed with a Group 1 instrument rating may, while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with a rating, act as\n(a) pilot-in-command of the aeroplane, if the minimum flight crew document for that aeroplane specifies a minimum flight crew of two pilots; or\n(b) co-pilot of the aeroplane.",
+        "section": "401.34",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.34.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9825308
+      },
+      {
+        "score": 0.632341325,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII — Commercial Pilot Licence > Aeroplanes — Privileges and Requirements | 401.30\n401.30\n(1) Subject to subsection (3), the holder of a commercial pilot licence — aeroplane may, by day or night,\n(a) exercise the privileges of a private pilot licence — aeroplane;\n(b) exercise the privileges of a VFR OTT rating;\n(c) while engaged in providing a commercial air service by means of an aeroplane of a class and type in respect of which the licence is endorsed with ratings, act as\n(i) pilot-in-command of the aeroplane, if the minimum flight crew document for the aeroplane specifies a minimum flight crew of one pilot, or\n(ii) co-pilot of the aeroplane;\n(d) if qualified as a flight instructor in accordance with section 425.21 of Standard 425 — Flight Training, conduct flight instruction; and\n(e) exercise private pilot licence — aeroplane privileges until the end of the medical validity period specified for the private pilot licence.\n(2) Where an applicant meets the requirements specified in the personnel licensing standards in respect of a commercial pilot licence — aeroplane except the night flight time requirements, the Minister shall issue to the applicant a commercial pilot licence — aeroplane endorsed for daylight flying only.\n(3) No holder of a commercial pilot licence — aeroplane whose licence is endorsed with a daylight-flying-only restriction shall exercise the privileges set out in paragraphs (1)(a) and (c) by night.\n(4) The Minister shall remove the daylight-flying-only restriction if an applicant meets the night flight time requirements of the personnel licensing standards.",
+        "section": "401.30",
+        "title": "Aeroplanes — Privileges and Requirements",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.30.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8688713
+      },
+      {
+        "score": 0.6763767,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XIV — Instrument Rating > Privileges | 401.47\n401.47 The holder of a licence endorsed with an instrument rating may exercise\n(a) the privileges of the licence under IFR in accordance with Part VI, Subpart 2, Division VII in respect of the group of aircraft endorsed on the licence; and\n(b) the privileges accorded by a VFR OTT rating.",
+        "section": "401.47",
+        "title": "Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.47.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8575773
+      },
+      {
+        "score": 0.645174205,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division XIV — Instrument Rating > Rating | 401.46\n401.46\n(1) The Minister shall endorse the following licences with an instrument rating if the applicant for the rating meets the requirements referred to in section 401.06:\n(a) pilot licence — aeroplane; and\n(b) pilot licence — helicopter.\n(2) Where the Minister has endorsed a licence with an instrument rating, the Minister shall endorse the licence with the group of aircraft in respect of which the privileges may be exercised.",
+        "section": "401.46",
+        "title": "Rating",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.46.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8447167
+      },
+      {
+        "score": 0.64624548,
+        "text": "Canadian Aviation Regulations | Part IV — Personnel Licensing and Training > Subpart 1 — Flight Crew Permits, Licences and Ratings > Division VII.1 — Multi-crew Pilot Licence > Aeroplanes — Privileges | 401.32\n401.32\n(1) The holder of a multi-crew pilot licence — aeroplane may act as co-pilot of a turbine-powered aeroplane that is operated day or night, under VFR, VFR OTT or IFR, if the aeroplane\n(a) is a transport category aircraft;\n(b) is an aeroplane for which a minimum flight crew document has been issued that specifies a minimum flight crew of two pilots;\n(c) is of a type in respect of which the holder’s licence is endorsed with a rating; and\n(d) is operated under subpart 4 of Part VI or under Part VII.\n(2) The holder of a multi-crew pilot licence — aeroplane may act as pilot-in-command of any aircraft for the purpose of the holder’s flight training if the flight training is conducted in accordance with section 401.19.",
+        "section": "401.32",
+        "title": "Aeroplanes — Privileges",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-401.32.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8309237
+      }
+    ],
+    "context_scores": {
+      "rag": {
+        "context_precision": 1.0,
+        "context_recall": 1.0
+      }
+    }
+  },
+  "May a Canadian VFR private pilot fly a VFR aircraft in Class A airspace without a Minister-issued authorization?": {
+    "rag": [
+      {
+        "score": 0.772188604,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > VFR Flight in Class A Airspace | 601.06\n601.06\n(1) No person shall operate a VFR aircraft in Class A airspace unless the aircraft is operated in accordance with an authorization issued by the Minister.\n(2) The Minister may issue an authorization referred to in subsection (1) where the operation of the aircraft is in the public interest and is not likely to affect aviation safety.",
+        "section": "601.06",
+        "title": "VFR Flight in Class A Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.06.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.709787,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > VFR Flight in Class B Airspace | 601.07\n601.07\n(1) No person shall operate a VFR aircraft in Class B airspace unless the aircraft is operated in accordance with an air traffic control clearance or an authorization issued by the Minister.\n(2) The Minister may issue an authorization referred to in subsection (1) where the operation of the aircraft is in the public interest and is not likely to affect aviation safety.\n(3) The pilot-in-command of a VFR aircraft operating in Class B airspace in accordance with an air traffic control clearance shall, when it becomes evident that it will not be possible to operate the aircraft in VMC at the altitude or along the route specified in the air traffic control clearance,\n(a) where the airspace is a control zone, request authorization to operate the aircraft in special VFR flight; and\n(b) in any other case,\n(i) request an amended air traffic control clearance that will enable the aircraft to be operated in VMC to the destination specified in the flight plan or to an alternate aerodrome, or\n(ii) request an air traffic control clearance to operate the aircraft in IFR flight.",
+        "section": "601.07",
+        "title": "VFR Flight in Class B Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.07.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.709032476,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > IFR Flight in Class A, B, C, D or E Airspace or Class F Special Use Restricted or Class F Special Use Advisory Controlled Airspace | 601.05\n601.05\n(1) No person shall operate an IFR aircraft in Class A, B, C, D or E airspace or in Class F Special Use Restricted or Class F Special Use Advisory controlled airspace unless the aircraft is operated in accordance with an air traffic control clearance or an authorization issued by the Minister.\n(2) The Minister may issue an authorization referred to in subsection (1) where the operation of the aircraft is in the public interest and is not likely to affect aviation safety.",
+        "section": "601.05",
+        "title": "IFR Flight in Class A, B, C, D or E Airspace or Class F Special Use Restricted or Class F Special Use Advisory Controlled Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.05.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.636472,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > VFR Flight in Class C Airspace | 601.08\n601.08\n(1) Subject to subsection (2), no person operating a VFR aircraft shall enter Class C airspace unless the person receives a clearance to enter from the appropriate air traffic control unit before entering the airspace.\n(2) The pilot-in-command of a VFR aircraft that is not equipped with radiocommunication equipment capable of two-way communication with the appropriate air traffic control unit may, during daylight in VMC, enter Class C airspace if the pilot-in-command receives authorization to enter from the appropriate air traffic control unit before entering the airspace.\n(3) Class C airspace becomes Class E airspace when the appropriate air traffic control unit is not in operation.",
+        "section": "601.08",
+        "title": "VFR Flight in Class C Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.08.html",
+        "point_in_time": "2026-06-17"
+      },
+      {
+        "score": 0.614661932,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division II — Aircraft Operating Restrictions and Hazards to Aviation Safety > Exceptions | 601.17\n601.17\n(1) Section 601.15 does not apply to\n(a) persons who are operating an aircraft at the request of, or with the authorization of, an appropriate fire control authority for the purpose of assisting the fire control authority in the conduct of its operations;\n(b) persons who are operating an aircraft with the authorization of the Minister issued under subsection (2); or\n(c) Department of Transport personnel who are operating an aircraft in the performance of duties related to surveillance and the enforcement of aviation legislation.\n(2) On receipt of an application in writing, the Minister shall issue a written authorization permitting the applicant to operate an aircraft if the Minister is of the opinion that operating the aircraft is necessary for the safety of the public or to support the operation of an aerodrome that is in or adjacent to the forest fire area.\n(3) The Minister may specify conditions in the authorization governing the operation of the aircraft as are necessary for its safe and proper operation.\n(4) No person shall operate an aircraft under the authorization unless the authorization is on board and the aircraft is operated in accordance with any conditions specified in the authorization.",
+        "section": "601.17",
+        "title": "Exceptions",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.17.html",
+        "point_in_time": "2026-06-17"
+      }
+    ],
+    "rag_rerank": [
+      {
+        "score": 0.772188604,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > VFR Flight in Class A Airspace | 601.06\n601.06\n(1) No person shall operate a VFR aircraft in Class A airspace unless the aircraft is operated in accordance with an authorization issued by the Minister.\n(2) The Minister may issue an authorization referred to in subsection (1) where the operation of the aircraft is in the public interest and is not likely to affect aviation safety.",
+        "section": "601.06",
+        "title": "VFR Flight in Class A Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.06.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9766336
+      },
+      {
+        "score": 0.709032476,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > IFR Flight in Class A, B, C, D or E Airspace or Class F Special Use Restricted or Class F Special Use Advisory Controlled Airspace | 601.05\n601.05\n(1) No person shall operate an IFR aircraft in Class A, B, C, D or E airspace or in Class F Special Use Restricted or Class F Special Use Advisory controlled airspace unless the aircraft is operated in accordance with an air traffic control clearance or an authorization issued by the Minister.\n(2) The Minister may issue an authorization referred to in subsection (1) where the operation of the aircraft is in the public interest and is not likely to affect aviation safety.",
+        "section": "601.05",
+        "title": "IFR Flight in Class A, B, C, D or E Airspace or Class F Special Use Restricted or Class F Special Use Advisory Controlled Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.05.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.93223155
+      },
+      {
+        "score": 0.709787,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > VFR Flight in Class B Airspace | 601.07\n601.07\n(1) No person shall operate a VFR aircraft in Class B airspace unless the aircraft is operated in accordance with an air traffic control clearance or an authorization issued by the Minister.\n(2) The Minister may issue an authorization referred to in subsection (1) where the operation of the aircraft is in the public interest and is not likely to affect aviation safety.\n(3) The pilot-in-command of a VFR aircraft operating in Class B airspace in accordance with an air traffic control clearance shall, when it becomes evident that it will not be possible to operate the aircraft in VMC at the altitude or along the route specified in the air traffic control clearance,\n(a) where the airspace is a control zone, request authorization to operate the aircraft in special VFR flight; and\n(b) in any other case,\n(i) request an amended air traffic control clearance that will enable the aircraft to be operated in VMC to the destination specified in the flight plan or to an alternate aerodrome, or\n(ii) request an air traffic control clearance to operate the aircraft in IFR flight.",
+        "section": "601.07",
+        "title": "VFR Flight in Class B Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.07.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.9265301
+      },
+      {
+        "score": 0.614661932,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division II — Aircraft Operating Restrictions and Hazards to Aviation Safety > Exceptions | 601.17\n601.17\n(1) Section 601.15 does not apply to\n(a) persons who are operating an aircraft at the request of, or with the authorization of, an appropriate fire control authority for the purpose of assisting the fire control authority in the conduct of its operations;\n(b) persons who are operating an aircraft with the authorization of the Minister issued under subsection (2); or\n(c) Department of Transport personnel who are operating an aircraft in the performance of duties related to surveillance and the enforcement of aviation legislation.\n(2) On receipt of an application in writing, the Minister shall issue a written authorization permitting the applicant to operate an aircraft if the Minister is of the opinion that operating the aircraft is necessary for the safety of the public or to support the operation of an aerodrome that is in or adjacent to the forest fire area.\n(3) The Minister may specify conditions in the authorization governing the operation of the aircraft as are necessary for its safe and proper operation.\n(4) No person shall operate an aircraft under the authorization unless the authorization is on board and the aircraft is operated in accordance with any conditions specified in the authorization.",
+        "section": "601.17",
+        "title": "Exceptions",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.17.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.87195534
+      },
+      {
+        "score": 0.636472,
+        "text": "Canadian Aviation Regulations | Part VI — General Operating and Flight Rules > Subpart 1 — Airspace > Division I — Airspace Structure, Classification and Use > VFR Flight in Class C Airspace | 601.08\n601.08\n(1) Subject to subsection (2), no person operating a VFR aircraft shall enter Class C airspace unless the person receives a clearance to enter from the appropriate air traffic control unit before entering the airspace.\n(2) The pilot-in-command of a VFR aircraft that is not equipped with radiocommunication equipment capable of two-way communication with the appropriate air traffic control unit may, during daylight in VMC, enter Class C airspace if the pilot-in-command receives authorization to enter from the appropriate air traffic control unit before entering the airspace.\n(3) Class C airspace becomes Class E airspace when the appropriate air traffic control unit is not in operation.",
+        "section": "601.08",
+        "title": "VFR Flight in Class C Airspace",
+        "source": "TC_CAR",
+        "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-601.08.html",
+        "point_in_time": "2026-06-17",
+        "rerank_score": 0.8542049
+      }
     ]
   }
 }
