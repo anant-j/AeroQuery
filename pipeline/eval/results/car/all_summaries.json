@@ -1,0 +1,1066 @@
+[
+  {
+    "model": "gpt-5.4-nano",
+    "run": {
+      "protocol_version": 8,
+      "benchmark": {
+        "schema_version": 1,
+        "source": "TC_CAR",
+        "xml_sha256": "7e762abaf0c887b76db4efc828b72d2c31327e0d203b8f8a31063fe21d7418a1",
+        "point_in_time": "2026-06-17",
+        "generator": "gpt-5.4-mini",
+        "target_count": 250,
+        "scope": "VFR pilot and flight operations",
+        "review_status": "machine-generated; human review required"
+      },
+      "questions_sha256": "e9acffc2dcefa8cf2527e25edb1e6106c4913a16b0c63f60db65df02928c9add",
+      "namespace": "canada-car-2026-06-17",
+      "index": "aeroquery",
+      "namespace_vector_count": 2045,
+      "azure_endpoint_sha256": "025e86df502abf6893b1ad1a265fc6889b7b86c69393ed9455422eb37dc08297",
+      "embedding_model": "text-embedding-3-large",
+      "judge_model": "gpt-5.4",
+      "ragas_version": "0.4.3",
+      "reranker": "rerank-v4.0-pro",
+      "candidate_count": 10,
+      "context_count": 5,
+      "models": [
+        "gpt-5.4-nano",
+        "gpt-5.4-mini",
+        "gpt-5.4",
+        "llama3.2:1b"
+      ],
+      "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "run_tag": "default",
+      "provisional": true
+    },
+    "num_questions": 5,
+    "bare": {
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.336,
+        "standard_deviation": 0.46,
+        "ci95": [
+          0.0,
+          0.6831
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.278,
+        "standard_deviation": 0.2071,
+        "ci95": [
+          0.12,
+          0.448
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.61,
+        "standard_deviation": 0.0663,
+        "ci95": [
+          0.5628,
+          0.6613
+        ]
+      }
+    },
+    "rag": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.802,
+        "standard_deviation": 0.285,
+        "ci95": [
+          0.5454,
+          0.9895
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 0.85,
+        "standard_deviation": 0.2911,
+        "ci95": [
+          0.5833,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.875,
+        "standard_deviation": 0.064,
+        "ci95": [
+          0.8296,
+          0.928
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.478,
+        "standard_deviation": 0.3557,
+        "ci95": [
+          0.212,
+          0.744
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.71,
+        "standard_deviation": 0.0833,
+        "ci95": [
+          0.6478,
+          0.78
+        ]
+      }
+    },
+    "rag_rerank": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.907,
+        "standard_deviation": 0.1738,
+        "ci95": [
+          0.7467,
+          1.0
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.884,
+        "standard_deviation": 0.0708,
+        "ci95": [
+          0.8358,
+          0.9418
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.602,
+        "standard_deviation": 0.2922,
+        "ci95": [
+          0.358,
+          0.81
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.739,
+        "standard_deviation": 0.0971,
+        "ci95": [
+          0.6649,
+          0.8143
+        ]
+      }
+    },
+    "paired_comparisons": {
+      "rag_minus_bare": {
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.4711,
+          "ci95": [
+            0.1784,
+            0.8936
+          ],
+          "mean_difference": 0.539
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.4805,
+          "ci95": [
+            -0.214,
+            0.534
+          ],
+          "mean_difference": 0.2
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0991,
+          "ci95": [
+            0.0287,
+            0.1795
+          ],
+          "mean_difference": 0.1
+        }
+      },
+      "rerank_minus_rag": {
+        "faithfulness": {
+          "n": 5,
+          "standard_deviation": 0.1504,
+          "ci95": [
+            -0.0056,
+            0.217
+          ],
+          "mean_difference": 0.105
+        },
+        "context_precision": {
+          "n": 5,
+          "standard_deviation": 0.2911,
+          "ci95": [
+            0.0,
+            0.4167
+          ],
+          "mean_difference": 0.15
+        },
+        "context_recall": {
+          "n": 5,
+          "standard_deviation": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_difference": 0.0
+        },
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.0132,
+          "ci95": [
+            -0.0013,
+            0.0194
+          ],
+          "mean_difference": 0.009
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.3407,
+          "ci95": [
+            -0.116,
+            0.436
+          ],
+          "mean_difference": 0.124
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0598,
+          "ci95": [
+            -0.0025,
+            0.0833
+          ],
+          "mean_difference": 0.029
+        }
+      }
+    }
+  },
+  {
+    "model": "gpt-5.4-mini",
+    "run": {
+      "protocol_version": 8,
+      "benchmark": {
+        "schema_version": 1,
+        "source": "TC_CAR",
+        "xml_sha256": "7e762abaf0c887b76db4efc828b72d2c31327e0d203b8f8a31063fe21d7418a1",
+        "point_in_time": "2026-06-17",
+        "generator": "gpt-5.4-mini",
+        "target_count": 250,
+        "scope": "VFR pilot and flight operations",
+        "review_status": "machine-generated; human review required"
+      },
+      "questions_sha256": "e9acffc2dcefa8cf2527e25edb1e6106c4913a16b0c63f60db65df02928c9add",
+      "namespace": "canada-car-2026-06-17",
+      "index": "aeroquery",
+      "namespace_vector_count": 2045,
+      "azure_endpoint_sha256": "025e86df502abf6893b1ad1a265fc6889b7b86c69393ed9455422eb37dc08297",
+      "embedding_model": "text-embedding-3-large",
+      "judge_model": "gpt-5.4",
+      "ragas_version": "0.4.3",
+      "reranker": "rerank-v4.0-pro",
+      "candidate_count": 10,
+      "context_count": 5,
+      "models": [
+        "gpt-5.4-nano",
+        "gpt-5.4-mini",
+        "gpt-5.4",
+        "llama3.2:1b"
+      ],
+      "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "run_tag": "default",
+      "provisional": true
+    },
+    "num_questions": 5,
+    "bare": {
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.908,
+        "standard_deviation": 0.0555,
+        "ci95": [
+          0.8636,
+          0.949
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.366,
+        "standard_deviation": 0.2802,
+        "ci95": [
+          0.15,
+          0.6
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.657,
+        "standard_deviation": 0.0674,
+        "ci95": [
+          0.6053,
+          0.7095
+        ]
+      }
+    },
+    "rag": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.76,
+        "standard_deviation": 0.428,
+        "ci95": [
+          0.375,
+          0.9846
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 0.85,
+        "standard_deviation": 0.2911,
+        "ci95": [
+          0.5833,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.852,
+        "standard_deviation": 0.0722,
+        "ci95": [
+          0.7972,
+          0.9101
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.61,
+        "standard_deviation": 0.2554,
+        "ci95": [
+          0.41,
+          0.81
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.726,
+        "standard_deviation": 0.0322,
+        "ci95": [
+          0.7031,
+          0.7509
+        ]
+      }
+    },
+    "rag_rerank": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.827,
+        "standard_deviation": 0.2891,
+        "ci95": [
+          0.56,
+          1.0
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.857,
+        "standard_deviation": 0.071,
+        "ci95": [
+          0.8085,
+          0.9211
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.65,
+        "standard_deviation": 0.1391,
+        "ci95": [
+          0.554,
+          0.76
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.766,
+        "standard_deviation": 0.0401,
+        "ci95": [
+          0.7379,
+          0.7976
+        ]
+      }
+    },
+    "paired_comparisons": {
+      "rag_minus_bare": {
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.0751,
+          "ci95": [
+            -0.1187,
+            -0.0008
+          ],
+          "mean_difference": -0.056
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.5209,
+          "ci95": [
+            -0.156,
+            0.644
+          ],
+          "mean_difference": 0.244
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0702,
+          "ci95": [
+            0.0145,
+            0.1228
+          ],
+          "mean_difference": 0.069
+        }
+      },
+      "rerank_minus_rag": {
+        "faithfulness": {
+          "n": 5,
+          "standard_deviation": 0.1582,
+          "ci95": [
+            -0.03,
+            0.2004
+          ],
+          "mean_difference": 0.067
+        },
+        "context_precision": {
+          "n": 5,
+          "standard_deviation": 0.2911,
+          "ci95": [
+            0.0,
+            0.4167
+          ],
+          "mean_difference": 0.15
+        },
+        "context_recall": {
+          "n": 5,
+          "standard_deviation": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_difference": 0.0
+        },
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.0464,
+          "ci95": [
+            -0.0277,
+            0.0445
+          ],
+          "mean_difference": 0.004
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.2124,
+          "ci95": [
+            -0.118,
+            0.206
+          ],
+          "mean_difference": 0.04
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0386,
+          "ci95": [
+            0.0126,
+            0.0712
+          ],
+          "mean_difference": 0.04
+        }
+      }
+    }
+  },
+  {
+    "model": "gpt-5.4",
+    "run": {
+      "protocol_version": 8,
+      "benchmark": {
+        "schema_version": 1,
+        "source": "TC_CAR",
+        "xml_sha256": "7e762abaf0c887b76db4efc828b72d2c31327e0d203b8f8a31063fe21d7418a1",
+        "point_in_time": "2026-06-17",
+        "generator": "gpt-5.4-mini",
+        "target_count": 250,
+        "scope": "VFR pilot and flight operations",
+        "review_status": "machine-generated; human review required"
+      },
+      "questions_sha256": "e9acffc2dcefa8cf2527e25edb1e6106c4913a16b0c63f60db65df02928c9add",
+      "namespace": "canada-car-2026-06-17",
+      "index": "aeroquery",
+      "namespace_vector_count": 2045,
+      "azure_endpoint_sha256": "025e86df502abf6893b1ad1a265fc6889b7b86c69393ed9455422eb37dc08297",
+      "embedding_model": "text-embedding-3-large",
+      "judge_model": "gpt-5.4",
+      "ragas_version": "0.4.3",
+      "reranker": "rerank-v4.0-pro",
+      "candidate_count": 10,
+      "context_count": 5,
+      "models": [
+        "gpt-5.4-nano",
+        "gpt-5.4-mini",
+        "gpt-5.4",
+        "llama3.2:1b"
+      ],
+      "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "run_tag": "default",
+      "provisional": true
+    },
+    "num_questions": 5,
+    "bare": {
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.872,
+        "standard_deviation": 0.0929,
+        "ci95": [
+          0.7928,
+          0.9356
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.374,
+        "standard_deviation": 0.1917,
+        "ci95": [
+          0.238,
+          0.534
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.67,
+        "standard_deviation": 0.0781,
+        "ci95": [
+          0.6122,
+          0.731
+        ]
+      }
+    },
+    "rag": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.912,
+        "standard_deviation": 0.1291,
+        "ci95": [
+          0.7978,
+          1.0
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 0.85,
+        "standard_deviation": 0.2911,
+        "ci95": [
+          0.5833,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.863,
+        "standard_deviation": 0.067,
+        "ci95": [
+          0.8162,
+          0.9198
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.592,
+        "standard_deviation": 0.2891,
+        "ci95": [
+          0.392,
+          0.842
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.721,
+        "standard_deviation": 0.0373,
+        "ci95": [
+          0.6953,
+          0.7507
+        ]
+      }
+    },
+    "rag_rerank": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.915,
+        "standard_deviation": 0.0966,
+        "ci95": [
+          0.8381,
+          0.9882
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.87,
+        "standard_deviation": 0.0526,
+        "ci95": [
+          0.8276,
+          0.9093
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.648,
+        "standard_deviation": 0.225,
+        "ci95": [
+          0.466,
+          0.81
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.729,
+        "standard_deviation": 0.0489,
+        "ci95": [
+          0.6939,
+          0.7666
+        ]
+      }
+    },
+    "paired_comparisons": {
+      "rag_minus_bare": {
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.0607,
+          "ci95": [
+            -0.062,
+            0.0359
+          ],
+          "mean_difference": -0.009
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.4601,
+          "ci95": [
+            -0.132,
+            0.554
+          ],
+          "mean_difference": 0.218
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0921,
+          "ci95": [
+            -0.0247,
+            0.1181
+          ],
+          "mean_difference": 0.051
+        }
+      },
+      "rerank_minus_rag": {
+        "faithfulness": {
+          "n": 5,
+          "standard_deviation": 0.0435,
+          "ci95": [
+            -0.0331,
+            0.0381
+          ],
+          "mean_difference": 0.003
+        },
+        "context_precision": {
+          "n": 5,
+          "standard_deviation": 0.2911,
+          "ci95": [
+            0.0,
+            0.4167
+          ],
+          "mean_difference": 0.15
+        },
+        "context_recall": {
+          "n": 5,
+          "standard_deviation": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_difference": 0.0
+        },
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.0398,
+          "ci95": [
+            -0.0214,
+            0.0437
+          ],
+          "mean_difference": 0.007
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.2973,
+          "ci95": [
+            -0.136,
+            0.33
+          ],
+          "mean_difference": 0.056
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0556,
+          "ci95": [
+            -0.0212,
+            0.058
+          ],
+          "mean_difference": 0.008
+        }
+      }
+    }
+  },
+  {
+    "model": "llama3.2:1b",
+    "run": {
+      "protocol_version": 8,
+      "benchmark": {
+        "schema_version": 1,
+        "source": "TC_CAR",
+        "xml_sha256": "7e762abaf0c887b76db4efc828b72d2c31327e0d203b8f8a31063fe21d7418a1",
+        "point_in_time": "2026-06-17",
+        "generator": "gpt-5.4-mini",
+        "target_count": 250,
+        "scope": "VFR pilot and flight operations",
+        "review_status": "machine-generated; human review required"
+      },
+      "questions_sha256": "e9acffc2dcefa8cf2527e25edb1e6106c4913a16b0c63f60db65df02928c9add",
+      "namespace": "canada-car-2026-06-17",
+      "index": "aeroquery",
+      "namespace_vector_count": 2045,
+      "azure_endpoint_sha256": "025e86df502abf6893b1ad1a265fc6889b7b86c69393ed9455422eb37dc08297",
+      "embedding_model": "text-embedding-3-large",
+      "judge_model": "gpt-5.4",
+      "ragas_version": "0.4.3",
+      "reranker": "rerank-v4.0-pro",
+      "candidate_count": 10,
+      "context_count": 5,
+      "models": [
+        "gpt-5.4-nano",
+        "gpt-5.4-mini",
+        "gpt-5.4",
+        "llama3.2:1b"
+      ],
+      "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "run_tag": "default",
+      "provisional": true
+    },
+    "num_questions": 5,
+    "bare": {
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.35,
+        "standard_deviation": 0.4818,
+        "ci95": [
+          0.0,
+          0.7305
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.034,
+        "standard_deviation": 0.076,
+        "ci95": [
+          0.0,
+          0.102
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.6,
+        "standard_deviation": 0.0349,
+        "ci95": [
+          0.5717,
+          0.6265
+        ]
+      }
+    },
+    "rag": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.715,
+        "standard_deviation": 0.2086,
+        "ci95": [
+          0.5499,
+          0.8814
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 0.85,
+        "standard_deviation": 0.2911,
+        "ci95": [
+          0.5833,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.47,
+        "standard_deviation": 0.4575,
+        "ci95": [
+          0.1057,
+          0.8167
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.224,
+        "standard_deviation": 0.1901,
+        "ci95": [
+          0.074,
+          0.374
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.598,
+        "standard_deviation": 0.0316,
+        "ci95": [
+          0.5738,
+          0.621
+        ]
+      }
+    },
+    "rag_rerank": {
+      "faithfulness": {
+        "n": 5,
+        "mean": 0.764,
+        "standard_deviation": 0.1382,
+        "ci95": [
+          0.662,
+          0.8744
+        ]
+      },
+      "context_precision": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "context_recall": {
+        "n": 5,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "mean": 0.766,
+        "standard_deviation": 0.4304,
+        "ci95": [
+          0.3774,
+          0.9862
+        ]
+      },
+      "factual_correctness": {
+        "n": 5,
+        "mean": 0.362,
+        "standard_deviation": 0.3789,
+        "ci95": [
+          0.078,
+          0.672
+        ]
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "mean": 0.644,
+        "standard_deviation": 0.0337,
+        "ci95": [
+          0.6257,
+          0.6748
+        ]
+      }
+    },
+    "paired_comparisons": {
+      "rag_minus_bare": {
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.6305,
+          "ci95": [
+            -0.318,
+            0.5586
+          ],
+          "mean_difference": 0.12
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.2381,
+          "ci95": [
+            0.006,
+            0.374
+          ],
+          "mean_difference": 0.19
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.0482,
+          "ci95": [
+            -0.0417,
+            0.0344
+          ],
+          "mean_difference": -0.003
+        }
+      },
+      "rerank_minus_rag": {
+        "faithfulness": {
+          "n": 5,
+          "standard_deviation": 0.2828,
+          "ci95": [
+            -0.1848,
+            0.2616
+          ],
+          "mean_difference": 0.049
+        },
+        "context_precision": {
+          "n": 5,
+          "standard_deviation": 0.2911,
+          "ci95": [
+            0.0,
+            0.4167
+          ],
+          "mean_difference": 0.15
+        },
+        "context_recall": {
+          "n": 5,
+          "standard_deviation": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "mean_difference": 0.0
+        },
+        "answer_relevancy": {
+          "n": 5,
+          "standard_deviation": 0.7601,
+          "ci95": [
+            -0.3426,
+            0.8468
+          ],
+          "mean_difference": 0.296
+        },
+        "factual_correctness": {
+          "n": 5,
+          "standard_deviation": 0.2252,
+          "ci95": [
+            -0.026,
+            0.31
+          ],
+          "mean_difference": 0.138
+        },
+        "semantic_similarity": {
+          "n": 5,
+          "standard_deviation": 0.06,
+          "ci95": [
+            0.0072,
+            0.1015
+          ],
+          "mean_difference": 0.047
+        }
+      }
+    }
+  }
+]

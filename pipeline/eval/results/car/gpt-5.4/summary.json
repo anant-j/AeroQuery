@@ -1,0 +1,266 @@
+{
+  "model": "gpt-5.4",
+  "run": {
+    "protocol_version": 8,
+    "benchmark": {
+      "schema_version": 1,
+      "source": "TC_CAR",
+      "xml_sha256": "7e762abaf0c887b76db4efc828b72d2c31327e0d203b8f8a31063fe21d7418a1",
+      "point_in_time": "2026-06-17",
+      "generator": "gpt-5.4-mini",
+      "target_count": 250,
+      "scope": "VFR pilot and flight operations",
+      "review_status": "machine-generated; human review required"
+    },
+    "questions_sha256": "e9acffc2dcefa8cf2527e25edb1e6106c4913a16b0c63f60db65df02928c9add",
+    "namespace": "canada-car-2026-06-17",
+    "index": "aeroquery",
+    "namespace_vector_count": 2045,
+    "azure_endpoint_sha256": "025e86df502abf6893b1ad1a265fc6889b7b86c69393ed9455422eb37dc08297",
+    "embedding_model": "text-embedding-3-large",
+    "judge_model": "gpt-5.4",
+    "ragas_version": "0.4.3",
+    "reranker": "rerank-v4.0-pro",
+    "candidate_count": 10,
+    "context_count": 5,
+    "models": [
+      "gpt-5.4-nano",
+      "gpt-5.4-mini",
+      "gpt-5.4",
+      "llama3.2:1b"
+    ],
+    "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+    "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+    "run_tag": "default",
+    "provisional": true
+  },
+  "num_questions": 5,
+  "bare": {
+    "answer_relevancy": {
+      "n": 5,
+      "mean": 0.872,
+      "standard_deviation": 0.0929,
+      "ci95": [
+        0.7928,
+        0.9356
+      ]
+    },
+    "factual_correctness": {
+      "n": 5,
+      "mean": 0.374,
+      "standard_deviation": 0.1917,
+      "ci95": [
+        0.238,
+        0.534
+      ]
+    },
+    "semantic_similarity": {
+      "n": 5,
+      "mean": 0.67,
+      "standard_deviation": 0.0781,
+      "ci95": [
+        0.6122,
+        0.731
+      ]
+    }
+  },
+  "rag": {
+    "faithfulness": {
+      "n": 5,
+      "mean": 0.912,
+      "standard_deviation": 0.1291,
+      "ci95": [
+        0.7978,
+        1.0
+      ]
+    },
+    "context_precision": {
+      "n": 5,
+      "mean": 0.85,
+      "standard_deviation": 0.2911,
+      "ci95": [
+        0.5833,
+        1.0
+      ]
+    },
+    "context_recall": {
+      "n": 5,
+      "mean": 1.0,
+      "standard_deviation": 0.0,
+      "ci95": [
+        1.0,
+        1.0
+      ]
+    },
+    "answer_relevancy": {
+      "n": 5,
+      "mean": 0.863,
+      "standard_deviation": 0.067,
+      "ci95": [
+        0.8162,
+        0.9198
+      ]
+    },
+    "factual_correctness": {
+      "n": 5,
+      "mean": 0.592,
+      "standard_deviation": 0.2891,
+      "ci95": [
+        0.392,
+        0.842
+      ]
+    },
+    "semantic_similarity": {
+      "n": 5,
+      "mean": 0.721,
+      "standard_deviation": 0.0373,
+      "ci95": [
+        0.6953,
+        0.7507
+      ]
+    }
+  },
+  "rag_rerank": {
+    "faithfulness": {
+      "n": 5,
+      "mean": 0.915,
+      "standard_deviation": 0.0966,
+      "ci95": [
+        0.8381,
+        0.9882
+      ]
+    },
+    "context_precision": {
+      "n": 5,
+      "mean": 1.0,
+      "standard_deviation": 0.0,
+      "ci95": [
+        1.0,
+        1.0
+      ]
+    },
+    "context_recall": {
+      "n": 5,
+      "mean": 1.0,
+      "standard_deviation": 0.0,
+      "ci95": [
+        1.0,
+        1.0
+      ]
+    },
+    "answer_relevancy": {
+      "n": 5,
+      "mean": 0.87,
+      "standard_deviation": 0.0526,
+      "ci95": [
+        0.8276,
+        0.9093
+      ]
+    },
+    "factual_correctness": {
+      "n": 5,
+      "mean": 0.648,
+      "standard_deviation": 0.225,
+      "ci95": [
+        0.466,
+        0.81
+      ]
+    },
+    "semantic_similarity": {
+      "n": 5,
+      "mean": 0.729,
+      "standard_deviation": 0.0489,
+      "ci95": [
+        0.6939,
+        0.7666
+      ]
+    }
+  },
+  "paired_comparisons": {
+    "rag_minus_bare": {
+      "answer_relevancy": {
+        "n": 5,
+        "standard_deviation": 0.0607,
+        "ci95": [
+          -0.062,
+          0.0359
+        ],
+        "mean_difference": -0.009
+      },
+      "factual_correctness": {
+        "n": 5,
+        "standard_deviation": 0.4601,
+        "ci95": [
+          -0.132,
+          0.554
+        ],
+        "mean_difference": 0.218
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "standard_deviation": 0.0921,
+        "ci95": [
+          -0.0247,
+          0.1181
+        ],
+        "mean_difference": 0.051
+      }
+    },
+    "rerank_minus_rag": {
+      "faithfulness": {
+        "n": 5,
+        "standard_deviation": 0.0435,
+        "ci95": [
+          -0.0331,
+          0.0381
+        ],
+        "mean_difference": 0.003
+      },
+      "context_precision": {
+        "n": 5,
+        "standard_deviation": 0.2911,
+        "ci95": [
+          0.0,
+          0.4167
+        ],
+        "mean_difference": 0.15
+      },
+      "context_recall": {
+        "n": 5,
+        "standard_deviation": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "mean_difference": 0.0
+      },
+      "answer_relevancy": {
+        "n": 5,
+        "standard_deviation": 0.0398,
+        "ci95": [
+          -0.0214,
+          0.0437
+        ],
+        "mean_difference": 0.007
+      },
+      "factual_correctness": {
+        "n": 5,
+        "standard_deviation": 0.2973,
+        "ci95": [
+          -0.136,
+          0.33
+        ],
+        "mean_difference": 0.056
+      },
+      "semantic_similarity": {
+        "n": 5,
+        "standard_deviation": 0.0556,
+        "ci95": [
+          -0.0212,
+          0.058
+        ],
+        "mean_difference": 0.008
+      }
+    }
+  }
+}
