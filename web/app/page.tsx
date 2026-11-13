@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
 import ReactMarkdown from "react-markdown";
+import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { formatComparisonMessage, getTurnstileSiteKey, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
@@ -13,6 +14,8 @@ const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
 const DefaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
+const DefaultQuery2 = "If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?";
+const DefaultQueries = [DefaultQuery, DefaultQuery2];
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
 function getRemainingRequests() {
@@ -197,6 +200,8 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
 
 export default function Home() {
   const [query, setQuery] = useState("");
+  const suggestionNavigated = useRef(false);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
   const [modelOption, setModelOption] = useState<ModelOption>("openai");
   const [loading, setLoading] = useState(false);
   const [ragResult, setRagResult] = useState<AskResponse | null>(null);
@@ -507,17 +512,76 @@ export default function Home() {
       <form onSubmit={handleSubmit} className="mb-8">
         <div ref={turnstileContainer} />
         {!TURNSTILE_SITE_KEY && <p role="alert" className="mb-3 text-sm text-red-600">Verification is not configured.</p>}
-        <div className="flex gap-3 mb-3">
-          <input
-            name="questionBox"
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={DefaultQuery}
-            aria-label="Search Canadian aviation regulations"
-            className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="flex items-start gap-3 mb-3">
+          <div className="relative min-w-0 flex-1">
+            <Combobox value={query} onChange={(value: string | null) => setQuery(value ?? "")} onClose={() => { suggestionNavigated.current = false; }} immediate>
+              <div className="flex items-center rounded-xl border border-gray-200 bg-white shadow-sm transition focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-blue-500">
+                <svg className="ml-4 h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
+                </svg>
+                <ComboboxInput
+                  name="questionBox"
+                  value={query}
+                  onChange={(event) => {
+                    suggestionNavigated.current = false;
+                    setQuery(event.target.value);
+                  }}
+                  onKeyDown={(event) => {
+                    if (["ArrowDown", "ArrowUp", "Home", "End", "PageDown", "PageUp"].includes(event.key)) {
+                      suggestionNavigated.current = true;
+                    } else if (event.key === "Enter" && !event.nativeEvent.isComposing && !suggestionNavigated.current) {
+                      event.preventDefault();
+                      if (submitButtonRef.current && !submitButtonRef.current.disabled) {
+                        event.currentTarget.blur();
+                        event.currentTarget.form?.requestSubmit(submitButtonRef.current);
+                      }
+                    }
+                  }}
+                  placeholder={DefaultQuery}
+                  aria-label="Search Canadian aviation regulations"
+                  className="min-w-0 flex-1 bg-transparent px-3 py-3.5 text-sm text-gray-700 outline-none placeholder-gray-400 dark:text-gray-200 dark:placeholder-gray-500"
+                />
+                <ComboboxButton
+                  aria-label="Show suggested questions"
+                  className="group mr-2 rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-blue-500 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                >
+                  <svg className="h-4 w-4 transition-transform group-data-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" />
+                  </svg>
+                </ComboboxButton>
+              </div>
+              <ComboboxOptions modal={false} aria-label="Suggested questions" className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl shadow-gray-900/10 dark:border-gray-700 dark:bg-gray-900 dark:shadow-black/30">
+                <div aria-hidden="true" className="border-b border-gray-100 px-4 py-3 dark:border-gray-800">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Suggested questions</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Choose an example or type your own question.</p>
+                </div>
+                <div className="p-1.5">
+                  {!DefaultQueries.includes(query) && (
+                    <ComboboxOption
+                      value={query}
+                      onPointerMove={() => { suggestionNavigated.current = true; }}
+                      className="cursor-pointer rounded-lg px-3 py-3 text-sm text-gray-500 data-focus:bg-blue-50 data-focus:text-blue-800 dark:text-gray-400 dark:data-focus:bg-blue-950/60 dark:data-focus:text-blue-200"
+                    >
+                      {query ? "Use your own question" : "Write your own question"}
+                    </ComboboxOption>
+                  )}
+                  {DefaultQueries.map((question, index) => (
+                    <ComboboxOption
+                      key={question}
+                      value={question}
+                      onPointerMove={() => { suggestionNavigated.current = true; }}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg px-3 py-3 text-left text-sm leading-5 text-gray-700 transition data-focus:bg-blue-50 data-focus:text-blue-800 dark:text-gray-200 dark:data-focus:bg-blue-950/60 dark:data-focus:text-blue-200"
+                    >
+                      <span aria-hidden="true" className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-blue-50 text-xs font-semibold text-blue-600 dark:bg-blue-950 dark:text-blue-300">{index + 1}</span>
+                      <span className="pt-0.5">{question}</span>
+                    </ComboboxOption>
+                  ))}
+                </div>
+              </ComboboxOptions>
+            </Combobox>
+          </div>
           <button
+            ref={submitButtonRef}
             type="submit"
             disabled={loading || !TURNSTILE_SITE_KEY || !turnstileReady || remainingRequests < requestsNeeded || (modelOption === "webllm" && !webllmReady)}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
