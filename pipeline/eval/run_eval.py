@@ -37,7 +37,7 @@ load_dotenv()
 PROTOCOL_VERSION = 8
 AZURE_MODELS = ("gpt-5.4-nano", "gpt-5.4-mini", "gpt-5.4")
 LOCAL_MODEL = "llama3.2:1b"
-JUDGE_MODEL = "gpt-5.5"
+JUDGE_MODEL = "gpt-5.4"
 EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434/v1")
 NAMESPACE = "canada-car-2026-06-17"
