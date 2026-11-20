@@ -8,7 +8,7 @@
     "tokens": 674,
     "semantic_similarity": 0.6169,
     "answer_relevancy": 0.9525,
-    "factual_correctness": 0.17,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -56,7 +56,7 @@
     "tokens": 588,
     "semantic_similarity": 0.5758,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -80,7 +80,7 @@
     "tokens": 776,
     "semantic_similarity": 0.5755,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.08,
     "metric_errors": {}
   },
   {
@@ -116,7 +116,7 @@
     "tokens": 554,
     "semantic_similarity": 0.6304,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.29,
+    "factual_correctness": 0.4,
     "metric_errors": {}
   },
   {
@@ -140,7 +140,7 @@
     "tokens": 674,
     "semantic_similarity": 0.8391,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.36,
+    "factual_correctness": 0.27,
     "metric_errors": {}
   },
   {
@@ -164,7 +164,7 @@
     "tokens": 555,
     "semantic_similarity": 0.6892,
     "answer_relevancy": 0.933,
-    "factual_correctness": 0.18,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -176,7 +176,7 @@
     "tokens": 567,
     "semantic_similarity": 0.6313,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.2,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -188,7 +188,7 @@
     "tokens": 667,
     "semantic_similarity": 0.5251,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.33,
     "metric_errors": {}
   },
   {
@@ -248,7 +248,7 @@
     "tokens": 541,
     "semantic_similarity": 0.6637,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.33,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -260,7 +260,7 @@
     "tokens": 514,
     "semantic_similarity": 0.5347,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -296,7 +296,7 @@
     "tokens": 518,
     "semantic_similarity": 0.6028,
     "answer_relevancy": 0.8114,
-    "factual_correctness": 0.29,
+    "factual_correctness": 0.4,
     "metric_errors": {}
   },
   {
@@ -332,7 +332,7 @@
     "tokens": 579,
     "semantic_similarity": 0.4688,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -344,7 +344,7 @@
     "tokens": 523,
     "semantic_similarity": 0.7073,
     "answer_relevancy": 0.9735,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -356,7 +356,7 @@
     "tokens": 815,
     "semantic_similarity": 0.6872,
     "answer_relevancy": 1.0,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.29,
     "metric_errors": {}
   },
   {
@@ -380,7 +380,7 @@
     "tokens": 665,
     "semantic_similarity": 0.4546,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.14,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -416,7 +416,7 @@
     "tokens": 649,
     "semantic_similarity": 0.5336,
     "answer_relevancy": 0.6746,
-    "factual_correctness": 0.18,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -440,7 +440,7 @@
     "tokens": 542,
     "semantic_similarity": 0.4972,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -452,7 +452,7 @@
     "tokens": 489,
     "semantic_similarity": 0.5338,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.5,
+    "factual_correctness": 0.57,
     "metric_errors": {}
   },
   {
@@ -536,7 +536,7 @@
     "tokens": 661,
     "semantic_similarity": 0.7266,
     "answer_relevancy": 0.8041,
-    "factual_correctness": 0.38,
+    "factual_correctness": 0.14,
     "metric_errors": {}
   },
   {
@@ -560,7 +560,7 @@
     "tokens": 741,
     "semantic_similarity": 0.5529,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.17,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -572,7 +572,7 @@
     "tokens": 475,
     "semantic_similarity": 0.6314,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.5,
+    "factual_correctness": 0.29,
     "metric_errors": {}
   },
   {
@@ -596,7 +596,7 @@
     "tokens": 557,
     "semantic_similarity": 0.7066,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -608,7 +608,7 @@
     "tokens": 465,
     "semantic_similarity": 0.4691,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.29,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -620,7 +620,7 @@
     "tokens": 578,
     "semantic_similarity": 0.8066,
     "answer_relevancy": 0.8341,
-    "factual_correctness": 0.62,
+    "factual_correctness": 0.5,
     "metric_errors": {}
   },
   {
@@ -632,7 +632,7 @@
     "tokens": 570,
     "semantic_similarity": 0.6609,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.36,
+    "factual_correctness": 0.18,
     "metric_errors": {}
   },
   {
@@ -644,7 +644,7 @@
     "tokens": 648,
     "semantic_similarity": 0.6935,
     "answer_relevancy": 0.7854,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.44,
     "metric_errors": {}
   },
   {
@@ -668,7 +668,7 @@
     "tokens": 548,
     "semantic_similarity": 0.6971,
     "answer_relevancy": 0.8358,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -692,7 +692,7 @@
     "tokens": 471,
     "semantic_similarity": 0.7825,
     "answer_relevancy": 0.8387,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -704,7 +704,7 @@
     "tokens": 605,
     "semantic_similarity": 0.5591,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.25,
     "metric_errors": {}
   },
   {
@@ -728,7 +728,7 @@
     "tokens": 646,
     "semantic_similarity": 0.572,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.33,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -752,7 +752,7 @@
     "tokens": 545,
     "semantic_similarity": 0.3522,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.2,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -764,7 +764,7 @@
     "tokens": 558,
     "semantic_similarity": 0.6547,
     "answer_relevancy": 1.0,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.33,
     "metric_errors": {}
   },
   {
@@ -776,7 +776,7 @@
     "tokens": 597,
     "semantic_similarity": 0.5748,
     "answer_relevancy": 0.7381,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.25,
     "metric_errors": {}
   },
   {
@@ -788,7 +788,7 @@
     "tokens": 802,
     "semantic_similarity": 0.7493,
     "answer_relevancy": 1.0,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -824,7 +824,7 @@
     "tokens": 659,
     "semantic_similarity": 0.547,
     "answer_relevancy": 0.8884,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -860,7 +860,7 @@
     "tokens": 636,
     "semantic_similarity": 0.7577,
     "answer_relevancy": 0.9759,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.33,
     "metric_errors": {}
   },
   {
@@ -872,7 +872,7 @@
     "tokens": 605,
     "semantic_similarity": 0.4759,
     "answer_relevancy": 0.0,
-    "factual_correctness": 0.2,
+    "factual_correctness": 0.18,
     "metric_errors": {}
   },
   {
@@ -896,7 +896,7 @@
     "tokens": 558,
     "semantic_similarity": 0.5869,
     "answer_relevancy": 0.9365,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.44,
     "metric_errors": {}
   },
   {
@@ -910,5 +910,309 @@
     "answer_relevancy": 0.0,
     "factual_correctness": 0.0,
     "metric_errors": {}
+  },
+  {
+    "question": "If your aircraft is on the water and you have another aircraft or a vessel on your right, what must you do?",
+    "ground_truth": "You must give way.",
+    "section": "602.20",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.20.html",
+    "answer": "# If Your Aircraft Is On The Water And You Have Another Aircraft Or A Vessel On Your Right, What Must You Do?\n\nAccording to Canadian Aviation Regulations (CARs), section 6.3 of the Civil Aviation Safety Analysis and Reporting System (CASSARS) states that when an aircraft is on water and another aircraft or a vessel is on your right, you must:\n\n* Maintain a safe distance from the other aircraft or vessel\n* Keep the other aircraft or vessel at least 100 meters behind your own aircraft\n\nThis is to ensure safety in case of an emergency or if you need to take evasive action.\n\n# References:\n* CASSARS, Section 6.3: Aircraft Separation on Water (PDF)\n* CARs, Regulation 91.155: Aircraft Separation on Water (HTML)",
+    "tokens": 544,
+    "semantic_similarity": 0.3492,
+    "answer_relevancy": 0.9827,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0.2,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "When your aircraft on the water is overtaking another aircraft or a vessel, how must you alter your heading?",
+    "ground_truth": "Alter your heading to keep well clear of the other aircraft or the vessel.",
+    "section": "602.20",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.20.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe relevant section of Canadian Aviation Regulations (CARs) that addresses this scenario is [PAR. 61.210](https://www.tc-135-2018-en.pdf), which states:\n\n\"An aircraft must not change its heading to avoid an obstacle on the water.\"\n\nThis regulation emphasizes the importance of maintaining situational awareness and avoiding obstacles, including those on the water.\n\nHowever, it's worth noting that [PAR. 61.210(1)(a)] provides additional guidance by stating that an aircraft may \"change direction\" if necessary to avoid an obstacle on the water, but only if:\n\n* The change in heading is not greater than 30°\n* The aircraft is not exceeding its maximum certified speed\n* The aircraft is not exceeding its maximum certified altitude\n\nIf these conditions are met, [PAR. 61.210(1)(b)] allows for a change in heading to avoid an obstacle on the water.\n\nIt's also worth noting that [PAR. 61.210(2)] provides guidance on how to determine if an obstacle is within sight:\n\n\"...an aircraft must be able to see an obstacle on the water, or have reasonable grounds to believe it is present.\"\n\nIf an aircraft cannot see an obstacle on the water, it may not be necessary to change heading to avoid it.\n\nSources:\n- [PAR. 61.210](https://www.tc-135-2018-en.pdf)\n- [PAR. 61.210(1)(a)]",
+    "tokens": 692,
+    "semantic_similarity": 0.5318,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "As a private pilot, may you fly lower than the normal minimums during a police operation, and what limits apply?",
+    "ground_truth": "Yes, but only if the aircraft is operated at altitudes and distances no less than necessary for the operation, without creating a hazard to persons or property on the surface, and the flight is for a police operation conducted in the service of a police authority.",
+    "section": "602.15",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.15.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Canadian Aviation Regulations (CARs) do not explicitly state whether private pilots can fly lower than normal minimums during a police operation. However, section 6.01 of the CAR states that \"a pilot-in-command may deviate from the prescribed altitude or route when necessary for safe operation.\" This suggests that there are limits to what is considered safe and reasonable.\n\nSection 6.02 of the CAR states that \"a pilot-in-command shall not deviate from the prescribed altitude or route unless it is necessary for safe operation, and the deviation will not cause a risk to persons or property.\"\n\nIt's also worth noting that section 7.01 of the CAR states that \"a police officer may direct a pilot-in-command to fly at an altitude that is lower than normal minimums if it is necessary to ensure public safety.\" However, this does not necessarily mean that private pilots can deviate from normal minimums during a police operation.\n\nIn general, the Canadian Transport Act (CTA) and the Air Traffic Control Regulations also provide guidance on flying in emergency situations. While these regulations do not specifically address police operations, they do emphasize the importance of prioritizing public safety.\n\nIt's worth noting that the Federal Aviation Administration (FAA) has similar guidelines for pilots operating in law enforcement or other emergency situations. However, these guidelines are specific to the FAA and may not be directly applicable to Canadian aviation regulations.\n\nIn summary, while there is no explicit prohibition on flying lower than normal minimums during a police operation, there are limits to what is considered safe and reasonable. Private pilots should exercise caution and follow established protocols when operating in emergency situations.",
+    "tokens": 723,
+    "semantic_similarity": 0.6388,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.22,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "Can you fly below the normal minimums for flight training, and under what conditions?",
+    "ground_truth": "Yes, to the extent necessary for the operation, if the aircraft is operated without creating a hazard to persons or property on the surface and the flight is flight training conducted by or under the supervision of a qualified flight instructor.",
+    "section": "602.15",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.15.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Canadian Aviation Regulations (CARs) specify that pilots must meet certain minimum standards for flight training. According to Section 7 of CAR 501, a pilot-in-command may not fly an aircraft below the normal minimums for flight training unless:\n\n* The aircraft is being used for training purposes and the pilot-in-command has received specialized instruction in the specific type of aircraft.\n* The pilot-in-command has been certified as a flight instructor (FI) or a designated instructor (DI), and is flying under the supervision of an FI or DI.\n\nHowever, it's essential to note that these minimums are not absolute and can be adjusted based on various conditions. For example, Section 7 also states that pilots may fly below normal minimums for training in certain situations, such as:\n\n* When the aircraft is being used for training purposes.\n* When the pilot-in-command has received specialized instruction in the specific type of aircraft.\n\nAdditionally, Section 8 of CAR 501 specifies that a flight plan must be prepared and executed to ensure safe flight operations. The flight plan should include information about the route, altitude, and other relevant details.\n\nIt's also worth noting that the Transport Canada Aviation Regulations (TCARs) provide more detailed guidance on flying below normal minimums for training. According to Section 7 of TCAR 501, a pilot-in-command may not fly an aircraft below the normal minimums for flight training unless:\n\n* The aircraft is being used for training purposes and the pilot-in-command has received specialized instruction in the specific type of aircraft.\n* The pilot-in-command has been certified as a flight instructor (FI) or a designated instructor (DI), and is flying under the supervision of an FI or DI.\n\nIn summary, while I don't have enough information to provide a definitive answer, it's clear that pilots must meet certain conditions before flying below normal minimums for training.",
+    "tokens": 765,
+    "semantic_similarity": 0.5746,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.22,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "May a Canadian VFR private pilot fly an aircraft so close to another aircraft that there is a risk of collision?",
+    "ground_truth": "No. A person must not operate an aircraft in such proximity to another aircraft as to create a risk of collision.",
+    "section": "602.21",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.21.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe relevant section from Transport Canada's Canadian Aviation Regulations (CARs) is [Part 91.155](https://www.tc.gc.ca/eng/air-transport/canadian-aeronautics-regulations/91-155.htm), which states:\n\n\"An aircraft may be flown so close to another aircraft that there is a risk of collision if the pilot, in the exercise of reasonable care, determines that it is necessary to do so.\"\n\nThis section does not provide specific guidance on when an aircraft can be flown \"so close\" as to pose a risk of collision. However, it emphasizes the importance of exercising reasonable care and considering factors such as visibility, air traffic control instructions, and the pilot's judgment.\n\nIt is also worth noting that [Part 91.155(1)(a)] states that an aircraft may not be flown so close to another aircraft \"that there is a risk of collision unless—\n(a) The pilot has been advised by air traffic control that it is safe to do so; or\n(b) The pilot determines, in the exercise of reasonable care, that it is necessary to do so.\"\n\nThis section suggests that the decision to fly an aircraft close to another one poses a risk of collision only if there are specific circumstances (advice from air traffic control and/or determining necessity) that mitigate this risk.",
+    "tokens": 662,
+    "semantic_similarity": 0.6595,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.2,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "What does CAR 602.21 prohibit when operating an aircraft near other aircraft?",
+    "ground_truth": "It prohibits operating an aircraft close enough to another aircraft to create a risk of collision.",
+    "section": "602.21",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.21.html",
+    "answer": "# Operating an Aircraft Near Other Aircraft\nWhen operating an aircraft near other aircraft, the Canadian Aviation Regulations (CARs) prohibit the following:\n\n*   **Excessive noise**: The noise level from an aircraft should not exceed 85 decibels at a distance of 1 kilometer from another aircraft. (CAR 602.21(2))\n*   **Interference with navigation**: Aircraft should not interfere with each other's navigation systems, including radar and communication systems. (CAR 602.21(3))\n*   **Collision avoidance maneuvers**: Aircraft should be prepared to perform collision avoidance maneuvers in the event of an emergency or unexpected situation. (CAR 602.21(4))\n\nNote: The above information is based on CARs 602.21, which deals with noise and interference from aircraft.",
+    "tokens": 534,
+    "semantic_similarity": 0.6454,
+    "answer_relevancy": 0.8776,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "May a Canadian VFR private pilot drop an object from an aircraft in flight if doing so would create a hazard to people or property on the surface?",
+    "ground_truth": "No. A person may not create a hazard to persons or property on the surface by dropping an object from an aircraft in flight.",
+    "section": "602.23",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.23.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe relevant section is [PARS 91.191](https://www.tcs.gc.ca/eng/aviation/regs/parsecodes/parsecode_091191), which states that a pilot-in-command may intentionally release an object from an aircraft in flight if doing so would not create a hazard to people or property on the surface.\n\nHowever, it is worth noting that [PARS 91.193](https://www.tcs.gc.ca/eng/aviation/regs/parsecodes/parsecode_091193) also provides guidance on intentionally releasing an object from an aircraft in flight, stating that a pilot-in-command may intentionally release an object if doing so would not create a hazard to people or property on the surface.\n\nTherefore, based on these relevant sections of the Canadian Aviation Regulations, it appears that a Canadian VFR private pilot may drop an object from an aircraft in flight if doing so would not create a hazard to people or property on the surface.",
+    "tokens": 600,
+    "semantic_similarity": 0.6486,
+    "answer_relevancy": 0.915,
+    "factual_correctness": 0.4,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "What is prohibited under CAR 602.23 when an object is dropped from an aircraft in flight?",
+    "ground_truth": "Creating a hazard to persons or property on the surface is prohibited.",
+    "section": "602.23",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.23.html",
+    "answer": "**Prohibited Under CAR 602.23 When an Object Is Dropped from an Aircraft in Flight?**\n\n*   According to Canadian Aviation Regulations (CARs) Section 602.23, when an object is dropped from an aircraft in flight, it is prohibited to:\n    *   Attach any device or equipment that could interfere with the safe operation of the aircraft\n    *   Install any device or equipment on the aircraft that could be used for malicious purposes\n\n**Limitations and Exceptions:**\n\n*   The regulation does not specify what constitutes a \"device\" or \"equipment\" that could be used for malicious purposes. This means that pilots should exercise caution when installing any devices or equipment on their aircraft.\n*   The regulation also does not address the installation of devices or equipment on other objects, such as drones or personal items.\n\n**Sources:**\n\n*   Canadian Aviation Regulations (CARs) Section 602.23\n*   [Transport Canada - Aviation Regulations](https://www.tc.gc.ca/en/aviation/regs/index-e.html#car-602-23)",
+    "tokens": 592,
+    "semantic_similarity": 0.5039,
+    "answer_relevancy": 0.9537,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "May a Canadian VFR private pilot operate an aeroplane to tow an object if the aeroplane is not equipped with a tow hook and release control mechanism?",
+    "ground_truth": "No. Towing an object is prohibited unless the aeroplane is equipped with both a tow hook and a release control mechanism.",
+    "section": "602.22",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.22.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Transport Canada Canadian Aviation Regulations (CARs) do not explicitly permit a private pilot to operate an aeroplane for towing without a tow hook and release control mechanism. However, section 6.3 of the CARs states that a pilot-in-command may operate an aircraft for towing if they have received training in towing and are familiar with the equipment used.\n\nThe Federal Aviation Administration (FAA) regulations also permit private pilots to tow objects under certain conditions, but only if they have received specific training and are equipped with the necessary equipment. The FAA's Part 103 section 1.17 states that a pilot-in-command may operate an aircraft for towing if they have received training in towing and are familiar with the equipment used.\n\nHowever, it is essential to note that the CARs and FAA regulations do not provide a clear answer to this specific question. A more detailed analysis of the regulations would be required to determine whether a private pilot can operate an aeroplane for towing without a tow hook and release control mechanism.\n\nSources:\n- Transport Canada Canadian Aviation Regulations (CARs), Section 6.3\n- Federal Aviation Administration (FAA) Part 103, Section 1.17",
+    "tokens": 642,
+    "semantic_similarity": 0.7105,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.22,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "What equipment must an aeroplane have before it may be operated while towing an object under this provision?",
+    "ground_truth": "It must be equipped with a tow hook and a release control mechanism.",
+    "section": "602.22",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.22.html",
+    "answer": "According to Canadian Aviation Regulations (CARs) 61.151(1), an aircraft must have a secondary flight display system (SFDS) or a primary flight display system (PFD) that meets the requirements of CARs 61.151.\n\nThe SFDS or PFD must be capable of displaying:\n\n* The location and altitude of the towing object\n* The direction of the towing force\n* The rate of change of the towing force\n\nIt is also recommended to have a backup system, such as an auxiliary flight display system (AFDS), that can provide additional information in case the primary system fails.\n\nI don't have enough information in the available regulations to answer this question.",
+    "tokens": 515,
+    "semantic_similarity": 0.4152,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "For a Canadian VFR private pilot, when is formation flight permitted by pre-arrangement between pilots-in-command?",
+    "ground_truth": "Formation flight is permitted only if it is pre-arranged between the pilots-in-command of the aircraft.",
+    "section": "602.24",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.24.html",
+    "answer": "# Formation Flight Permitted by Pre-arrangement Between Pilots-in-Command for Canadian VFR Private Pilots\nWhen a Canadian VFR private pilot wants to conduct formation flight with another pilot-in-command, the pre-arranged agreement must be in writing and signed by both parties. This is specified in Section 7.10 of the **Canadian Aviation Regulations, Part 91**.\n\n## General Requirements\n\n*   The pilots must agree on a specific route and altitude.\n*   They must also agree on a meeting point and time for the formation flight.\n*   The pre-arranged agreement must be signed by both parties.\n\n## Exceptions\n\n*   If the weather is not suitable for formation flying, the pilots may still conduct it under **Section 7.10** of the Part 91 regulations.\n*   In some cases, a pilot-in-command may waive the requirement to have a pre-arranged agreement if they feel it would be safe and prudent to do so.\n\n## Limitations\n\n*   The pre-arranged agreement must be in writing and signed by both parties.\n*   It is not necessary for the agreement to include specific details such as altitude, route, or meeting point.",
+    "tokens": 622,
+    "semantic_similarity": 0.6724,
+    "answer_relevancy": 0.8858,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "If a formation flight is conducted within a control zone, who must be included in the pre-arrangement?",
+    "ground_truth": "Within a control zone, the pre-arrangement must be between the pilots-in-command and the appropriate air traffic control unit.",
+    "section": "602.24",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.24.html",
+    "answer": "# If a formation flight is conducted within a control zone, who must be included in the pre-arrangement?\n\n## Step 1: Understand the context of the question\nThe question pertains to aviation regulations, specifically regarding the requirements for conducting a formation flight within a control zone.\n\n## Step 2: Identify relevant sections of Canadian Aviation Regulations (CARs)\nSection 17.5 of CARs states that when flying in a controlled airspace area, a pre-arrangement is required for formations or other maneuvers that may pose a hazard to aircraft or persons on the ground.\n\n## Step 3: Determine who must be included in the pre-arrangement\nAccording to Section 17.5 of CARs, the person(s) responsible for flying the formation flight and any other individuals involved in the maneuver must be included in the pre-arrangement.\n\n## Step 4: Consider exceptions or limitations\nThere are no specific exceptions mentioned in the question that would alter the requirement for including the pilot(s) in the pre-arrangement. However, it's worth noting that Section 17.5 of CARs does not explicitly mention who must be included in the pre-arrangement.\n\n## Step 5: Provide a conclusion based on available information\nBased on the relevant sections of Canadian Aviation Regulations (CARs), the person(s) responsible for flying the formation flight and any other individuals involved in the maneuver must be included in the pre-arrangement.",
+    "tokens": 670,
+    "semantic_similarity": 0.6037,
+    "answer_relevancy": 0.9524,
+    "factual_correctness": 0.33,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "As a Canadian VFR private pilot carrying a passenger, what minimum aerobatic experience must the pilot-in-command have before conducting aerobatic manoeuvres?",
+    "ground_truth": "The pilot-in-command must have either at least 10 hours of dual flight instruction in conducting aerobatic manoeuvres or 20 hours conducting aerobatic manoeuvres.",
+    "section": "602.28",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.28.html",
+    "answer": "The question is based on Transport Canada Civil Aviation Regulations (TCAR) Section 3.10(1), which states that a pilot-in-command carrying a passenger must be at least 35 hours of flight experience for VFR flight training and have completed at least one aerobatic manoeuvre.\n\nHowever, the question does not provide any untrusted reference data to support this answer. Therefore, I will rely on the available regulations.\n\nAs per TCAR Section 3.10(1), a pilot-in-command carrying a passenger must be at least 35 hours of flight experience for VFR flight training and have completed at least one aerobatic manoeuvre.\n\nI don't have enough information in the available regulations to answer this question, but I can confirm that the required minimum experience is indeed 35 hours.",
+    "tokens": 549,
+    "semantic_similarity": 0.665,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "If a passenger is on board, what recent aerobatic experience must the pilot-in-command have before conducting aerobatic manoeuvres?",
+    "ground_truth": "The pilot-in-command must have engaged in at least one hour of conducting aerobatic manoeuvres in the preceding six months.",
+    "section": "602.28",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.28.html",
+    "answer": "According to Canadian Aviation Regulations (CARs) Section 7.5 of the Civil Aviation Safety and Marking Regulations, a pilot-in-command must have at least 500 hours of flight experience, including:\n\n* At least 100 hours of aerobatic flight experience\n* At least 50 hours of night flying experience\n\nHowever, it is not necessary to meet these specific requirements if the passenger has sufficient training or experience in aerobatics. The key phrase here is \"sufficient training or experience\", which suggests that the pilot-in-command should have some level of proficiency in aerobatic maneuvers, but may not necessarily need to meet the exact hour requirement.\n\nIt's also worth noting that CAR 7.5 specifically states that a pilot-in-command must be able to conduct aerobatic manoeuvres safely and effectively, rather than just having the necessary experience or training.",
+    "tokens": 558,
+    "semantic_similarity": 0.6938,
+    "answer_relevancy": 0.7911,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "As a private pilot flying VFR, may I fly at 260 knots indicated airspeed if I am below 10,000 feet ASL and do not have any special authorization or certificate?",
+    "ground_truth": "No. Subsection 602.32(1)(a) prohibits operating at more than 250 knots indicated airspeed below 10,000 feet ASL, unless subsection (2) applies.",
+    "section": "602.32",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.32.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe relevant sections are:\n\n* Part 91 of the Canadian Aviation Regulations, Section 91.155(1) states that an instrument flight rules (IFR) pilot may not fly at any speed below 125 knots indicated airspeed unless they have received special authorization or certification.\n* Part 61 of the Canadian Aviation Regulations, Section 61.55(2) states that a private pilot flying VFR is allowed to fly at any speed below 125 knots indicated airspeed as long as they are not below 10,000 feet above sea level.\n\nSince you are below 10,000 feet ASL and do not have any special authorization or certificate, you may not be eligible to fly at 260 knots indicated airspeed.",
+    "tokens": 557,
+    "semantic_similarity": 0.675,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.29,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "If my aircraft’s minimum safe airspeed for the current configuration is higher than the speed limit in subsection (1), what speed must I use?",
+    "ground_truth": "You must operate at the minimum safe airspeed.",
+    "section": "602.32",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.32.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe relevant section is [TS 135.211](https://tc.gc.ca/en/publications/aviation/2018/135-211), which states that if the minimum safe airspeed for the current configuration is higher than the speed limit, you must use a speed lower than or equal to the minimum safe airspeed.\n\nHowever, it's worth noting that [TS 135.210](https://tc.gc.ca/en/publications/aviation/2018/135-210) also provides guidance on this topic, stating that if the aircraft is not equipped with an autopilot system, you must use a speed lower than or equal to the minimum safe airspeed.\n\nSources:\n* [TS 135.211](https://tc.gc.ca/en/publications/aviation/2018/135-211)\n* [TS 135.210](https://tc.gc.ca/en/publications/aviation/2018/135-210)",
+    "tokens": 591,
+    "semantic_similarity": 0.608,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "May a Canadian VFR private pilot conduct aerobatic manoeuvres below 2,000 feet AGL?",
+    "ground_truth": "No, not unless the flight is conducted in accordance with a special flight operations certificate issued under section 603.02 or 603.67.",
+    "section": "602.27",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.27.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe relevant section is [VFR Operations] in Transport Canada Canadian Aviation Regulations (CARs), Part 91, Subpart F. According to Section 91(1) of CARs, a VFR pilot may conduct aerobatic manoeuvres at any altitude, but below 2,000 feet AGL only if they are conducted for training purposes and with the approval of Transport Canada.\n\nHowever, it is worth noting that [Aerobatic Manoeuvres] in Part 91 of CARs also requires that such manoeuvres be conducted under the supervision of a certified flight instructor (CFI) who has been authorized to conduct aerobatic training. Therefore, even if the pilot is conducting the manoeuvre below 2,000 feet AGL, they must still have the CFI's approval.\n\nSources:\n- Transport Canada Canadian Aviation Regulations (CARs), Part 91\n- [Aerobatic Manoeuvres] in Part 91 of CARs",
+    "tokens": 593,
+    "semantic_similarity": 0.5006,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "Can aerobatic manoeuvres be flown in Class D Control Zones without prior co-ordination with air traffic control?",
+    "ground_truth": "No. Aerobatic manoeuvres in Class D Control Zones require prior co-ordination between the pilot-in-command and the air traffic control unit that provides air traffic control service in that airspace.",
+    "section": "602.27",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.27.html",
+    "answer": "I don't have enough information in the available regulations to answer this question.\n\nThe Canadian Aviation Regulations (CARs) do not explicitly state whether aerobatic manoeuvres can be flown in Class D Control Zones without prior co-ordination with air traffic control. However, section 17 of CAR 61, which governs aerobatic flight, does provide some guidance on the requirements for such flights.\n\nAccording to CAR 61, section 17(1), an aerobatic flight is defined as a flight that involves a high degree of complexity and risk, and requires exceptional skill and experience. Section 17(2) states that an aerobatic flight must be flown in accordance with the Air Traffic Control (ATC) instructions received from ATC.\n\nSection 17(3) also provides that an aerobatic flight may not be flown without prior co-ordination with ATC, unless it is a Category A aerobatic flight or a Category B aerobatic flight. However, section 17(4) states that if the flight is a Category C aerobatic flight, it can be flown in Class D Control Zones without prior co-ordination with ATC.\n\nIt's worth noting that the Air Traffic Control (ATC) instructions received from ATC must be clear and unambiguous, and must take into account the specific characteristics of the flight. If the ATC instructions are unclear or incomplete, it may not be possible to fly an aerobatic manoeuvre without prior co-ordination with ATC.\n\nIn summary, while there is no explicit prohibition on flying aerobatic manoeuvres in Class D Control Zones without prior co-ordination with ATC, section 17 of CAR 61 provides some guidance on the requirements for such flights. It appears that it may be possible to fly an aerobatic manoeuvre in a Class D Control Zone without prior co-ordination with ATC if it is a Category C aerobatic flight or if the ATC instructions are clear and unambiguous.\n\nSources:\n- CAR 61, section 17\n- CAR 61, section 17(1)\n- CAR 61, section 17(2)\n- CAR 61, section 17(3)\n- CAR 61, section 17(4)",
+    "tokens": 841,
+    "semantic_similarity": 0.7624,
+    "answer_relevancy": 0.0,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
+  },
+  {
+    "question": "Before take-off from an aerodrome while operating in the standard pressure region, what should a pilot set the altimeter to if the aerodrome altimeter setting cannot be obtained?",
+    "ground_truth": "Set it to the elevation of the aerodrome.",
+    "section": "602.36",
+    "source_url": "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.36.html",
+    "answer": "# Altitude Setting Before Take-off\nIn the standard pressure region, before take-off from an aerodrome, a pilot should set the altimeter to **1,000 feet** (305.5 meters) above ground level (AGL). This is because the standard pressure altitude setting is typically 1,000 feet AGL.\n\n## Sources:\n- Transport Canada: Canadian Aviation Regulations, Part 61, Section 61.151\n- Transport Canada: Canadian Aviation Regulations, Part 61, Section 61.152",
+    "tokens": 498,
+    "semantic_similarity": 0.5478,
+    "answer_relevancy": 0.8472,
+    "factual_correctness": 0.0,
+    "metric_errors": {},
+    "generation_settings": {
+      "temperature": 0,
+      "max_tokens": 1024
+    }
   }
 ]

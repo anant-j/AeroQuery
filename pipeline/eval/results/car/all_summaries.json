@@ -2,7 +2,7 @@
   {
     "model": "gpt-5.4-nano",
     "run": {
-      "protocol_version": 8,
+      "protocol_version": 9,
       "benchmark": {
         "schema_version": 1,
         "source": "TC_CAR",
@@ -33,7 +33,31 @@
       "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
       "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
       "run_tag": "default",
-      "provisional": true
+      "provisional": true,
+      "reused_answers": {
+        "source_status": "consolidated",
+        "source_protocol_version": 8,
+        "files": {
+          "gpt-5.4-nano/bare_results.json": "4789bdf5203c40e516ade22936ab4589b41c9b696f695c999481f7bd5ae85375",
+          "gpt-5.4-nano/rag_results.json": "0fee32e42613e69a5cf58319b0a180e974d69bd91e0da5b255ed4f21796861ce",
+          "gpt-5.4-nano/rag_rerank_results.json": "5f89ff59e5d0c356c24c5e983f3e2f465dd912cbccd05b13268c22508e2ca48f",
+          "gpt-5.4-mini/bare_results.json": "a80dfcec8186b021de012ef6f0fed798e3df7dc7920ff7f75463eda3e4c9f615",
+          "gpt-5.4-mini/rag_results.json": "4dfceab9fb1576ced6f2613e4f4719911a5974912178f8fc50cf07338ea9230b",
+          "gpt-5.4-mini/rag_rerank_results.json": "aed3d8a40ba7a338271d819f98b1c5bff25075f9dc56b58326929527c7aeb808",
+          "gpt-5.4/bare_results.json": "8420633210cc6a7d7bcbc6413e6edb44b1a0b77e253bca26107584c0d7b42357",
+          "gpt-5.4/rag_results.json": "2cf5d40ba65f29fb0effe112b90013870443327212b6c4f63b1ad4a0ad7f2c22",
+          "gpt-5.4/rag_rerank_results.json": "064071a542a9a9e62d36da6e759bb955ceb3192b9074ba4561c9f45689774991",
+          "llama3.2-1b/bare_results.json": "6b048687a281f9864e156280c9a52534de2c23a83be953657e7e9da114cddcaa",
+          "llama3.2-1b/rag_results.json": "229c203bbe692ca7bd221ccdd97b6bf1d5290ae7ca23b33bf7470601aac31e3a",
+          "llama3.2-1b/rag_rerank_results.json": "bc867e7274d9cb084b4b037c98149c7d020cb9c9bfcd86e08c10b9db8688a5f1",
+          "retrieval_cache.json": "44324e46d528b3476867dbab4f40917df03fef9f0f79fdc9a47b7e5e236ed109"
+        }
+      },
+      "missing_local_generation": {
+        "max_output_tokens": 1024,
+        "initial_temperature": 0,
+        "fallback_temperature": 0.2
+      }
     },
     "num_questions": 95,
     "bare": {
@@ -48,11 +72,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.289,
-        "standard_deviation": 0.2821,
+        "mean": 0.378,
+        "standard_deviation": 0.2877,
         "ci95": [
-          0.2354,
-          0.3474
+          0.3203,
+          0.4352
         ]
       },
       "semantic_similarity": {
@@ -104,11 +128,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.466,
-        "standard_deviation": 0.2906,
+        "mean": 0.532,
+        "standard_deviation": 0.2839,
         "ci95": [
-          0.408,
-          0.5237
+          0.4754,
+          0.5885
         ]
       },
       "semantic_similarity": {
@@ -160,11 +184,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.497,
-        "standard_deviation": 0.2862,
+        "mean": 0.533,
+        "standard_deviation": 0.2744,
         "ci95": [
-          0.4412,
-          0.5581
+          0.4791,
+          0.5889
         ]
       },
       "semantic_similarity": {
@@ -190,12 +214,12 @@
         },
         "factual_correctness": {
           "n": 95,
-          "standard_deviation": 0.3528,
+          "standard_deviation": 0.3905,
           "ci95": [
-            0.1056,
-            0.2469
+            0.0739,
+            0.2306
           ],
-          "mean_difference": 0.176
+          "mean_difference": 0.153
         },
         "semantic_similarity": {
           "n": 95,
@@ -246,12 +270,12 @@
         },
         "factual_correctness": {
           "n": 95,
-          "standard_deviation": 0.2685,
+          "standard_deviation": 0.3167,
           "ci95": [
-            -0.0265,
-            0.0866
+            -0.0598,
+            0.0665
           ],
-          "mean_difference": 0.031
+          "mean_difference": 0.002
         },
         "semantic_similarity": {
           "n": 95,
@@ -268,7 +292,7 @@
   {
     "model": "gpt-5.4-mini",
     "run": {
-      "protocol_version": 8,
+      "protocol_version": 9,
       "benchmark": {
         "schema_version": 1,
         "source": "TC_CAR",
@@ -299,7 +323,31 @@
       "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
       "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
       "run_tag": "default",
-      "provisional": true
+      "provisional": true,
+      "reused_answers": {
+        "source_status": "consolidated",
+        "source_protocol_version": 8,
+        "files": {
+          "gpt-5.4-nano/bare_results.json": "4789bdf5203c40e516ade22936ab4589b41c9b696f695c999481f7bd5ae85375",
+          "gpt-5.4-nano/rag_results.json": "0fee32e42613e69a5cf58319b0a180e974d69bd91e0da5b255ed4f21796861ce",
+          "gpt-5.4-nano/rag_rerank_results.json": "5f89ff59e5d0c356c24c5e983f3e2f465dd912cbccd05b13268c22508e2ca48f",
+          "gpt-5.4-mini/bare_results.json": "a80dfcec8186b021de012ef6f0fed798e3df7dc7920ff7f75463eda3e4c9f615",
+          "gpt-5.4-mini/rag_results.json": "4dfceab9fb1576ced6f2613e4f4719911a5974912178f8fc50cf07338ea9230b",
+          "gpt-5.4-mini/rag_rerank_results.json": "aed3d8a40ba7a338271d819f98b1c5bff25075f9dc56b58326929527c7aeb808",
+          "gpt-5.4/bare_results.json": "8420633210cc6a7d7bcbc6413e6edb44b1a0b77e253bca26107584c0d7b42357",
+          "gpt-5.4/rag_results.json": "2cf5d40ba65f29fb0effe112b90013870443327212b6c4f63b1ad4a0ad7f2c22",
+          "gpt-5.4/rag_rerank_results.json": "064071a542a9a9e62d36da6e759bb955ceb3192b9074ba4561c9f45689774991",
+          "llama3.2-1b/bare_results.json": "6b048687a281f9864e156280c9a52534de2c23a83be953657e7e9da114cddcaa",
+          "llama3.2-1b/rag_results.json": "229c203bbe692ca7bd221ccdd97b6bf1d5290ae7ca23b33bf7470601aac31e3a",
+          "llama3.2-1b/rag_rerank_results.json": "bc867e7274d9cb084b4b037c98149c7d020cb9c9bfcd86e08c10b9db8688a5f1",
+          "retrieval_cache.json": "44324e46d528b3476867dbab4f40917df03fef9f0f79fdc9a47b7e5e236ed109"
+        }
+      },
+      "missing_local_generation": {
+        "max_output_tokens": 1024,
+        "initial_temperature": 0,
+        "fallback_temperature": 0.2
+      }
     },
     "num_questions": 95,
     "bare": {
@@ -314,11 +362,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.375,
-        "standard_deviation": 0.3401,
+        "mean": 0.464,
+        "standard_deviation": 0.3068,
         "ci95": [
-          0.3066,
-          0.4404
+          0.4033,
+          0.5241
         ]
       },
       "semantic_similarity": {
@@ -370,11 +418,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.48,
-        "standard_deviation": 0.297,
+        "mean": 0.604,
+        "standard_deviation": 0.2441,
         "ci95": [
-          0.4192,
-          0.5383
+          0.5518,
+          0.6521
         ]
       },
       "semantic_similarity": {
@@ -426,11 +474,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.486,
-        "standard_deviation": 0.3101,
+        "mean": 0.597,
+        "standard_deviation": 0.228,
         "ci95": [
-          0.4249,
-          0.5494
+          0.5511,
+          0.6444
         ]
       },
       "semantic_similarity": {
@@ -456,12 +504,12 @@
         },
         "factual_correctness": {
           "n": 95,
-          "standard_deviation": 0.328,
+          "standard_deviation": 0.3561,
           "ci95": [
-            0.0407,
-            0.1709
+            0.0655,
+            0.2132
           ],
-          "mean_difference": 0.105
+          "mean_difference": 0.14
         },
         "semantic_similarity": {
           "n": 95,
@@ -512,12 +560,12 @@
         },
         "factual_correctness": {
           "n": 95,
-          "standard_deviation": 0.2795,
+          "standard_deviation": 0.2344,
           "ci95": [
-            -0.0498,
-            0.0611
+            -0.0573,
+            0.0383
           ],
-          "mean_difference": 0.006
+          "mean_difference": -0.007
         },
         "semantic_similarity": {
           "n": 95,
@@ -534,7 +582,7 @@
   {
     "model": "gpt-5.4",
     "run": {
-      "protocol_version": 8,
+      "protocol_version": 9,
       "benchmark": {
         "schema_version": 1,
         "source": "TC_CAR",
@@ -565,7 +613,31 @@
       "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
       "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
       "run_tag": "default",
-      "provisional": true
+      "provisional": true,
+      "reused_answers": {
+        "source_status": "consolidated",
+        "source_protocol_version": 8,
+        "files": {
+          "gpt-5.4-nano/bare_results.json": "4789bdf5203c40e516ade22936ab4589b41c9b696f695c999481f7bd5ae85375",
+          "gpt-5.4-nano/rag_results.json": "0fee32e42613e69a5cf58319b0a180e974d69bd91e0da5b255ed4f21796861ce",
+          "gpt-5.4-nano/rag_rerank_results.json": "5f89ff59e5d0c356c24c5e983f3e2f465dd912cbccd05b13268c22508e2ca48f",
+          "gpt-5.4-mini/bare_results.json": "a80dfcec8186b021de012ef6f0fed798e3df7dc7920ff7f75463eda3e4c9f615",
+          "gpt-5.4-mini/rag_results.json": "4dfceab9fb1576ced6f2613e4f4719911a5974912178f8fc50cf07338ea9230b",
+          "gpt-5.4-mini/rag_rerank_results.json": "aed3d8a40ba7a338271d819f98b1c5bff25075f9dc56b58326929527c7aeb808",
+          "gpt-5.4/bare_results.json": "8420633210cc6a7d7bcbc6413e6edb44b1a0b77e253bca26107584c0d7b42357",
+          "gpt-5.4/rag_results.json": "2cf5d40ba65f29fb0effe112b90013870443327212b6c4f63b1ad4a0ad7f2c22",
+          "gpt-5.4/rag_rerank_results.json": "064071a542a9a9e62d36da6e759bb955ceb3192b9074ba4561c9f45689774991",
+          "llama3.2-1b/bare_results.json": "6b048687a281f9864e156280c9a52534de2c23a83be953657e7e9da114cddcaa",
+          "llama3.2-1b/rag_results.json": "229c203bbe692ca7bd221ccdd97b6bf1d5290ae7ca23b33bf7470601aac31e3a",
+          "llama3.2-1b/rag_rerank_results.json": "bc867e7274d9cb084b4b037c98149c7d020cb9c9bfcd86e08c10b9db8688a5f1",
+          "retrieval_cache.json": "44324e46d528b3476867dbab4f40917df03fef9f0f79fdc9a47b7e5e236ed109"
+        }
+      },
+      "missing_local_generation": {
+        "max_output_tokens": 1024,
+        "initial_temperature": 0,
+        "fallback_temperature": 0.2
+      }
     },
     "num_questions": 95,
     "bare": {
@@ -580,11 +652,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.309,
-        "standard_deviation": 0.2697,
+        "mean": 0.447,
+        "standard_deviation": 0.2822,
         "ci95": [
-          0.2589,
-          0.3656
+          0.3884,
+          0.5057
         ]
       },
       "semantic_similarity": {
@@ -636,11 +708,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.4,
-        "standard_deviation": 0.2839,
+        "mean": 0.489,
+        "standard_deviation": 0.2263,
         "ci95": [
-          0.3417,
-          0.4596
+          0.4443,
+          0.5373
         ]
       },
       "semantic_similarity": {
@@ -692,11 +764,11 @@
       },
       "factual_correctness": {
         "n": 95,
-        "mean": 0.409,
-        "standard_deviation": 0.2705,
+        "mean": 0.497,
+        "standard_deviation": 0.2152,
         "ci95": [
-          0.3501,
-          0.4627
+          0.4545,
+          0.5421
         ]
       },
       "semantic_similarity": {
@@ -722,12 +794,12 @@
         },
         "factual_correctness": {
           "n": 95,
-          "standard_deviation": 0.3261,
+          "standard_deviation": 0.3245,
           "ci95": [
-            0.0261,
-            0.1567
+            -0.0213,
+            0.1076
           ],
-          "mean_difference": 0.092
+          "mean_difference": 0.042
         },
         "semantic_similarity": {
           "n": 95,
@@ -778,10 +850,10 @@
         },
         "factual_correctness": {
           "n": 95,
-          "standard_deviation": 0.2562,
+          "standard_deviation": 0.1994,
           "ci95": [
-            -0.0417,
-            0.0581
+            -0.0324,
+            0.0472
           ],
           "mean_difference": 0.008
         },
@@ -793,6 +865,296 @@
             0.01
           ],
           "mean_difference": 0.005
+        }
+      }
+    }
+  },
+  {
+    "model": "llama3.2:1b",
+    "run": {
+      "protocol_version": 9,
+      "benchmark": {
+        "schema_version": 1,
+        "source": "TC_CAR",
+        "xml_sha256": "7e762abaf0c887b76db4efc828b72d2c31327e0d203b8f8a31063fe21d7418a1",
+        "point_in_time": "2026-06-17",
+        "generator": "gpt-5.4-mini",
+        "target_count": 250,
+        "scope": "VFR pilot and flight operations",
+        "review_status": "machine-generated; human review required"
+      },
+      "questions_sha256": "e9acffc2dcefa8cf2527e25edb1e6106c4913a16b0c63f60db65df02928c9add",
+      "namespace": "canada-car-2026-06-17",
+      "index": "aeroquery",
+      "namespace_vector_count": 2045,
+      "azure_endpoint_sha256": "025e86df502abf6893b1ad1a265fc6889b7b86c69393ed9455422eb37dc08297",
+      "embedding_model": "text-embedding-3-large",
+      "judge_model": "gpt-5.4",
+      "ragas_version": "0.4.3",
+      "reranker": "rerank-v4.0-pro",
+      "candidate_count": 10,
+      "context_count": 5,
+      "models": [
+        "gpt-5.4-nano",
+        "gpt-5.4-mini",
+        "gpt-5.4",
+        "llama3.2:1b"
+      ],
+      "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
+      "run_tag": "default",
+      "provisional": true,
+      "reused_answers": {
+        "source_status": "consolidated",
+        "source_protocol_version": 8,
+        "files": {
+          "gpt-5.4-nano/bare_results.json": "4789bdf5203c40e516ade22936ab4589b41c9b696f695c999481f7bd5ae85375",
+          "gpt-5.4-nano/rag_results.json": "0fee32e42613e69a5cf58319b0a180e974d69bd91e0da5b255ed4f21796861ce",
+          "gpt-5.4-nano/rag_rerank_results.json": "5f89ff59e5d0c356c24c5e983f3e2f465dd912cbccd05b13268c22508e2ca48f",
+          "gpt-5.4-mini/bare_results.json": "a80dfcec8186b021de012ef6f0fed798e3df7dc7920ff7f75463eda3e4c9f615",
+          "gpt-5.4-mini/rag_results.json": "4dfceab9fb1576ced6f2613e4f4719911a5974912178f8fc50cf07338ea9230b",
+          "gpt-5.4-mini/rag_rerank_results.json": "aed3d8a40ba7a338271d819f98b1c5bff25075f9dc56b58326929527c7aeb808",
+          "gpt-5.4/bare_results.json": "8420633210cc6a7d7bcbc6413e6edb44b1a0b77e253bca26107584c0d7b42357",
+          "gpt-5.4/rag_results.json": "2cf5d40ba65f29fb0effe112b90013870443327212b6c4f63b1ad4a0ad7f2c22",
+          "gpt-5.4/rag_rerank_results.json": "064071a542a9a9e62d36da6e759bb955ceb3192b9074ba4561c9f45689774991",
+          "llama3.2-1b/bare_results.json": "6b048687a281f9864e156280c9a52534de2c23a83be953657e7e9da114cddcaa",
+          "llama3.2-1b/rag_results.json": "229c203bbe692ca7bd221ccdd97b6bf1d5290ae7ca23b33bf7470601aac31e3a",
+          "llama3.2-1b/rag_rerank_results.json": "bc867e7274d9cb084b4b037c98149c7d020cb9c9bfcd86e08c10b9db8688a5f1",
+          "retrieval_cache.json": "44324e46d528b3476867dbab4f40917df03fef9f0f79fdc9a47b7e5e236ed109"
+        }
+      },
+      "missing_local_generation": {
+        "max_output_tokens": 1024,
+        "initial_temperature": 0,
+        "fallback_temperature": 0.2
+      }
+    },
+    "num_questions": 95,
+    "bare": {
+      "answer_relevancy": {
+        "n": 95,
+        "mean": 0.353,
+        "standard_deviation": 0.4381,
+        "ci95": [
+          0.27,
+          0.4407
+        ]
+      },
+      "factual_correctness": {
+        "n": 95,
+        "mean": 0.126,
+        "standard_deviation": 0.1759,
+        "ci95": [
+          0.0903,
+          0.1628
+        ]
+      },
+      "semantic_similarity": {
+        "n": 95,
+        "mean": 0.605,
+        "standard_deviation": 0.1087,
+        "ci95": [
+          0.583,
+          0.6269
+        ]
+      }
+    },
+    "rag": {
+      "faithfulness": {
+        "n": 95,
+        "mean": 0.632,
+        "standard_deviation": 0.2105,
+        "ci95": [
+          0.5896,
+          0.6739
+        ]
+      },
+      "context_precision": {
+        "n": 95,
+        "mean": 0.913,
+        "standard_deviation": 0.1919,
+        "ci95": [
+          0.872,
+          0.9486
+        ]
+      },
+      "context_recall": {
+        "n": 95,
+        "mean": 0.989,
+        "standard_deviation": 0.1026,
+        "ci95": [
+          0.9579,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 95,
+        "mean": 0.664,
+        "standard_deviation": 0.3987,
+        "ci95": [
+          0.581,
+          0.7405
+        ]
+      },
+      "factual_correctness": {
+        "n": 95,
+        "mean": 0.293,
+        "standard_deviation": 0.2321,
+        "ci95": [
+          0.2464,
+          0.3438
+        ]
+      },
+      "semantic_similarity": {
+        "n": 95,
+        "mean": 0.667,
+        "standard_deviation": 0.101,
+        "ci95": [
+          0.6468,
+          0.6871
+        ]
+      }
+    },
+    "rag_rerank": {
+      "faithfulness": {
+        "n": 95,
+        "mean": 0.626,
+        "standard_deviation": 0.2296,
+        "ci95": [
+          0.5775,
+          0.6738
+        ]
+      },
+      "context_precision": {
+        "n": 95,
+        "mean": 0.955,
+        "standard_deviation": 0.0942,
+        "ci95": [
+          0.9344,
+          0.9723
+        ]
+      },
+      "context_recall": {
+        "n": 95,
+        "mean": 1.0,
+        "standard_deviation": 0.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "answer_relevancy": {
+        "n": 95,
+        "mean": 0.703,
+        "standard_deviation": 0.3759,
+        "ci95": [
+          0.6269,
+          0.7771
+        ]
+      },
+      "factual_correctness": {
+        "n": 95,
+        "mean": 0.305,
+        "standard_deviation": 0.2353,
+        "ci95": [
+          0.2548,
+          0.3519
+        ]
+      },
+      "semantic_similarity": {
+        "n": 95,
+        "mean": 0.666,
+        "standard_deviation": 0.1013,
+        "ci95": [
+          0.6452,
+          0.6855
+        ]
+      }
+    },
+    "paired_comparisons": {
+      "rag_minus_bare": {
+        "answer_relevancy": {
+          "n": 95,
+          "standard_deviation": 0.6146,
+          "ci95": [
+            0.1893,
+            0.4345
+          ],
+          "mean_difference": 0.312
+        },
+        "factual_correctness": {
+          "n": 95,
+          "standard_deviation": 0.2614,
+          "ci95": [
+            0.1142,
+            0.218
+          ],
+          "mean_difference": 0.166
+        },
+        "semantic_similarity": {
+          "n": 95,
+          "standard_deviation": 0.072,
+          "ci95": [
+            0.0469,
+            0.0763
+          ],
+          "mean_difference": 0.062
+        }
+      },
+      "rerank_minus_rag": {
+        "faithfulness": {
+          "n": 95,
+          "standard_deviation": 0.2831,
+          "ci95": [
+            -0.064,
+            0.05
+          ],
+          "mean_difference": -0.006
+        },
+        "context_precision": {
+          "n": 95,
+          "standard_deviation": 0.2082,
+          "ci95": [
+            0.001,
+            0.0844
+          ],
+          "mean_difference": 0.041
+        },
+        "context_recall": {
+          "n": 95,
+          "standard_deviation": 0.1026,
+          "ci95": [
+            0.0,
+            0.0316
+          ],
+          "mean_difference": 0.011
+        },
+        "answer_relevancy": {
+          "n": 95,
+          "standard_deviation": 0.4218,
+          "ci95": [
+            -0.0466,
+            0.1213
+          ],
+          "mean_difference": 0.039
+        },
+        "factual_correctness": {
+          "n": 95,
+          "standard_deviation": 0.2798,
+          "ci95": [
+            -0.0427,
+            0.0665
+          ],
+          "mean_difference": 0.012
+        },
+        "semantic_similarity": {
+          "n": 95,
+          "standard_deviation": 0.052,
+          "ci95": [
+            -0.0117,
+            0.0086
+          ],
+          "mean_difference": -0.001
         }
       }
     }

@@ -25,10 +25,10 @@ const BenchmarkMetrics = [
     label: "Factual correctness",
     description: "How well the answer's claims agree with the reference answer.",
     scores: [
-      { model: "GPT-5.4 nano", bare: 0.355, rag: 0.530, rerank: 0.545 },
-      { model: "GPT-5.4 mini", bare: 0.379, rag: 0.547, rerank: 0.530 },
-      { model: "GPT-5.4", bare: 0.325, rag: 0.442, rerank: 0.472 },
-      { model: "Llama 3.2 1B", bare: 0.133, rag: 0.242, rerank: 0.268 },
+      { model: "GPT-5.4 nano", bare: 0.378, rag: 0.532, rerank: 0.533 },
+      { model: "GPT-5.4 mini", bare: 0.464, rag: 0.604, rerank: 0.597 },
+      { model: "GPT-5.4", bare: 0.447, rag: 0.489, rerank: 0.497 },
+      { model: "Llama 3.2 1B", bare: 0.126, rag: 0.293, rerank: 0.305 },
     ],
   },
   {
@@ -36,10 +36,10 @@ const BenchmarkMetrics = [
     label: "Answer relevancy",
     description: "How relevant the answer is to the question; it does not measure factual accuracy.",
     scores: [
-      { model: "GPT-5.4 nano", bare: 0.617, rag: 0.875, rerank: 0.878 },
-      { model: "GPT-5.4 mini", bare: 0.849, rag: 0.862, rerank: 0.871 },
-      { model: "GPT-5.4", bare: 0.880, rag: 0.878, rerank: 0.884 },
-      { model: "Llama 3.2 1B", bare: 0.319, rag: 0.653, rerank: 0.675 },
+      { model: "GPT-5.4 nano", bare: 0.625, rag: 0.872, rerank: 0.873 },
+      { model: "GPT-5.4 mini", bare: 0.846, rag: 0.871, rerank: 0.876 },
+      { model: "GPT-5.4", bare: 0.875, rag: 0.882, rerank: 0.889 },
+      { model: "Llama 3.2 1B", bare: 0.353, rag: 0.664, rerank: 0.703 },
     ],
   },
   {
@@ -47,10 +47,10 @@ const BenchmarkMetrics = [
     label: "Semantic similarity",
     description: "Embedding-based similarity between the answer and reference answer.",
     scores: [
-      { model: "GPT-5.4 nano", bare: 0.644, rag: 0.728, rerank: 0.728 },
-      { model: "GPT-5.4 mini", bare: 0.669, rag: 0.753, rerank: 0.750 },
-      { model: "GPT-5.4", bare: 0.689, rag: 0.727, rerank: 0.733 },
-      { model: "Llama 3.2 1B", bare: 0.610, rag: 0.679, rerank: 0.682 },
+      { model: "GPT-5.4 nano", bare: 0.624, rag: 0.716, rerank: 0.715 },
+      { model: "GPT-5.4 mini", bare: 0.671, rag: 0.739, rerank: 0.742 },
+      { model: "GPT-5.4", bare: 0.682, rag: 0.717, rerank: 0.722 },
+      { model: "Llama 3.2 1B", bare: 0.605, rag: 0.667, rerank: 0.666 },
     ],
   },
   {
@@ -58,10 +58,10 @@ const BenchmarkMetrics = [
     label: "Faithfulness",
     description: "How well the answer's claims are supported by the retrieved context.",
     scores: [
-      { model: "GPT-5.4 nano", bare: null, rag: 0.911, rerank: 0.921 },
-      { model: "GPT-5.4 mini", bare: null, rag: 0.881, rerank: 0.868 },
-      { model: "GPT-5.4", bare: null, rag: 0.922, rerank: 0.942 },
-      { model: "Llama 3.2 1B", bare: null, rag: 0.652, rerank: 0.636 },
+      { model: "GPT-5.4 nano", bare: null, rag: 0.896, rerank: 0.903 },
+      { model: "GPT-5.4 mini", bare: null, rag: 0.859, rerank: 0.861 },
+      { model: "GPT-5.4", bare: null, rag: 0.916, rerank: 0.909 },
+      { model: "Llama 3.2 1B", bare: null, rag: 0.632, rerank: 0.626 },
     ],
   },
   {
@@ -69,10 +69,10 @@ const BenchmarkMetrics = [
     label: "Context precision",
     description: "How well relevant retrieved context is ranked. Retrieval scores are shared across models.",
     scores: [
-      { model: "GPT-5.4 nano", bare: null, rag: 0.901, rerank: 0.949 },
-      { model: "GPT-5.4 mini", bare: null, rag: 0.901, rerank: 0.949 },
-      { model: "GPT-5.4", bare: null, rag: 0.901, rerank: 0.949 },
-      { model: "Llama 3.2 1B", bare: null, rag: 0.901, rerank: 0.949 },
+      { model: "GPT-5.4 nano", bare: null, rag: 0.913, rerank: 0.955 },
+      { model: "GPT-5.4 mini", bare: null, rag: 0.913, rerank: 0.955 },
+      { model: "GPT-5.4", bare: null, rag: 0.913, rerank: 0.955 },
+      { model: "Llama 3.2 1B", bare: null, rag: 0.913, rerank: 0.955 },
     ],
   },
   {
@@ -80,12 +80,18 @@ const BenchmarkMetrics = [
     label: "Context recall",
     description: "How much of the reference answer is supported by retrieved context. Retrieval scores are shared across models.",
     scores: [
-      { model: "GPT-5.4 nano", bare: null, rag: 1.000, rerank: 1.000 },
-      { model: "GPT-5.4 mini", bare: null, rag: 1.000, rerank: 1.000 },
-      { model: "GPT-5.4", bare: null, rag: 1.000, rerank: 1.000 },
-      { model: "Llama 3.2 1B", bare: null, rag: 1.000, rerank: 1.000 },
+      { model: "GPT-5.4 nano", bare: null, rag: 0.989, rerank: 1.000 },
+      { model: "GPT-5.4 mini", bare: null, rag: 0.989, rerank: 1.000 },
+      { model: "GPT-5.4", bare: null, rag: 0.989, rerank: 1.000 },
+      { model: "Llama 3.2 1B", bare: null, rag: 0.989, rerank: 1.000 },
     ],
   },
+];
+const FactualRagComparisons = [
+  { model: "GPT-5.4 nano", difference: "+0.153", interval: "+0.0739 to +0.2306" },
+  { model: "GPT-5.4 mini", difference: "+0.140", interval: "+0.0655 to +0.2132" },
+  { model: "GPT-5.4", difference: "+0.042", interval: "-0.0213 to +0.1076" },
+  { model: "Llama 3.2 1B", difference: "+0.166", interval: "+0.1142 to +0.2180" },
 ];
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
@@ -742,7 +748,7 @@ export default function Home() {
           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Provisional</span>
         </div>
         <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-          Mean scores on the 52 CAR questions completed by every model and configuration.
+          Mean scores on 95 shared CAR questions, out of a 250-question benchmark. Higher scores are better.
         </p>
         <div className="mb-4">
           <label htmlFor="benchmark-metric" className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Metric:</label>
@@ -761,7 +767,7 @@ export default function Home() {
         </div>
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
           <table className="w-full min-w-[450px] text-left text-sm">
-            <caption className="sr-only">Mean {benchmarkMetric.label.toLowerCase()} on 52 shared questions</caption>
+            <caption className="sr-only">Mean {benchmarkMetric.label.toLowerCase()} on 95 shared questions</caption>
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800/60 dark:text-gray-400">
               <tr>
                 <th scope="col" className="px-4 py-3">Model</th>
@@ -782,12 +788,47 @@ export default function Home() {
             </tbody>
           </table>
         </div>
+        <div className="mt-5">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Does RAG improve factual correctness?</h3>
+          <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+            These are paired RAG-minus-bare differences on the same questions. A 95% confidence interval
+            describes uncertainty in the estimated difference; an interval that includes zero does not
+            clearly establish an improvement.
+          </p>
+          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+            <table className="w-full min-w-[450px] text-left text-sm">
+              <caption className="sr-only">Factual correctness change from bare to RAG with 95% confidence intervals</caption>
+              <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800/60 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-4 py-3">Model</th>
+                  <th scope="col" className="px-4 py-3 text-right">Mean change</th>
+                  <th scope="col" className="px-4 py-3 text-right">95% confidence interval</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {FactualRagComparisons.map(({ model, difference, interval }) => (
+                  <tr key={model} className="text-gray-700 dark:text-gray-200">
+                    <th scope="row" className="px-4 py-3 font-medium">{model}</th>
+                    <td className="px-4 py-3 text-right tabular-nums">{difference}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{interval}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
+            RAG improved factual correctness for nano, mini, and Llama in this sample; the GPT-5.4 interval
+            includes zero. Reranking improved context precision, but its effect on factual correctness is uncertain.
+          </p>
+        </div>
         <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-          Offline evaluation snapshot from November 13, 2026, not the live app. GPT-5.4 was the LLM judge, including for its own answers.
-          N/A means no retrieved context was available for that metric. The benchmark is not fully human-reviewed and the Llama run is incomplete.
+          Offline evaluation rescored November 19, 2026, not the live app. GPT-5.4 was the LLM judge, including for its own answers.
+          N/A means no retrieved context was available for that metric. Retrieval metrics are shared across models.
+          Two newly generated Llama answers used a temperature fallback.
         </p>
         <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-          Interpret these scores cautiously: some answers matching the reference received zero factual correctness. The scoring needs further validation.
+          The benchmark is machine-generated and not fully human-reviewed. These scores are not proof that answers are safe or legally correct.
+          The question-aware factual scorer reduces some false zeros, but its judgments still need validation against the regulations.
         </p>
       </section>
 

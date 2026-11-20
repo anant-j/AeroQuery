@@ -5,7 +5,14 @@ import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+from ragas.llms.base import InstructorBaseRagasLLM
+from ragas.metrics.collections.factual_correctness.util import (
+    ClaimDecompositionOutput,
+    NLIStatementOutput,
+    StatementFaithfulnessAnswer,
+)
 
 from eval import run_eval
 from eval.error_analysis import classify_failures
@@ -104,6 +111,66 @@ class CarEvaluationTests(unittest.TestCase):
             asyncio.run(run_eval.score_ragas(
                 {"factual_correctness": BadScorer()}, "q", "a", "reference", []
             ))
+
+    def test_factual_correctness_uses_question_to_interpret_short_reference(self):
+        question = "How long must the pilot retain the instrument-rating recency record?"
+        llm = Mock(spec=InstructorBaseRagasLLM)
+        prompts = []
+
+        async def generate(prompt, output_type):
+            prompts.append(prompt)
+            self.assertIn(question, prompt)
+            data = json.loads(prompt.rsplit("input: ", 1)[1].rsplit("\nOutput:", 1)[0])
+            if output_type is ClaimDecompositionOutput:
+                self.assertIn("do not extract claims from the question", prompt)
+                duration = "three" if "three" in data["response"].lower() else "five"
+                return ClaimDecompositionOutput(
+                    claims=[f"The pilot must retain the record for {duration} years."]
+                )
+            self.assertIs(output_type, NLIStatementOutput)
+            self.assertIn("question is background only, not evidence", data["context"])
+            statement = data["statements"][0]
+            duration = "three" if "three" in statement else "five"
+            answer = json.loads(data["context"].split("\nAnswer: ", 1)[1])
+            return NLIStatementOutput(statements=[
+                StatementFaithfulnessAnswer(
+                    statement=statement, reason="Duration comparison",
+                    verdict=int(duration in answer.lower()),
+                )
+            ])
+
+        llm.agenerate = generate
+        scorer = run_eval.QuestionAwareFactualCorrectness(llm)
+        correct, errors = asyncio.run(run_eval.score_ragas(
+            {"factual_correctness": scorer}, question,
+            "The pilot must retain the record for three years.", "Three years.", [],
+        ))
+        self.assertEqual(errors, {})
+        self.assertEqual(correct["factual_correctness"], 1.0)
+        wrong, errors = asyncio.run(run_eval.score_ragas(
+            {"factual_correctness": scorer}, question,
+            "The pilot must retain the record for five years.", "Three years.", [],
+        ))
+        self.assertEqual(errors, {})
+        self.assertEqual(wrong["factual_correctness"], 0.0)
+        self.assertEqual(len(prompts), 8)
+
+    def test_factual_correctness_rejects_missing_judge_claims_or_verdicts(self):
+        llm = Mock(spec=InstructorBaseRagasLLM)
+        scorer = run_eval.QuestionAwareFactualCorrectness(llm)
+
+        async def generate(prompt, output_type):
+            if output_type is ClaimDecompositionOutput:
+                return ClaimDecompositionOutput(claims=claims)
+            return NLIStatementOutput(statements=[])
+
+        llm.agenerate = generate
+        for claims, expected in (([], "no usable claims"), (["A claim"], "invalid verdicts")):
+            with self.subTest(claims=claims):
+                with self.assertRaisesRegex(ValueError, expected):
+                    asyncio.run(scorer.ascore(
+                        question="How long?", response="Three years.", reference="Three years."
+                    ))
 
     def test_semantic_similarity_runs_in_thread_without_blocking_async_metrics(self):
         ready = threading.Event()
@@ -359,10 +426,163 @@ class CarEvaluationTests(unittest.TestCase):
             self.assertEqual(len(results), 150)
             with self.assertRaisesRegex(ValueError, "exceed the requested limit"):
                 run_eval.run_eval(limit=75, **options)
+            with patch.object(run_eval, "PROTOCOL_VERSION", run_eval.PROTOCOL_VERSION + 1):
+                with self.assertRaisesRegex(ValueError, "different evaluation settings or benchmark"):
+                    run_eval.run_eval(limit=150, **options)
             questions[0] = dict(questions[0], ground_truth="Different answer")
             with self.assertRaisesRegex(ValueError, "different evaluation settings or benchmark"):
                 run_eval.run_eval(limit=150, **options)
             self.assertEqual(len(calls), 150 * 3)
+
+    def test_rescore_reuses_answers_fills_gaps_and_resumes_after_scoring_failure(self):
+        questions = [dict(ITEM, question=f"Question {i}") for i in range(3)]
+        context = [{"text": "source", "section": "602.88"}]
+        stats = SimpleNamespace(dimension=3072, namespaces={"car": SimpleNamespace(vector_count=1)})
+        generated, scored = [], []
+        fail_once = False
+
+        class Client:
+            def close(self):
+                pass
+
+        class JudgeClient:
+            async def close(self):
+                pass
+
+        def generate(client, model, messages, local=False):
+            question = json.loads(messages[1]["content"].split("\n", 1)[1])["question"]
+            generated.append(question)
+            return f"Answer for {question}", 10
+
+        async def score(selected, question, answer, reference, contexts):
+            nonlocal fail_once
+            scored.append((question, set(selected)))
+            if fail_once and question == "Question 1" and len(selected) > 1:
+                fail_once = False
+                raise RuntimeError("judge unavailable")
+            value = 0.9 if set(selected) == {"factual_correctness"} else 0.5
+            return {name: value for name in selected if contexts or name not in run_eval.CONTEXT_METRICS}, {}
+
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(run_eval, "load_benchmark", return_value=(
+                    {"point_in_time": "2026-06-17"}, questions)), \
+                patch.object(run_eval, "get_pinecone_index", return_value=SimpleNamespace(
+                    describe_index_stats=lambda: stats)) as index, \
+                patch.object(run_eval, "make_scorers", return_value=(
+                    {name: object() for name in run_eval.ALL_METRICS}, JudgeClient(), Client())), \
+                patch.object(run_eval, "azure_client", return_value=Client()), \
+                patch.object(run_eval, "get_contexts", side_effect=lambda *args: {
+                    "rag": context, "rag_rerank": context}), \
+                patch.object(run_eval, "generate", side_effect=generate), \
+                patch.object(run_eval, "score_ragas", side_effect=score), \
+                patch("builtins.print"):
+            source = Path(directory) / "old"
+            destination = Path(directory) / "new"
+            options = {"namespace": "car", "models": ("first",), "delay": 0,
+                       "allow_unreviewed": True, "limit": 3}
+            with patch.object(run_eval, "PROTOCOL_VERSION", 8):
+                run_eval.run_eval(results_root=source, **options)
+
+            bare_path = source / "first" / "bare_results.json"
+            bare = json.loads(bare_path.read_text())
+            bare_path.write_text(json.dumps([bare[0]]))
+            rag_path = source / "first" / "rag_results.json"
+            rag = json.loads(rag_path.read_text())
+            rag_path.write_text(json.dumps([rag[0], rag[2]]))
+            original = bare_path.read_bytes()
+            generated.clear()
+            scored.clear()
+            index.reset_mock()
+            fail_once = True
+            reuse = {"results_root": destination, "reuse_answers_from": source, **options}
+            with self.assertRaisesRegex(RuntimeError, "judge unavailable"):
+                run_eval.run_eval(**reuse)
+            self.assertTrue(list((destination / "first").glob("*_generated.json")))
+            run_eval.run_eval(**reuse)
+
+            self.assertEqual(generated.count("Question 1"), 2)
+            self.assertEqual(generated.count("Question 2"), 1)
+            self.assertEqual(len(generated), 3)
+            self.assertEqual(bare_path.read_bytes(), original)
+            index.assert_not_called()
+            for config in run_eval.CONFIGS:
+                rows = json.loads((destination / "first" / f"{config}_results.json").read_text())
+                self.assertEqual([row["question"] for row in rows], [q["question"] for q in questions])
+                self.assertEqual(rows[0]["answer"], "Answer for Question 0")
+                self.assertEqual(rows[0]["factual_correctness"], 0.9)
+                self.assertEqual(rows[0]["semantic_similarity"], 0.5)
+            summary = json.loads((destination / "first" / "summary.json").read_text())
+            self.assertEqual(summary["bare"]["factual_correctness"]["n"], 3)
+            self.assertEqual(summary["rag"]["factual_correctness"]["n"], 3)
+            self.assertEqual(len([s for _, s in scored if s == {"factual_correctness"}]), 6)
+            self.assertTrue(all(len(s) == 1 or len(s) >= 4 for _, s in scored))
+            manifest_path = destination / "manifest.json"
+            manifest = json.loads(manifest_path.read_text())
+            manifest["reused_answers"].pop("directory")
+            manifest["reused_answers"]["source_status"] = "consolidated"
+            manifest_path.write_text(json.dumps(manifest))
+            generated_before, scored_before = len(generated), len(scored)
+            run_eval.run_eval(results_root=destination, **options)
+            self.assertEqual((len(generated), len(scored)), (generated_before, scored_before))
+            bare_path.write_text(json.dumps(bare))
+            with self.assertRaisesRegex(ValueError, "different evaluation settings or benchmark"):
+                run_eval.run_eval(**reuse)
+
+    def test_local_fallback_is_recorded_and_incomplete_answers_are_rejected(self):
+        response = SimpleNamespace(choices=[
+            SimpleNamespace(message=SimpleNamespace(content="unfinished"), finish_reason="length")
+        ])
+        client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
+            create=lambda **kwargs: response
+        )))
+        with self.assertRaises(run_eval.GenerationLimitError):
+            run_eval.generate(client, run_eval.LOCAL_MODEL, [], local=True, max_tokens=1024)
+
+        calls = []
+
+        def generate(client, model, messages, local=False, max_tokens=None, temperature=None):
+            calls.append((temperature, max_tokens))
+            if temperature == 0:
+                raise run_eval.GenerationLimitError("loop")
+            return "complete", 10
+
+        async def score(selected, question, answer, reference, contexts):
+            return {name: 0.5 for name in selected if contexts or name not in run_eval.CONTEXT_METRICS}, {}
+
+        class Client:
+            def close(self):
+                pass
+
+        class JudgeClient:
+            async def close(self):
+                pass
+
+        stats = SimpleNamespace(dimension=3072, namespaces={"car": SimpleNamespace(vector_count=1)})
+        context = [{"text": "source", "section": "602.88"}]
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(run_eval, "load_benchmark", return_value=(
+                    {"point_in_time": "2026-06-17"}, [ITEM])), \
+                patch.object(run_eval, "get_pinecone_index", return_value=SimpleNamespace(
+                    describe_index_stats=lambda: stats)), \
+                patch.object(run_eval, "make_scorers", return_value=(
+                    {name: object() for name in run_eval.ALL_METRICS}, JudgeClient(), Client())), \
+                patch.object(run_eval, "azure_client", return_value=Client()), \
+                patch.object(run_eval, "OpenAI", return_value=Client()), \
+                patch.object(run_eval, "get_contexts", return_value={"rag": context, "rag_rerank": context}), \
+                patch.object(run_eval, "generate", side_effect=generate), \
+                patch.object(run_eval, "score_ragas", side_effect=score), \
+                patch("builtins.print"):
+            source, destination = Path(directory) / "old", Path(directory) / "new"
+            options = {"namespace": "car", "models": (run_eval.LOCAL_MODEL,), "delay": 0,
+                       "allow_unreviewed": True, "limit": 1}
+            with patch.object(run_eval, "PROTOCOL_VERSION", 8):
+                run_eval.run_eval(results_root=source, **options)
+            (source / "llama3.2-1b" / "bare_results.json").write_text("[]")
+            calls.clear()
+            run_eval.run_eval(results_root=destination, reuse_answers_from=source, **options)
+            self.assertEqual(calls, [(0, 1024), (0.2, 1024)])
+            rows = json.loads((destination / "llama3.2-1b" / "bare_results.json").read_text())
+            self.assertEqual(rows[0]["generation_settings"], {"temperature": 0.2, "max_tokens": 1024})
 
 
 if __name__ == "__main__":

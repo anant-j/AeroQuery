@@ -8,7 +8,7 @@
     "tokens": 682,
     "semantic_similarity": 0.6189,
     "answer_relevancy": 0.9244,
-    "factual_correctness": 0.44,
+    "factual_correctness": 0.46,
     "metric_errors": {}
   },
   {
@@ -32,7 +32,7 @@
     "tokens": 599,
     "semantic_similarity": 0.6014,
     "answer_relevancy": 0.7407,
-    "factual_correctness": 0.18,
+    "factual_correctness": 0.4,
     "metric_errors": {}
   },
   {
@@ -44,7 +44,7 @@
     "tokens": 495,
     "semantic_similarity": 0.7476,
     "answer_relevancy": 0.9016,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.29,
     "metric_errors": {}
   },
   {
@@ -80,7 +80,7 @@
     "tokens": 892,
     "semantic_similarity": 0.6705,
     "answer_relevancy": 0.8208,
-    "factual_correctness": 0.21,
+    "factual_correctness": 0.25,
     "metric_errors": {}
   },
   {
@@ -92,7 +92,7 @@
     "tokens": 636,
     "semantic_similarity": 0.6418,
     "answer_relevancy": 0.8136,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.43,
     "metric_errors": {}
   },
   {
@@ -104,7 +104,7 @@
     "tokens": 459,
     "semantic_similarity": 0.2765,
     "answer_relevancy": 0.9728,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.5,
     "metric_errors": {}
   },
   {
@@ -116,7 +116,7 @@
     "tokens": 519,
     "semantic_similarity": 0.7147,
     "answer_relevancy": 0.8022,
-    "factual_correctness": 0.5,
+    "factual_correctness": 0.6,
     "metric_errors": {}
   },
   {
@@ -128,7 +128,7 @@
     "tokens": 962,
     "semantic_similarity": 0.6878,
     "answer_relevancy": 0.8727,
-    "factual_correctness": 0.3,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -140,7 +140,7 @@
     "tokens": 630,
     "semantic_similarity": 0.8846,
     "answer_relevancy": 0.9267,
-    "factual_correctness": 0.67,
+    "factual_correctness": 0.57,
     "metric_errors": {}
   },
   {
@@ -152,7 +152,7 @@
     "tokens": 590,
     "semantic_similarity": 0.7854,
     "answer_relevancy": 0.9573,
-    "factual_correctness": 0.18,
+    "factual_correctness": 0.15,
     "metric_errors": {}
   },
   {
@@ -164,7 +164,7 @@
     "tokens": 912,
     "semantic_similarity": 0.6946,
     "answer_relevancy": 0.8382,
-    "factual_correctness": 0.2,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -188,7 +188,7 @@
     "tokens": 636,
     "semantic_similarity": 0.4968,
     "answer_relevancy": 0.9401,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.18,
     "metric_errors": {}
   },
   {
@@ -224,7 +224,7 @@
     "tokens": 686,
     "semantic_similarity": 0.7184,
     "answer_relevancy": 0.8214,
-    "factual_correctness": 0.14,
+    "factual_correctness": 0.54,
     "metric_errors": {}
   },
   {
@@ -236,7 +236,7 @@
     "tokens": 745,
     "semantic_similarity": 0.6886,
     "answer_relevancy": 0.8727,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.71,
     "metric_errors": {}
   },
   {
@@ -260,7 +260,7 @@
     "tokens": 698,
     "semantic_similarity": 0.6386,
     "answer_relevancy": 0.8306,
-    "factual_correctness": 0.33,
+    "factual_correctness": 0.29,
     "metric_errors": {}
   },
   {
@@ -272,7 +272,7 @@
     "tokens": 861,
     "semantic_similarity": 0.5809,
     "answer_relevancy": 0.9078,
-    "factual_correctness": 0.33,
+    "factual_correctness": 0.5,
     "metric_errors": {}
   },
   {
@@ -284,7 +284,7 @@
     "tokens": 672,
     "semantic_similarity": 0.5329,
     "answer_relevancy": 0.9663,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.14,
     "metric_errors": {}
   },
   {
@@ -296,7 +296,7 @@
     "tokens": 553,
     "semantic_similarity": 0.639,
     "answer_relevancy": 0.8718,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -308,7 +308,7 @@
     "tokens": 620,
     "semantic_similarity": 0.5458,
     "answer_relevancy": 0.8644,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.15,
     "metric_errors": {}
   },
   {
@@ -320,7 +320,7 @@
     "tokens": 570,
     "semantic_similarity": 0.7868,
     "answer_relevancy": 0.876,
-    "factual_correctness": 0.73,
+    "factual_correctness": 0.83,
     "metric_errors": {}
   },
   {
@@ -356,7 +356,7 @@
     "tokens": 688,
     "semantic_similarity": 0.7313,
     "answer_relevancy": 0.9378,
-    "factual_correctness": 0.84,
+    "factual_correctness": 0.72,
     "metric_errors": {}
   },
   {
@@ -368,7 +368,7 @@
     "tokens": 645,
     "semantic_similarity": 0.7566,
     "answer_relevancy": 0.9947,
-    "factual_correctness": 0.36,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -380,7 +380,7 @@
     "tokens": 501,
     "semantic_similarity": 0.672,
     "answer_relevancy": 0.9083,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.6,
     "metric_errors": {}
   },
   {
@@ -392,7 +392,7 @@
     "tokens": 636,
     "semantic_similarity": 0.8466,
     "answer_relevancy": 0.9193,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.0,
     "metric_errors": {}
   },
   {
@@ -404,7 +404,7 @@
     "tokens": 669,
     "semantic_similarity": 0.5891,
     "answer_relevancy": 0.9312,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -416,7 +416,7 @@
     "tokens": 622,
     "semantic_similarity": 0.7021,
     "answer_relevancy": 0.9226,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.25,
     "metric_errors": {}
   },
   {
@@ -428,7 +428,7 @@
     "tokens": 486,
     "semantic_similarity": 0.6023,
     "answer_relevancy": 0.8083,
-    "factual_correctness": 0.29,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -476,7 +476,7 @@
     "tokens": 558,
     "semantic_similarity": 0.6111,
     "answer_relevancy": 0.9662,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.73,
     "metric_errors": {}
   },
   {
@@ -500,7 +500,7 @@
     "tokens": 515,
     "semantic_similarity": 0.7647,
     "answer_relevancy": 0.8468,
-    "factual_correctness": 0.75,
+    "factual_correctness": 0.86,
     "metric_errors": {}
   },
   {
@@ -512,7 +512,7 @@
     "tokens": 645,
     "semantic_similarity": 0.8036,
     "answer_relevancy": 0.9818,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -524,7 +524,7 @@
     "tokens": 501,
     "semantic_similarity": 0.6994,
     "answer_relevancy": 0.8366,
-    "factual_correctness": 0.6,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -548,7 +548,7 @@
     "tokens": 498,
     "semantic_similarity": 0.671,
     "answer_relevancy": 0.6448,
-    "factual_correctness": 0.5,
+    "factual_correctness": 0.4,
     "metric_errors": {}
   },
   {
@@ -560,7 +560,7 @@
     "tokens": 595,
     "semantic_similarity": 0.7279,
     "answer_relevancy": 0.9205,
-    "factual_correctness": 0.73,
+    "factual_correctness": 0.92,
     "metric_errors": {}
   },
   {
@@ -572,7 +572,7 @@
     "tokens": 471,
     "semantic_similarity": 0.8112,
     "answer_relevancy": 0.8667,
-    "factual_correctness": 0.5,
+    "factual_correctness": 1.0,
     "metric_errors": {}
   },
   {
@@ -596,7 +596,7 @@
     "tokens": 548,
     "semantic_similarity": 0.8263,
     "answer_relevancy": 0.81,
-    "factual_correctness": 0.57,
+    "factual_correctness": 0.71,
     "metric_errors": {}
   },
   {
@@ -608,7 +608,7 @@
     "tokens": 438,
     "semantic_similarity": 0.668,
     "answer_relevancy": 0.7576,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.4,
     "metric_errors": {}
   },
   {
@@ -632,7 +632,7 @@
     "tokens": 513,
     "semantic_similarity": 0.7497,
     "answer_relevancy": 0.718,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.25,
     "metric_errors": {}
   },
   {
@@ -644,7 +644,7 @@
     "tokens": 559,
     "semantic_similarity": 0.8054,
     "answer_relevancy": 0.7271,
-    "factual_correctness": 0.77,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -656,7 +656,7 @@
     "tokens": 552,
     "semantic_similarity": 0.7686,
     "answer_relevancy": 0.8954,
-    "factual_correctness": 0.5,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -668,7 +668,7 @@
     "tokens": 633,
     "semantic_similarity": 0.7703,
     "answer_relevancy": 0.8591,
-    "factual_correctness": 0.18,
+    "factual_correctness": 0.22,
     "metric_errors": {}
   },
   {
@@ -692,7 +692,7 @@
     "tokens": 573,
     "semantic_similarity": 0.7752,
     "answer_relevancy": 0.799,
-    "factual_correctness": 0.71,
+    "factual_correctness": 0.62,
     "metric_errors": {}
   },
   {
@@ -704,7 +704,7 @@
     "tokens": 538,
     "semantic_similarity": 0.6819,
     "answer_relevancy": 0.8907,
-    "factual_correctness": 0.67,
+    "factual_correctness": 0.89,
     "metric_errors": {}
   },
   {
@@ -716,7 +716,7 @@
     "tokens": 593,
     "semantic_similarity": 0.7119,
     "answer_relevancy": 0.8585,
-    "factual_correctness": 0.36,
+    "factual_correctness": 0.46,
     "metric_errors": {}
   },
   {
@@ -740,7 +740,7 @@
     "tokens": 622,
     "semantic_similarity": 0.4626,
     "answer_relevancy": 0.8441,
-    "factual_correctness": 0.77,
+    "factual_correctness": 0.75,
     "metric_errors": {}
   },
   {
@@ -752,7 +752,7 @@
     "tokens": 651,
     "semantic_similarity": 0.3831,
     "answer_relevancy": 0.9454,
-    "factual_correctness": 0.46,
+    "factual_correctness": 0.73,
     "metric_errors": {}
   },
   {
@@ -764,7 +764,7 @@
     "tokens": 516,
     "semantic_similarity": 0.6865,
     "answer_relevancy": 0.8792,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.57,
     "metric_errors": {}
   },
   {
@@ -788,7 +788,7 @@
     "tokens": 580,
     "semantic_similarity": 0.8406,
     "answer_relevancy": 0.8031,
-    "factual_correctness": 0.86,
+    "factual_correctness": 0.89,
     "metric_errors": {}
   },
   {
@@ -800,7 +800,7 @@
     "tokens": 490,
     "semantic_similarity": 0.6757,
     "answer_relevancy": 0.8668,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.5,
     "metric_errors": {}
   },
   {
@@ -812,7 +812,7 @@
     "tokens": 576,
     "semantic_similarity": 0.7332,
     "answer_relevancy": 0.8184,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.77,
     "metric_errors": {}
   },
   {
@@ -824,7 +824,7 @@
     "tokens": 638,
     "semantic_similarity": 0.6721,
     "answer_relevancy": 0.8172,
-    "factual_correctness": 0.4,
+    "factual_correctness": 0.55,
     "metric_errors": {}
   },
   {
@@ -848,7 +848,7 @@
     "tokens": 672,
     "semantic_similarity": 0.7815,
     "answer_relevancy": 0.9417,
-    "factual_correctness": 0.18,
+    "factual_correctness": 0.31,
     "metric_errors": {}
   },
   {
@@ -860,7 +860,7 @@
     "tokens": 617,
     "semantic_similarity": 0.7453,
     "answer_relevancy": 0.8793,
-    "factual_correctness": 0.31,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -872,7 +872,7 @@
     "tokens": 686,
     "semantic_similarity": 0.5432,
     "answer_relevancy": 0.8635,
-    "factual_correctness": 0.25,
+    "factual_correctness": 0.63,
     "metric_errors": {}
   },
   {
@@ -884,7 +884,7 @@
     "tokens": 465,
     "semantic_similarity": 0.5001,
     "answer_relevancy": 0.9297,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -896,7 +896,7 @@
     "tokens": 525,
     "semantic_similarity": 0.5922,
     "answer_relevancy": 0.8235,
-    "factual_correctness": 0.22,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -908,7 +908,7 @@
     "tokens": 497,
     "semantic_similarity": 0.6406,
     "answer_relevancy": 0.9385,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.33,
     "metric_errors": {}
   },
   {
@@ -920,7 +920,7 @@
     "tokens": 518,
     "semantic_similarity": 0.5068,
     "answer_relevancy": 0.9512,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.33,
     "metric_errors": {}
   },
   {
@@ -944,7 +944,7 @@
     "tokens": 825,
     "semantic_similarity": 0.7334,
     "answer_relevancy": 0.8866,
-    "factual_correctness": 0.48,
+    "factual_correctness": 0.59,
     "metric_errors": {}
   },
   {
@@ -956,7 +956,7 @@
     "tokens": 818,
     "semantic_similarity": 0.5777,
     "answer_relevancy": 0.7619,
-    "factual_correctness": 0.6,
+    "factual_correctness": 0.55,
     "metric_errors": {}
   },
   {
@@ -968,7 +968,7 @@
     "tokens": 572,
     "semantic_similarity": 0.7418,
     "answer_relevancy": 0.9426,
-    "factual_correctness": 0.5,
+    "factual_correctness": 0.44,
     "metric_errors": {}
   },
   {
@@ -980,7 +980,7 @@
     "tokens": 424,
     "semantic_similarity": 0.8101,
     "answer_relevancy": 0.9866,
-    "factual_correctness": 0.33,
+    "factual_correctness": 0.8,
     "metric_errors": {}
   },
   {
@@ -992,7 +992,7 @@
     "tokens": 529,
     "semantic_similarity": 0.7886,
     "answer_relevancy": 0.9479,
-    "factual_correctness": 0.29,
+    "factual_correctness": 0.73,
     "metric_errors": {}
   },
   {
@@ -1004,7 +1004,7 @@
     "tokens": 514,
     "semantic_similarity": 0.6188,
     "answer_relevancy": 0.9243,
-    "factual_correctness": 0.0,
+    "factual_correctness": 1.0,
     "metric_errors": {}
   },
   {
@@ -1016,7 +1016,7 @@
     "tokens": 511,
     "semantic_similarity": 0.8156,
     "answer_relevancy": 0.7286,
-    "factual_correctness": 0.33,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -1028,7 +1028,7 @@
     "tokens": 489,
     "semantic_similarity": 0.6016,
     "answer_relevancy": 0.8827,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.73,
     "metric_errors": {}
   },
   {
@@ -1040,7 +1040,7 @@
     "tokens": 589,
     "semantic_similarity": 0.6862,
     "answer_relevancy": 0.9052,
-    "factual_correctness": 0.43,
+    "factual_correctness": 0.46,
     "metric_errors": {}
   },
   {
@@ -1052,7 +1052,7 @@
     "tokens": 472,
     "semantic_similarity": 0.7574,
     "answer_relevancy": 0.8715,
-    "factual_correctness": 0.67,
+    "factual_correctness": 0.75,
     "metric_errors": {}
   },
   {
@@ -1064,7 +1064,7 @@
     "tokens": 616,
     "semantic_similarity": 0.7141,
     "answer_relevancy": 0.8461,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {
@@ -1088,7 +1088,7 @@
     "tokens": 610,
     "semantic_similarity": 0.7277,
     "answer_relevancy": 0.8114,
-    "factual_correctness": 0.6,
+    "factual_correctness": 0.67,
     "metric_errors": {}
   },
   {
@@ -1100,7 +1100,7 @@
     "tokens": 553,
     "semantic_similarity": 0.6247,
     "answer_relevancy": 0.7667,
-    "factual_correctness": 0.0,
+    "factual_correctness": 0.5,
     "metric_errors": {}
   },
   {
@@ -1112,7 +1112,7 @@
     "tokens": 608,
     "semantic_similarity": 0.5746,
     "answer_relevancy": 0.968,
-    "factual_correctness": 0.17,
+    "factual_correctness": 0.33,
     "metric_errors": {}
   },
   {
@@ -1124,7 +1124,7 @@
     "tokens": 601,
     "semantic_similarity": 0.7779,
     "answer_relevancy": 0.8229,
-    "factual_correctness": 0.31,
+    "factual_correctness": 0.2,
     "metric_errors": {}
   },
   {

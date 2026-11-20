@@ -1,7 +1,7 @@
 {
   "model": "gpt-5.4",
   "run": {
-    "protocol_version": 8,
+    "protocol_version": 9,
     "benchmark": {
       "schema_version": 1,
       "source": "TC_CAR",
@@ -32,7 +32,31 @@
     "rag_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
     "bare_prompt_sha256": "8cb4b888d791c3520ae84f7b3da24486eae1590ec1b07694300a1c89e6cc8b29",
     "run_tag": "default",
-    "provisional": true
+    "provisional": true,
+    "reused_answers": {
+      "source_status": "consolidated",
+      "source_protocol_version": 8,
+      "files": {
+        "gpt-5.4-nano/bare_results.json": "4789bdf5203c40e516ade22936ab4589b41c9b696f695c999481f7bd5ae85375",
+        "gpt-5.4-nano/rag_results.json": "0fee32e42613e69a5cf58319b0a180e974d69bd91e0da5b255ed4f21796861ce",
+        "gpt-5.4-nano/rag_rerank_results.json": "5f89ff59e5d0c356c24c5e983f3e2f465dd912cbccd05b13268c22508e2ca48f",
+        "gpt-5.4-mini/bare_results.json": "a80dfcec8186b021de012ef6f0fed798e3df7dc7920ff7f75463eda3e4c9f615",
+        "gpt-5.4-mini/rag_results.json": "4dfceab9fb1576ced6f2613e4f4719911a5974912178f8fc50cf07338ea9230b",
+        "gpt-5.4-mini/rag_rerank_results.json": "aed3d8a40ba7a338271d819f98b1c5bff25075f9dc56b58326929527c7aeb808",
+        "gpt-5.4/bare_results.json": "8420633210cc6a7d7bcbc6413e6edb44b1a0b77e253bca26107584c0d7b42357",
+        "gpt-5.4/rag_results.json": "2cf5d40ba65f29fb0effe112b90013870443327212b6c4f63b1ad4a0ad7f2c22",
+        "gpt-5.4/rag_rerank_results.json": "064071a542a9a9e62d36da6e759bb955ceb3192b9074ba4561c9f45689774991",
+        "llama3.2-1b/bare_results.json": "6b048687a281f9864e156280c9a52534de2c23a83be953657e7e9da114cddcaa",
+        "llama3.2-1b/rag_results.json": "229c203bbe692ca7bd221ccdd97b6bf1d5290ae7ca23b33bf7470601aac31e3a",
+        "llama3.2-1b/rag_rerank_results.json": "bc867e7274d9cb084b4b037c98149c7d020cb9c9bfcd86e08c10b9db8688a5f1",
+        "retrieval_cache.json": "44324e46d528b3476867dbab4f40917df03fef9f0f79fdc9a47b7e5e236ed109"
+      }
+    },
+    "missing_local_generation": {
+      "max_output_tokens": 1024,
+      "initial_temperature": 0,
+      "fallback_temperature": 0.2
+    }
   },
   "num_questions": 95,
   "bare": {
@@ -47,11 +71,11 @@
     },
     "factual_correctness": {
       "n": 95,
-      "mean": 0.309,
-      "standard_deviation": 0.2697,
+      "mean": 0.447,
+      "standard_deviation": 0.2822,
       "ci95": [
-        0.2589,
-        0.3656
+        0.3884,
+        0.5057
       ]
     },
     "semantic_similarity": {
@@ -103,11 +127,11 @@
     },
     "factual_correctness": {
       "n": 95,
-      "mean": 0.4,
-      "standard_deviation": 0.2839,
+      "mean": 0.489,
+      "standard_deviation": 0.2263,
       "ci95": [
-        0.3417,
-        0.4596
+        0.4443,
+        0.5373
       ]
     },
     "semantic_similarity": {
@@ -159,11 +183,11 @@
     },
     "factual_correctness": {
       "n": 95,
-      "mean": 0.409,
-      "standard_deviation": 0.2705,
+      "mean": 0.497,
+      "standard_deviation": 0.2152,
       "ci95": [
-        0.3501,
-        0.4627
+        0.4545,
+        0.5421
       ]
     },
     "semantic_similarity": {
@@ -189,12 +213,12 @@
       },
       "factual_correctness": {
         "n": 95,
-        "standard_deviation": 0.3261,
+        "standard_deviation": 0.3245,
         "ci95": [
-          0.0261,
-          0.1567
+          -0.0213,
+          0.1076
         ],
-        "mean_difference": 0.092
+        "mean_difference": 0.042
       },
       "semantic_similarity": {
         "n": 95,
@@ -245,10 +269,10 @@
       },
       "factual_correctness": {
         "n": 95,
-        "standard_deviation": 0.2562,
+        "standard_deviation": 0.1994,
         "ci95": [
-          -0.0417,
-          0.0581
+          -0.0324,
+          0.0472
         ],
         "mean_difference": 0.008
       },
