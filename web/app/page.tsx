@@ -9,6 +9,7 @@ import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-l
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
 import { officialSourceUrl } from "./lib/source-url.js";
+import { formatRelativeDelta } from "./lib/benchmark-delta.js";
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
@@ -748,7 +749,7 @@ export default function Home() {
           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Provisional</span>
         </div>
         <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-          Mean scores on 95 shared CAR questions, out of a 250-question benchmark. Higher scores are better.
+          Mean scores on 95 CAR questions. Higher scores are better. Used OpenAI GPT-5.4 as judge.
         </p>
         <div className="mb-4">
           <label htmlFor="benchmark-metric" className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Metric:</label>
@@ -766,7 +767,7 @@ export default function Home() {
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{benchmarkMetric.description}</p>
         </div>
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-          <table className="w-full min-w-[450px] text-left text-sm">
+          <table className="w-full min-w-[550px] text-left text-sm">
             <caption className="sr-only">Mean {benchmarkMetric.label.toLowerCase()} on 95 shared questions</caption>
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800/60 dark:text-gray-400">
               <tr>
@@ -781,50 +782,20 @@ export default function Home() {
                 <tr key={model} className="text-gray-700 dark:text-gray-200">
                   <th scope="row" className="px-4 py-3 font-medium">{model}</th>
                   <td className="px-4 py-3 text-right tabular-nums">{bare === null ? "N/A" : bare.toFixed(3)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{rag.toFixed(3)}</td>
-                  <td className="px-4 py-3 text-right tabular-nums">{rerank.toFixed(3)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
+                    {rag.toFixed(3)} <span className="text-gray-500 dark:text-gray-400">({formatRelativeDelta(bare, rag)})</span>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums">
+                    {rerank.toFixed(3)} <span className="text-gray-500 dark:text-gray-400">({formatRelativeDelta(bare, rerank)})</span>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="mt-5">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">Does RAG improve factual correctness?</h3>
-          <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-            These are paired RAG-minus-bare differences on the same questions. A 95% confidence interval
-            describes uncertainty in the estimated difference; an interval that includes zero does not
-            clearly establish an improvement.
-          </p>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-            <table className="w-full min-w-[450px] text-left text-sm">
-              <caption className="sr-only">Factual correctness change from bare to RAG with 95% confidence intervals</caption>
-              <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800/60 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-4 py-3">Model</th>
-                  <th scope="col" className="px-4 py-3 text-right">Mean change</th>
-                  <th scope="col" className="px-4 py-3 text-right">95% confidence interval</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {FactualRagComparisons.map(({ model, difference, interval }) => (
-                  <tr key={model} className="text-gray-700 dark:text-gray-200">
-                    <th scope="row" className="px-4 py-3 font-medium">{model}</th>
-                    <td className="px-4 py-3 text-right tabular-nums">{difference}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{interval}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-400">
-            RAG improved factual correctness for nano, mini, and Llama in this sample; the GPT-5.4 interval
-            includes zero. Reranking improved context precision, but its effect on factual correctness is uncertain.
-          </p>
-        </div>
-        <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-          Offline evaluation rescored November 19, 2026, not the live app. GPT-5.4 was the LLM judge, including for its own answers.
-          N/A means no retrieved context was available for that metric. Retrieval metrics are shared across models.
-          Two newly generated Llama answers used a temperature fallback.
+        <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          Changes are relative percentages against the displayed bare mean, calculated from rounded scores.
+          N/A means the bare baseline is unavailable or zero. A percentage change alone does not establish a significant difference.
         </p>
         <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
           The benchmark is machine-generated and not fully human-reviewed. These scores are not proof that answers are safe or legally correct.
