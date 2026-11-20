@@ -13,9 +13,80 @@ import { officialSourceUrl } from "./lib/source-url.js";
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
-const DefaultQuery = "How long do I need to wait after drinking alcohol before piloting an aircraft?";
-const DefaultQuery2 = "If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?";
-const DefaultQueries = [DefaultQuery, DefaultQuery2];
+const DefaultQueries = new Map<string, string>([
+  ["How long do I need to wait after drinking alcohol before piloting an aircraft?", ""],
+  ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?", ""],
+]);
+const SuggestedQuestions = [...DefaultQueries.keys()];
+const DefaultQuery = SuggestedQuestions[0];
+const BenchmarkMetrics = [
+  {
+    key: "factual_correctness",
+    label: "Factual correctness",
+    description: "How well the answer's claims agree with the reference answer.",
+    scores: [
+      { model: "GPT-5.4 nano", bare: 0.355, rag: 0.530, rerank: 0.545 },
+      { model: "GPT-5.4 mini", bare: 0.379, rag: 0.547, rerank: 0.530 },
+      { model: "GPT-5.4", bare: 0.325, rag: 0.442, rerank: 0.472 },
+      { model: "Llama 3.2 1B", bare: 0.133, rag: 0.242, rerank: 0.268 },
+    ],
+  },
+  {
+    key: "answer_relevancy",
+    label: "Answer relevancy",
+    description: "How relevant the answer is to the question; it does not measure factual accuracy.",
+    scores: [
+      { model: "GPT-5.4 nano", bare: 0.617, rag: 0.875, rerank: 0.878 },
+      { model: "GPT-5.4 mini", bare: 0.849, rag: 0.862, rerank: 0.871 },
+      { model: "GPT-5.4", bare: 0.880, rag: 0.878, rerank: 0.884 },
+      { model: "Llama 3.2 1B", bare: 0.319, rag: 0.653, rerank: 0.675 },
+    ],
+  },
+  {
+    key: "semantic_similarity",
+    label: "Semantic similarity",
+    description: "Embedding-based similarity between the answer and reference answer.",
+    scores: [
+      { model: "GPT-5.4 nano", bare: 0.644, rag: 0.728, rerank: 0.728 },
+      { model: "GPT-5.4 mini", bare: 0.669, rag: 0.753, rerank: 0.750 },
+      { model: "GPT-5.4", bare: 0.689, rag: 0.727, rerank: 0.733 },
+      { model: "Llama 3.2 1B", bare: 0.610, rag: 0.679, rerank: 0.682 },
+    ],
+  },
+  {
+    key: "faithfulness",
+    label: "Faithfulness",
+    description: "How well the answer's claims are supported by the retrieved context.",
+    scores: [
+      { model: "GPT-5.4 nano", bare: null, rag: 0.911, rerank: 0.921 },
+      { model: "GPT-5.4 mini", bare: null, rag: 0.881, rerank: 0.868 },
+      { model: "GPT-5.4", bare: null, rag: 0.922, rerank: 0.942 },
+      { model: "Llama 3.2 1B", bare: null, rag: 0.652, rerank: 0.636 },
+    ],
+  },
+  {
+    key: "context_precision",
+    label: "Context precision",
+    description: "How well relevant retrieved context is ranked. Retrieval scores are shared across models.",
+    scores: [
+      { model: "GPT-5.4 nano", bare: null, rag: 0.901, rerank: 0.949 },
+      { model: "GPT-5.4 mini", bare: null, rag: 0.901, rerank: 0.949 },
+      { model: "GPT-5.4", bare: null, rag: 0.901, rerank: 0.949 },
+      { model: "Llama 3.2 1B", bare: null, rag: 0.901, rerank: 0.949 },
+    ],
+  },
+  {
+    key: "context_recall",
+    label: "Context recall",
+    description: "How much of the reference answer is supported by retrieved context. Retrieval scores are shared across models.",
+    scores: [
+      { model: "GPT-5.4 nano", bare: null, rag: 1.000, rerank: 1.000 },
+      { model: "GPT-5.4 mini", bare: null, rag: 1.000, rerank: 1.000 },
+      { model: "GPT-5.4", bare: null, rag: 1.000, rerank: 1.000 },
+      { model: "Llama 3.2 1B", bare: null, rag: 1.000, rerank: 1.000 },
+    ],
+  },
+];
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
 function getRemainingRequests() {
@@ -200,6 +271,7 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
 
 export default function Home() {
   const [query, setQuery] = useState("");
+  const [benchmarkMetric, setBenchmarkMetric] = useState(BenchmarkMetrics[0]);
   const suggestionNavigated = useRef(false);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const [modelOption, setModelOption] = useState<ModelOption>("openai");
@@ -209,6 +281,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [ragStreaming, setRagStreaming] = useState(false);
   const [bareStreaming, setBareStreaming] = useState(false);
+  const explanation = ragResult?.answer.trim() ? DefaultQueries.get(ragResult.query)?.trim() : undefined;
   const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
   const requestsNeeded = modelOption === "openai" ? 2 : 1;
 
@@ -556,7 +629,7 @@ export default function Home() {
                   <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Choose an example or type your own question.</p>
                 </div>
                 <div className="p-1.5">
-                  {!DefaultQueries.includes(query) && (
+                  {!DefaultQueries.has(query) && (
                     <ComboboxOption
                       value={query}
                       onPointerMove={() => { suggestionNavigated.current = true; }}
@@ -565,7 +638,7 @@ export default function Home() {
                       {query ? "Use your own question" : "Write your own question"}
                     </ComboboxOption>
                   )}
-                  {DefaultQueries.map((question, index) => (
+                  {SuggestedQuestions.map((question, index) => (
                     <ComboboxOption
                       key={question}
                       value={question}
@@ -645,22 +718,78 @@ export default function Home() {
       )}
 
       {(ragResult || bareResult) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-          {ragResult && (
-            <ResultCard result={ragResult} label="RAG" accent="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30" streaming={ragStreaming} />
+        <div className="mb-10">
+          {explanation && (
+            <section aria-label="Reference explanation" className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100">
+              <h2 className="mb-1 font-semibold">Reference explanation</h2>
+              <p className="whitespace-pre-wrap">{explanation}</p>
+            </section>
           )}
-          {bareResult && (
-            <ResultCard result={bareResult} label="Bare LLM" accent="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-950/30" streaming={bareStreaming} />
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {ragResult && (
+              <ResultCard result={ragResult} label="RAG" accent="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30" streaming={ragStreaming} />
+            )}
+            {bareResult && (
+              <ResultCard result={bareResult} label="Bare LLM" accent="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-950/30" streaming={bareStreaming} />
+            )}
+          </div>
         </div>
       )}
 
-      <div className="border-t border-gray-100 dark:border-gray-800 pt-8">
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Eval Benchmark</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          CAR benchmark results are pending a new evaluation run.
+      <section aria-labelledby="eval-benchmark-heading" className="border-t border-gray-100 dark:border-gray-800 pt-8">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <h2 id="eval-benchmark-heading" className="text-lg font-semibold text-gray-700 dark:text-gray-200">Eval Benchmark</h2>
+          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Provisional</span>
+        </div>
+        <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          Mean scores on the 52 CAR questions completed by every model and configuration.
         </p>
-      </div>
+        <div className="mb-4">
+          <label htmlFor="benchmark-metric" className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Metric:</label>
+          <select
+            id="benchmark-metric"
+            value={benchmarkMetric.key}
+            onChange={(event) => {
+              const metric = BenchmarkMetrics.find((item) => item.key === event.target.value);
+              if (metric) setBenchmarkMetric(metric);
+            }}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+          >
+            {BenchmarkMetrics.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
+          </select>
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">{benchmarkMetric.description}</p>
+        </div>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table className="w-full min-w-[450px] text-left text-sm">
+            <caption className="sr-only">Mean {benchmarkMetric.label.toLowerCase()} on 52 shared questions</caption>
+            <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-gray-800/60 dark:text-gray-400">
+              <tr>
+                <th scope="col" className="px-4 py-3">Model</th>
+                <th scope="col" className="px-4 py-3 text-right">Bare</th>
+                <th scope="col" className="px-4 py-3 text-right">RAG</th>
+                <th scope="col" className="px-4 py-3 text-right">RAG + rerank</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {benchmarkMetric.scores.map(({ model, bare, rag, rerank }) => (
+                <tr key={model} className="text-gray-700 dark:text-gray-200">
+                  <th scope="row" className="px-4 py-3 font-medium">{model}</th>
+                  <td className="px-4 py-3 text-right tabular-nums">{bare === null ? "N/A" : bare.toFixed(3)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{rag.toFixed(3)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{rerank.toFixed(3)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          Offline evaluation snapshot from November 13, 2026, not the live app. GPT-5.4 was the LLM judge, including for its own answers.
+          N/A means no retrieved context was available for that metric. The benchmark is not fully human-reviewed and the Llama run is incomplete.
+        </p>
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          Interpret these scores cautiously: some answers matching the reference received zero factual correctness. The scoring needs further validation.
+        </p>
+      </section>
 
       <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mt-8">
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Built With</h2>
