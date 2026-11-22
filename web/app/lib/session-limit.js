@@ -25,6 +25,16 @@ export function remainingSessionRequests() {
   }
 }
 
+export function sessionRequestResetSeconds() {
+  try {
+    const state = readRequestLimit(window.localStorage);
+    if (!state || state.count < MAX_SESSION_REQUESTS) return null;
+    return Math.ceil((state.expiresAt - Date.now()) / 1000);
+  } catch {
+    return null;
+  }
+}
+
 export function consumeSessionRequest() {
   try {
     const storage = window.localStorage;

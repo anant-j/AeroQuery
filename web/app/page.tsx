@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { formatComparisonMessage, getTurnstileSiteKey, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
-import { consumeSessionRequest, remainingSessionRequests } from "./lib/session-limit.js";
+import { consumeSessionRequest, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
 import { officialSourceUrl } from "./lib/source-url.js";
@@ -15,7 +15,7 @@ const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
 const DefaultQueries = new Map<string, string>([
-  ["How long do I need to wait after drinking alcohol before piloting an aircraft?", ""],
+  ["How long do I need to wait after drinking alcohol before piloting an aircraft?", "The correct answer according to the latest regulations is 12 hours. The 8 hour bottle-to-throttle rule is FAA (US) regulation."],
   ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?", ""],
 ]);
 const SuggestedQuestions = [...DefaultQueries.keys()];
@@ -104,12 +104,60 @@ function getRemainingRequests() {
   }
 }
 
+function formatResetCountdown(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function getIsLocalhost() {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname;
+  return hostname === "localhost" || hostname.endsWith(".localhost") ||
+    hostname === "127.0.0.1" || hostname === "[::1]" || hostname === "::1";
+}
+
+function subscribeToLocalhost() {
+  return () => {};
+}
+
 function subscribeToSessionRequests(callback: () => void) {
   window.addEventListener(SESSION_LIMIT_EVENT, callback);
   window.addEventListener("storage", callback);
   return () => {
     window.removeEventListener(SESSION_LIMIT_EVENT, callback);
     window.removeEventListener("storage", callback);
+  };
+}
+
+function subscribeToSessionReset(callback: () => void) {
+  let interval: number | null = null;
+  const updateInterval = () => {
+    if (sessionRequestResetSeconds() === null) {
+      if (interval !== null) window.clearInterval(interval);
+      interval = null;
+    } else if (interval === null) {
+      interval = window.setInterval(() => {
+        const seconds = sessionRequestResetSeconds();
+        callback();
+        if (seconds === null) {
+          if (interval !== null) window.clearInterval(interval);
+          interval = null;
+          window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
+        }
+      }, 1000);
+    }
+  };
+  const onChange = () => {
+    callback();
+    updateInterval();
+  };
+
+  window.addEventListener(SESSION_LIMIT_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  updateInterval();
+  return () => {
+    window.removeEventListener(SESSION_LIMIT_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+    if (interval !== null) window.clearInterval(interval);
   };
 }
 
@@ -290,6 +338,8 @@ export default function Home() {
   const [bareStreaming, setBareStreaming] = useState(false);
   const explanation = ragResult?.answer.trim() ? DefaultQueries.get(ragResult.query)?.trim() : undefined;
   const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
+  const isLocalhost = useSyncExternalStore(subscribeToLocalhost, getIsLocalhost, () => false);
+  const sessionResetSeconds = useSyncExternalStore(subscribeToSessionReset, sessionRequestResetSeconds, () => null);
   const requestsNeeded = modelOption === "openai" ? 2 : 1;
 
   // WebLLM state
@@ -456,6 +506,26 @@ export default function Home() {
     setBareStreaming(false);
 
     try {
+      if (isLocalhost) {
+        for (let request = 0; request < requestsNeeded; request++) reserveSessionRequest();
+        setRagResult({
+          query: effectiveQuery,
+          answer: "Hardcoded localhost response for the RAG comparison. No API request was made.",
+          model: "Local mock",
+          tokens: 0,
+          use_rag: true,
+          sources: [],
+        });
+        setBareResult({
+          query: effectiveQuery,
+          answer: "Hardcoded localhost response for the non-RAG comparison. No API request was made.",
+          model: "Local mock",
+          tokens: 0,
+          use_rag: false,
+        });
+        return;
+      }
+
       if (!sessionRef.current) throw new Error("Verification is unavailable.");
       const sessionToken = await sessionRef.current();
       if (modelOption === "openai") {
@@ -663,10 +733,14 @@ export default function Home() {
           <button
             ref={submitButtonRef}
             type="submit"
-            disabled={loading || !TURNSTILE_SITE_KEY || !turnstileReady || remainingRequests < requestsNeeded || (modelOption === "webllm" && !webllmReady)}
+            disabled={loading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady || (modelOption === "webllm" && !webllmReady))) || remainingRequests < requestsNeeded}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Searching..." : "Compare"}
+            {loading
+              ? "Asking..."
+              : remainingRequests === 0
+                ? sessionResetSeconds === null ? "Limit reached" : `Resets in ${formatResetCountdown(sessionResetSeconds)}`
+                : "Ask"}
           </button>
         </div>
 
@@ -678,7 +752,7 @@ export default function Home() {
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
-            <option value="openai">Azure OpenAI (GPT-5.4-mini)</option>
+            <option value="openai">GPT-5.4-mini</option>
             <option value="webllm" disabled={!webllmReady}>WebLLM (Llama 3.2 1B)</option>
           </select>
           {!webllmReady && (
@@ -714,7 +788,13 @@ export default function Home() {
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
-          {remainingRequests < requestsNeeded && " You have reached the session limits. Please try again later."}
+          {remainingRequests < requestsNeeded && (
+            <>
+              {remainingRequests === 0
+                ? "You have reached the session limits. Please wait until it resets."
+                : "Not enough requests remain for this comparison."}
+            </>
+          )}
         </p>
       </form>
 
@@ -746,10 +826,10 @@ export default function Home() {
       <section aria-labelledby="eval-benchmark-heading" className="border-t border-gray-100 dark:border-gray-800 pt-8">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <h2 id="eval-benchmark-heading" className="text-lg font-semibold text-gray-700 dark:text-gray-200">Eval Benchmark</h2>
-          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Provisional</span>
+          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">LLM as Judge</span>
         </div>
         <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-          Mean scores on 95 CAR questions. Higher scores are better. Used OpenAI GPT-5.4 as judge.
+          Mean scores on 95 CAR questions. Higher scores are better. OpenAI GPT-5.4 used as judge.
         </p>
         <div className="mb-4">
           <label htmlFor="benchmark-metric" className="mr-2 text-sm font-medium text-gray-700 dark:text-gray-300">Metric:</label>
