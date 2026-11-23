@@ -120,6 +120,7 @@ async def _search_pinecone(env, vector, top_k=10):
     for match in result.get("matches", []):
         metadata = match.get("metadata") or {}
         chunks.append({
+            **({"id": match["id"]} if match.get("id") else {}),
             "score": match.get("score", 0),
             "text": metadata.get("text", "")[:MAX_CHUNK_LENGTH],
             "section": metadata.get("section", ""),

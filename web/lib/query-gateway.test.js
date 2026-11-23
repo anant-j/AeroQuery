@@ -22,7 +22,7 @@ test("comparison sends two authenticated requests and multiplexes their SSE byte
       },
     }));
   };
-  const result = await events(streamComparison("https://worker.test", "key", "127.0.0.1", "question", "gpt-5.4-nano", new AbortController().signal, fetcher));
+  const result = await events(streamComparison("https://worker.test", "key", "127.0.0.1", "question", "gpt-5.4-nano", new AbortController().signal, fetcher, "12345678-1234-4234-8234-123456789abc"));
   assert.equal(requests.length, 2);
   assert.deepEqual(requests.map(({ options }) => JSON.parse(options.body).use_rag).sort(), [false, true]);
   for (const { url, options } of requests) {
@@ -31,6 +31,7 @@ test("comparison sends two authenticated requests and multiplexes their SSE byte
     assert.equal(options.headers.Authorization, "Bearer 127.0.0.1");
     assert.equal(JSON.parse(options.body).query, "question");
     assert.equal(JSON.parse(options.body).model, "gpt-5.4-nano");
+    assert.equal(JSON.parse(options.body).user_uuid, "12345678-1234-4234-8234-123456789abc");
   }
   for (const [mode, token] of [["rag", "é"], ["bare", "bare"]]) {
     const text = result.filter((event) => event.mode === mode).map((event) => event.chunk).join("");

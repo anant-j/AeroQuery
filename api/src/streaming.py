@@ -1,11 +1,12 @@
 import json
+import time
 
 from js import ReadableStream, TextEncoder
 from pyodide.ffi import create_proxy
 from workers import Response
 
 from common import ApiError, _js_options
-from persistence import _cache_put
+from persistence import _cache_put, _finish_question
 from retrieval import _azure_chat
 
 
@@ -13,7 +14,8 @@ def _sse_event(event):
     return f"data: {json.dumps(event, separators=(',', ':'))}\n\n"
 
 
-async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, correlation_id=None):
+async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, correlation_id=None, log_context=None):
+    generation_started = time.monotonic()
     response, _ = await _azure_chat(env, messages, stream=True, model=model)
     if not response.ok:
         raise ApiError("Azure Foundry generation failed", 502)
@@ -25,9 +27,10 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
         tokens = []
         completed = False
         finish_reason = None
+        usage = None
 
         def emit_line(raw_line):
-            nonlocal completed, finish_reason
+            nonlocal completed, finish_reason, usage
             line = raw_line.decode("utf-8").rstrip("\r")
             if not line.startswith("data: "):
                 return
@@ -47,8 +50,9 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
                 controller.enqueue(encoder.encode(_sse_event({"type": "token", "token": token})))
             if choices and choices[0].get("finish_reason"):
                 finish_reason = choices[0]["finish_reason"]
-            usage = event.get("usage")
-            if usage:
+            event_usage = event.get("usage")
+            if event_usage:
+                usage = event_usage
                 controller.enqueue(encoder.encode(_sse_event({
                     "type": "usage",
                     "tokens": usage.get("total_tokens"),
@@ -75,11 +79,35 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
             if buffer:
                 emit_line(buffer)
             if cache_key and completed and finish_reason == "stop" and tokens:
-                await _cache_put(env, cache_key, {"answer": "".join(tokens), "sources": sources, "agent": agent, "model": model})
+                await _cache_put(env, cache_key, {
+                    "answer": "".join(tokens), "sources": sources, "agent": agent, "model": model,
+                    "source_metadata": log_context["sources"] if log_context else None,
+                    "prompt_sha": log_context.get("prompt_sha") if log_context else None,
+                })
+            if log_context:
+                successful = completed and finish_reason == "stop"
+                await _finish_question(
+                    env, correlation_id, outcome="success" if successful else "incomplete", http_status=200,
+                    duration_ms=round((time.monotonic() - log_context["started"]) * 1000),
+                    generation_ms=round((time.monotonic() - generation_started) * 1000),
+                    retrieval_ms=log_context["retrieval_ms"], sources=log_context["sources"],
+                    answer="".join(tokens), usage=usage, finish_reason=finish_reason,
+                    failure_stage=None if successful else "generation_stream",
+                    error_type=None if successful else "IncompleteStream",
+                )
             controller.enqueue(encoder.encode(_sse_event({"type": "done"})))
             controller.close()
         except Exception as error:
             print(json.dumps({"event": "generation_stream_failed", "correlation_id": correlation_id, "error_type": type(error).__name__}))
+            if log_context:
+                await _finish_question(
+                    env, correlation_id, outcome="error", http_status=200,
+                    duration_ms=round((time.monotonic() - log_context["started"]) * 1000),
+                    generation_ms=round((time.monotonic() - generation_started) * 1000),
+                    retrieval_ms=log_context["retrieval_ms"], sources=log_context["sources"],
+                    answer="".join(tokens), usage=usage, finish_reason=finish_reason,
+                    failure_stage="generation_stream", error_type=type(error).__name__,
+                )
             controller.error(error)
 
     stream = ReadableStream.new(_js_options({"start": create_proxy(start)}))

@@ -301,7 +301,10 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         source_url = "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.06.html"
         chunks = [{"section": "1", "title": "Title", "text": "Text", "score": 1, "source_url": source_url}]
         with (
-            patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": " question "})),
+            patch.object(worker, "_read_json_body", AsyncMock(side_effect=[
+                {"query": " question ", "user_uuid": "12345678-1234-4234-8234-123456789abc"},
+                {"query": " question ", "user_key": "12345678-1234-4234-8234-123456789abc"},
+            ])),
             patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
             patch.object(worker, "_retrieve_chunks", AsyncMock(return_value=chunks)) as retrieve,
         ):
@@ -314,17 +317,27 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([row[1] for row in rows], [0, 1])
         self.assertEqual(rows[0][0], worker._question_sha("question", "webllm"))
         self.assertEqual(rows[0][0], rows[1][0])
+        rows = entry.env.DB.connection.execute(
+            "SELECT user_uuid, outcome, answer, sources_json FROM question_logs ORDER BY rowid"
+        ).fetchall()
+        for user_uuid, outcome, answer, sources_json in rows:
+            self.assertEqual(user_uuid, "12345678-1234-4234-8234-123456789abc")
+            self.assertEqual(outcome, "success")
+            self.assertIsNone(answer)
+            self.assertEqual(json.loads(sources_json)[0]["score"], 1)
+            self.assertNotIn("text", json.loads(sources_json)[0])
 
     async def test_pinecone_source_url_is_preserved_in_public_chunks(self):
         source_url = "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.06.html"
         response = {"matches": [
-            {"metadata": {"section": "602.06", "title": "Smoking", "text": "text", "source_url": source_url}},
+            {"id": "chunk-123", "metadata": {"section": "602.06", "title": "Smoking", "text": "text", "source_url": source_url}},
             {"metadata": {"section": "1", "title": "Other", "text": "text"}},
         ]}
         env = types.SimpleNamespace(PINECONE_INDEX_HOST="index.test", PINECONE_API_KEY="key")
         with patch.object(retrieval, "_json_request", AsyncMock(return_value=response)):
             chunks = await retrieval._search_pinecone(env, [0.1])
         public = retrieval._public_chunks(chunks)
+        self.assertEqual(persistence._source_metadata(chunks)[0]["id"], "chunk-123")
         self.assertEqual(public[0]["source_url"], source_url)
         self.assertNotIn("source_url", public[1])
 
@@ -387,6 +400,90 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"token":"cached answer"', response.body)
         self.assertIn('"type":"sources"', response.body)
         self.assertEqual(entry.env.DB.connection.execute("SELECT mode, answered_from_cache FROM question_logs ORDER BY rowid DESC LIMIT 1").fetchone(), ("openai_rag", 1))
+        self.assertEqual(entry.env.DB.connection.execute(
+            "SELECT answer, outcome, input_tokens, output_tokens FROM question_logs"
+        ).fetchone(), ("cached answer", "success", 0, 0))
+
+    async def test_stream_records_answer_usage_and_partial_failures(self):
+        env = types.SimpleNamespace(DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), QUESTIONS_LOG_QUERY_TEXT="true")
+        self.addCleanup(env.DB.connection.close)
+        for case in ("success", "incomplete", "error"):
+            await worker._log_question(env, "question", "openai_rag", "sha", case, model="model")
+            lines = [
+                'data: {"choices":[{"delta":{"content":"answer"},"finish_reason":null}]}\n',
+                'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n',
+                'data: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":2,"total_tokens":12}}\n',
+            ]
+            if case == "success":
+                lines.append("data: [DONE]\n")
+            items = [
+                types.SimpleNamespace(done=False, value=types.SimpleNamespace(to_bytes=lambda: "".join(lines).encode())),
+                RuntimeError("stream broke") if case == "error" else types.SimpleNamespace(done=True),
+            ]
+            reader = types.SimpleNamespace(read=AsyncMock(side_effect=items))
+            upstream = types.SimpleNamespace(ok=True, body=types.SimpleNamespace(getReader=lambda: reader))
+            errors = []
+            controller = types.SimpleNamespace(enqueue=lambda value: None, close=lambda: None, error=errors.append)
+            with (
+                patch.object(streaming, "_azure_chat", AsyncMock(return_value=(upstream, "model"))),
+                patch.object(streaming, "_js_options", lambda value: value),
+                patch.object(streaming, "ReadableStream", types.SimpleNamespace(new=lambda options: options)),
+            ):
+                response = await streaming._stream_generation(
+                    env, [], "model", correlation_id=case,
+                    log_context={"started": streaming.time.monotonic(), "retrieval_ms": 5, "sources": [{"section": "1"}]},
+                )
+                await response.body["start"](controller)
+            row = env.DB.connection.execute(
+                "SELECT answer, outcome, input_tokens, output_tokens, total_tokens, failure_stage, error_type, retrieval_ms "
+                "FROM question_logs WHERE correlation_id = ?", (case,),
+            ).fetchone()
+            self.assertEqual(row[:5], ("answer", case, 10, 2, 12))
+            self.assertEqual(row[5:7], (None, None) if case == "success" else (
+                "generation_stream", "IncompleteStream" if case == "incomplete" else "RuntimeError"
+            ))
+            self.assertEqual(row[7], 5)
+            self.assertEqual(len(errors), 1 if case == "error" else 0)
+
+    async def test_validated_request_failures_are_logged(self):
+        entry = worker.Default()
+        entry.env = types.SimpleNamespace(
+            DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), API_WORKER_KEY="a" * 32,
+            ALLOWED_ORIGINS="https://example.test",
+            API_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+            SESSION_RATE_LIMITER=types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True))),
+        )
+        self.addCleanup(entry.env.DB.connection.close)
+        request = types.SimpleNamespace(
+            headers={"origin": "https://example.test", "x-aeroquery-key": "a" * 32},
+            method="POST", url="https://example.test/api/retrieve",
+        )
+        with (
+            patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "question"})),
+            patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
+            patch.object(worker, "_retrieve_chunks", AsyncMock(side_effect=worker.ApiError("failed", 502))),
+        ):
+            self.assertEqual((await entry.fetch(request)).status, 502)
+        self.assertEqual(entry.env.DB.connection.execute(
+            "SELECT outcome, http_status, failure_stage, error_type FROM question_logs"
+        ).fetchone(), ("error", 502, "retrieval", "ApiError"))
+
+    async def test_invalid_user_uuid_is_rejected(self):
+        entry = worker.Default()
+        limiter = types.SimpleNamespace(limit=AsyncMock(return_value=types.SimpleNamespace(success=True)))
+        entry.env = types.SimpleNamespace(
+            API_WORKER_KEY="a" * 32, ALLOWED_ORIGINS="https://example.test",
+            API_RATE_LIMITER=limiter, SESSION_RATE_LIMITER=limiter,
+        )
+        request = types.SimpleNamespace(
+            headers={"origin": "https://example.test", "x-aeroquery-key": "a" * 32},
+            method="POST", url="https://example.test/api/retrieve",
+        )
+        with (
+            patch.object(worker, "_read_json_body", AsyncMock(return_value={"query": "question", "user_uuid": "invalid"})),
+            patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
+        ):
+            self.assertEqual((await entry.fetch(request)).status, 400)
 
     async def test_retrieved_instructions_are_passed_as_untrusted_data(self):
         entry = worker.Default()
@@ -460,6 +557,35 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         columns = {row[1] for row in connection.execute("PRAGMA table_info(question_logs)")}
         self.assertEqual(columns, {"correlation_id", "created_at", "mode", "question_asked", "question_sha", "answered_from_cache"})
         self.assertEqual(connection.execute("SELECT correlation_id, question_asked, question_sha, answered_from_cache FROM question_logs").fetchone(), ("correlation", "question", None, 1))
+
+    def test_analytics_migration_preserves_existing_logs(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        schema_dir = Path(__file__).parents[1] / "schema"
+        for schema in sorted(schema_dir.glob("*.sql")):
+            if schema.name == "0005_request_analytics.sql":
+                connection.execute(
+                    "INSERT INTO question_logs (correlation_id, created_at, mode, question_asked, answered_from_cache) VALUES (?, ?, ?, ?, ?)",
+                    ("existing", "2026-01-01", "openai_rag", "question", 0),
+                )
+            connection.executescript(schema.read_text())
+        self.assertEqual(connection.execute(
+            "SELECT correlation_id, question_asked, user_uuid, answer, outcome FROM question_logs"
+        ).fetchone(), ("existing", "question", None, None, None))
+
+    def test_user_uuid_migration_preserves_existing_user_keys(self):
+        connection = sqlite3.connect(":memory:")
+        self.addCleanup(connection.close)
+        schema_dir = Path(__file__).parents[1] / "schema"
+        for schema in sorted(schema_dir.glob("*.sql")):
+            if schema.name == "0006_user_uuid.sql":
+                connection.execute(
+                    "INSERT INTO question_logs (correlation_id, created_at, mode, user_key) VALUES (?, ?, ?, ?)",
+                    ("existing", "2026-01-01", "openai_rag", "12345678-1234-4234-8234-123456789abc"),
+                )
+            connection.executescript(schema.read_text())
+        self.assertEqual(connection.execute("SELECT user_uuid FROM question_logs").fetchone(),
+                         ("12345678-1234-4234-8234-123456789abc",))
 
     def test_question_sha_depends_only_on_question_and_mode(self):
         key = worker._question_sha("question", "openai_rag")

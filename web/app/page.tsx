@@ -10,6 +10,7 @@ import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
 import { officialSourceUrl } from "./lib/source-url.js";
 import { formatRelativeDelta } from "./lib/benchmark-delta.js";
+import { getUserUuid } from "./lib/user-uuid.js";
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
@@ -432,7 +433,7 @@ export default function Home() {
     // Keep the existing session budget: a comparison uses two backend requests.
     reserveSessionRequest();
     reserveSessionRequest();
-    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, model, new AbortController().signal).getReader();
+    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, model, new AbortController().signal, fetch, getUserUuid()).getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     const upstreamBuffers = { rag: "", bare: "" };
@@ -545,7 +546,7 @@ export default function Home() {
         const retrieveRes = await fetch(`${WORKER_URL}/api/retrieve`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-aeroquery-key": WORKER_KEY, "Authorization": `Bearer ${sessionToken}` },
-          body: JSON.stringify({ query: effectiveQuery }),
+          body: JSON.stringify({ query: effectiveQuery, user_uuid: getUserUuid() }),
         });
 
         if (!retrieveRes.ok) {

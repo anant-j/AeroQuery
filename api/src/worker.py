@@ -1,6 +1,8 @@
+import hashlib
 import hmac
 import ipaddress
 import json
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
@@ -8,8 +10,8 @@ from urllib.parse import urlparse
 from workers import Response, WorkerEntrypoint
 
 from common import ApiError
-from constants import SYSTEM_PROMPT
-from persistence import _cache_get, _cache_key, _cache_put, _log_question, _question_sha
+from constants import NAMESPACE, SYSTEM_PROMPT
+from persistence import _cache_get, _cache_key, _cache_put, _finish_question, _log_question, _question_sha, _source_metadata
 from retrieval import _public_chunks, _retrieve_chunks, _run_agent
 from security import _issue_session, _read_json_body, _validate_query, _verify_session, _verify_turnstile
 from streaming import _cached_stream, _stream_generation
@@ -50,6 +52,10 @@ class Default(WorkerEntrypoint):
 
     async def _handle_request(self, request, origin):
         correlation_id = uuid.uuid4().hex
+        started = time.monotonic()
+        logged = False
+        retrieval_ms = None
+        source_metadata = None
         stage = "authentication"
         try:
             expected_key = getattr(self.env, "API_WORKER_KEY", "")
@@ -95,6 +101,15 @@ class Default(WorkerEntrypoint):
                 raise ApiError("Too many session requests. Please wait a minute and try again.", 429)
             query = _validate_query(body.get("query"))
 
+            # Accept the previous field while older browser clients are still cached.
+            user_uuid = body.get("user_uuid", body.get("user_key"))
+            if user_uuid is not None:
+                try:
+                    if not isinstance(user_uuid, str) or str(uuid.UUID(user_uuid)) != user_uuid:
+                        raise ValueError("Invalid user UUID")
+                except ValueError:
+                    raise ApiError("Invalid user UUID", 400)
+
             use_rag = body.get("use_rag", False)
             if not isinstance(use_rag, bool):
                 raise ApiError("use_rag must be a boolean", 400)
@@ -104,15 +119,44 @@ class Default(WorkerEntrypoint):
             cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False, model)
             cached = await _cache_get(self.env, cache_key)
             stage = "question_logging"
-            await _log_question(self.env, query, mode, _question_sha(query, mode), correlation_id, cached is not None)
+            prompt_sha = (
+                cached.get("prompt_sha") if cached is not None
+                else hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest()
+            ) if path == "/stream" else None
+            await _log_question(
+                self.env, query, mode, _question_sha(query, mode), correlation_id, cached is not None,
+                user_uuid=user_uuid, endpoint=path, model=cached.get("model", model) if cached else model,
+                prompt_sha=prompt_sha,
+                corpus_version=NAMESPACE if path == "/retrieve" or use_rag else None,
+            )
+            logged = True
             if cached is not None:
-                return _cached_stream(cached) if path == "/stream" else Response.json(cached)
+                source_metadata = cached.get("source_metadata")
+                if source_metadata is None:
+                    source_metadata = _source_metadata(cached.get("sources", cached.get("chunks", [])))
+                await _finish_question(
+                    self.env, correlation_id, outcome="success", http_status=200,
+                    duration_ms=round((time.monotonic() - started) * 1000),
+                    answer=cached.get("answer"), sources=source_metadata,
+                    usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0} if path == "/stream" else None,
+                )
+                return _cached_stream(cached) if path == "/stream" else Response.json({
+                    key: value for key, value in cached.items() if key != "source_metadata"
+                })
 
             if path == "/retrieve":
                 stage = "retrieval"
+                retrieval_started = time.monotonic()
                 chunks = await _retrieve_chunks(self.env, query)
+                retrieval_ms = round((time.monotonic() - retrieval_started) * 1000)
+                source_metadata = _source_metadata(chunks)
                 result = {"query": query, "chunks": _public_chunks(chunks)}
-                await _cache_put(self.env, cache_key, result)
+                await _cache_put(self.env, cache_key, {**result, "source_metadata": source_metadata})
+                await _finish_question(
+                    self.env, correlation_id, outcome="success", http_status=200,
+                    duration_ms=round((time.monotonic() - started) * 1000),
+                    retrieval_ms=retrieval_ms, sources=source_metadata,
+                )
                 return Response.json(result)
 
             agent = None
@@ -121,8 +165,11 @@ class Default(WorkerEntrypoint):
             context_sufficient = None
             if use_rag:
                 stage = "agent_retrieval"
+                retrieval_started = time.monotonic()
                 result = await _run_agent(self.env, query)
+                retrieval_ms = round((time.monotonic() - retrieval_started) * 1000)
                 agent = result["agent"]
+                source_metadata = _source_metadata(result["chunks"])
                 sources = _public_chunks(result["chunks"])
                 prompt_sources = [
                     {"section": source["section"], "title": source["title"], "text": source["text"]}
@@ -138,8 +185,17 @@ class Default(WorkerEntrypoint):
             ]
 
             stage = "generation"
-            return await _stream_generation(self.env, messages, model, sources, agent, cache_key, correlation_id)
+            return await _stream_generation(
+                self.env, messages, model, sources, agent, cache_key, correlation_id,
+                log_context={"started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata,
+                             "prompt_sha": prompt_sha},
+            )
         except ApiError as error:
+            if logged:
+                await _finish_question(self.env, correlation_id, outcome="error", http_status=error.status,
+                                       duration_ms=round((time.monotonic() - started) * 1000),
+                                       failure_stage=stage, error_type=type(error).__name__,
+                                       retrieval_ms=retrieval_ms, sources=source_metadata)
             return Response.json({"error": str(error)}, status=error.status)
         except Exception as error:
             print(json.dumps({
@@ -148,6 +204,11 @@ class Default(WorkerEntrypoint):
                 "stage": stage,
                 "error_type": type(error).__name__,
             }))
+            if logged:
+                await _finish_question(self.env, correlation_id, outcome="error", http_status=502,
+                                       duration_ms=round((time.monotonic() - started) * 1000),
+                                       failure_stage=stage, error_type=type(error).__name__,
+                                       retrieval_ms=retrieval_ms, sources=source_metadata)
             return Response.json({"error": "Request failed"}, status=502)
     async def scheduled(self, controller, env, ctx):
         worker_env = self.env
