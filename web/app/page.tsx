@@ -15,8 +15,8 @@ const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
 const DefaultQueries = new Map<string, string>([
-  ["How long do I need to wait after drinking alcohol before piloting an aircraft?", "The correct answer according to the latest regulations is 12 hours. The 8 hour bottle-to-throttle rule is FAA (US) regulation."],
-  ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?", ""],
+  ["How long do I need to wait after drinking alcohol before piloting an aircraft?", "The correct answer according to the latest regulations is: 12 hours."],
+  ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?", "The correct answer according to the latest regulations is: end of March 31, 2031"],
 ]);
 const SuggestedQuestions = [...DefaultQueries.keys()];
 const DefaultQuery = SuggestedQuestions[0];
@@ -634,7 +634,16 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">AeroQuery</h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Ask questions about Canadian aviation regulations. Powered by RAG over Transport Canada Canadian Aviation Regulations (CARs).
+            Ask questions about Canadian aviation regulations. Powered by RAG over Transport Canada&apos;s{" "}
+            <a
+              href="https://tc.canada.ca/en/corporate-services/acts-regulations/list-regulations/canadian-aviation-regulations-sor-96-433"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-blue-600 dark:hover:text-blue-400"
+            >
+              Canadian Aviation Regulations (SOR/96-433)
+            </a>
+            .
           </p>
         </div>
         <button
