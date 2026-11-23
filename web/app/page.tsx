@@ -16,7 +16,8 @@ const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").rep
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
 const DefaultQueries = new Map<string, string>([
   ["How long do I need to wait after drinking alcohol before piloting an aircraft?", "The correct answer according to the latest regulations is: 12 hours."],
-  ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 10, 2026, when does their new medical certificate expire?", "The correct answer according to the latest regulations is: end of March 31, 2031"],
+  ["above what cabin pressure altitude must all flight crew members wear supplemental oxygen continuously?", "The correct answer according to the latest regulations is: 13000 feet ASL"],
+  ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 1, 2026, when does their new medical certificate expire?", "The correct answer according to the latest regulations is: end of March 31, 2031"]
 ]);
 const SuggestedQuestions = [...DefaultQueries.keys()];
 const DefaultQuery = SuggestedQuestions[0];
@@ -116,7 +117,7 @@ function getIsLocalhost() {
 }
 
 function subscribeToLocalhost() {
-  return () => {};
+  return () => { };
 }
 
 function subscribeToSessionRequests(callback: () => void) {
@@ -489,7 +490,7 @@ export default function Home() {
       }
       if (!completed.rag || !completed.bare) throw new Error("Generation stream ended unexpectedly");
     } finally {
-      await reader.cancel().catch(() => {});
+      await reader.cancel().catch(() => { });
     }
   }
 
@@ -609,7 +610,7 @@ export default function Home() {
       }
     } catch (err) {
       setError("Something went wrong. Please try again later.");
-      if(err instanceof Error){
+      if (err instanceof Error) {
         console.error(err.message);
       }
     } finally {
@@ -894,23 +895,27 @@ export default function Home() {
       <div className="border-t border-gray-100 dark:border-gray-800 pt-6 mt-8">
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">Built With</h2>
         {[
-          { label: "AI", items: [
-            { name: "Azure AI Foundry", desc: "Azure OpenAI models, embeddings & judge", url: "https://ai.azure.com" },
-            { name: "Ollama", desc: "Local evaluation model", url: "https://ollama.com" },
-            { name: "Pinecone", desc: "Vector DB", url: "https://www.pinecone.io" },
-            { name: "Cohere Rerank", desc: "Reranking", url: "https://cohere.com" },
-            { name: "WebLLM", desc: "In-browser model inference", url: "https://webllm.mlc.ai" },
-            { name: "RAGAS", desc: "Evaluation Harness", url: "https://docs.ragas.io" }
-          ]},
-          { label: "Infra", items: [
-            { name: "Netlify", desc: "Hosting", url: "https://www.netlify.com" },
-            { name: "Cloudflare Turnstile", desc: "Request verification", url: "https://developers.cloudflare.com/turnstile/" },
-            { name: "Cloudflare Workers", desc: "API/Backend", url: "https://workers.cloudflare.com/" },
-            { name: "Cloudflare D1 & KV", desc: "Question logs & answer cache", url: "https://developers.cloudflare.com/d1/" },
-            { name: "Next.js", desc: "React & TypeScript frontend", url: "https://nextjs.org" },
-            { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
-            { name: "Docker", desc: "Ingestion Pipeline", url: "https://www.docker.com" }
-          ]},
+          {
+            label: "AI", items: [
+              { name: "Azure AI Foundry", desc: "Azure OpenAI models, embeddings & judge", url: "https://ai.azure.com" },
+              { name: "Ollama", desc: "Local evaluation model", url: "https://ollama.com" },
+              { name: "Pinecone", desc: "Vector DB", url: "https://www.pinecone.io" },
+              { name: "Cohere Rerank", desc: "Reranking", url: "https://cohere.com" },
+              { name: "WebLLM", desc: "In-browser model inference", url: "https://webllm.mlc.ai" },
+              { name: "RAGAS", desc: "Evaluation Harness", url: "https://docs.ragas.io" }
+            ]
+          },
+          {
+            label: "Infra", items: [
+              { name: "Netlify", desc: "Hosting", url: "https://www.netlify.com" },
+              { name: "Cloudflare Turnstile", desc: "Request verification", url: "https://developers.cloudflare.com/turnstile/" },
+              { name: "Cloudflare Workers", desc: "API/Backend", url: "https://workers.cloudflare.com/" },
+              { name: "Cloudflare D1 & KV", desc: "Question logs & answer cache", url: "https://developers.cloudflare.com/d1/" },
+              { name: "Next.js", desc: "React & TypeScript frontend", url: "https://nextjs.org" },
+              { name: "Tailwind", desc: "CSS", url: "https://tailwindcss.com" },
+              { name: "Docker", desc: "Ingestion Pipeline", url: "https://www.docker.com" }
+            ]
+          },
         ].map((section) => (
           <div key={section.label} className="mb-2">
             <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mr-2">{section.label}:</span>
