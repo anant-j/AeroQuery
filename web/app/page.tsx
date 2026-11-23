@@ -71,10 +71,7 @@ const BenchmarkMetrics = [
     label: "Context precision",
     description: "How well relevant retrieved context is ranked. Retrieval scores are shared across models.",
     scores: [
-      { model: "GPT-5.4 nano", bare: null, rag: 0.913, rerank: 0.955 },
-      { model: "GPT-5.4 mini", bare: null, rag: 0.913, rerank: 0.955 },
-      { model: "GPT-5.4", bare: null, rag: 0.913, rerank: 0.955 },
-      { model: "Llama 3.2 1B", bare: null, rag: 0.913, rerank: 0.955 },
+      { model: "All models", bare: null, rag: 0.913, rerank: 0.955 },
     ],
   },
   {
@@ -82,10 +79,7 @@ const BenchmarkMetrics = [
     label: "Context recall",
     description: "How much of the reference answer is supported by retrieved context. Retrieval scores are shared across models.",
     scores: [
-      { model: "GPT-5.4 nano", bare: null, rag: 0.989, rerank: 1.000 },
-      { model: "GPT-5.4 mini", bare: null, rag: 0.989, rerank: 1.000 },
-      { model: "GPT-5.4", bare: null, rag: 0.989, rerank: 1.000 },
-      { model: "Llama 3.2 1B", bare: null, rag: 0.989, rerank: 1.000 },
+      { model: "All models", bare: null, rag: 0.989, rerank: 1.000 },
     ],
   },
 ];
