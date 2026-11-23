@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore }
 import ReactMarkdown from "react-markdown";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { formatComparisonMessage, getTurnstileSiteKey, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
+import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
@@ -160,6 +160,8 @@ function subscribeToTheme(callback: () => void) {
   return () => window.removeEventListener(THEME_CHANGE_EVENT, callback);
 }
 
+class RequestError extends Error {}
+
 function reserveSessionRequest() {
   let accepted = false;
   try {
@@ -168,7 +170,7 @@ function reserveSessionRequest() {
     accepted = false;
   }
   window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
-  if (!accepted) throw new Error("Session request limit reached or session storage is unavailable.");
+  if (!accepted) throw new RequestError("Session request limit reached or session storage is unavailable.");
 }
 
 declare global {
@@ -196,6 +198,8 @@ interface AskResponse {
   model: string;
   tokens: number;
   use_rag: boolean;
+  complete?: boolean;
+  incomplete?: boolean;
   sources?: Source[];
   agent?: {
     query_type?: string;
@@ -261,6 +265,16 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
         </span>
       </div>
 
+      {label === "Bare LLM" && (
+        <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">
+          Unverified model output without retrieved sources. Check official regulations.
+        </p>
+      )}
+      {result.incomplete && (
+        <p role="alert" className="text-xs text-red-600 dark:text-red-400 mb-3">
+          This answer is incomplete. Please try again.
+        </p>
+      )}
       <div className="prose prose-sm prose-gray dark:prose-invert max-w-none mb-3">
         {streaming && !result.answer && (
           <span className="text-sm text-gray-400 dark:text-gray-500 animate-pulse">
@@ -331,6 +345,7 @@ export default function Home() {
   const isLocalhost = useSyncExternalStore(subscribeToLocalhost, getIsLocalhost, () => false);
   const sessionResetSeconds = useSyncExternalStore(subscribeToSessionReset, sessionRequestResetSeconds, () => null);
   const requestsNeeded = modelOption === "webllm" ? 1 : 2;
+  const queryTooLong = isQueryTooLong(query);
 
   // WebLLM state
   const [webllmReady, setWebllmReady] = useState(false);
@@ -448,7 +463,7 @@ export default function Home() {
             const event = JSON.parse(line.slice(6));
             if (event.mode !== "rag" && event.mode !== "bare") throw new Error("Invalid stream response");
             const mode: "rag" | "bare" = event.mode;
-            if (event.error) throw new Error(`${mode === "rag" ? "RAG" : "Bare"}: ${event.error}`);
+            if (typeof event.error === "string") throw new RequestError(`${mode === "rag" ? "RAG" : "Bare"}: ${event.error}`);
             if (typeof event.chunk !== "string") throw new Error("Invalid stream response");
             upstreamBuffers[mode] += event.chunk;
             const upstreamLines = upstreamBuffers[mode].split("\n");
@@ -468,8 +483,11 @@ export default function Home() {
                 setRagResult(prev => prev ? { ...prev, sources: data.sources, agent: data.agent } : null);
               } else if (data.type === "usage") {
                 update(prev => prev ? { ...prev, tokens: data.tokens, model: data.model } : null);
+              } else if (data.type === "error") {
+                throw new RequestError(`${mode === "rag" ? "RAG" : "Bare"}: ${typeof data.error === "string" ? data.error : "Generation failed. Please try again."}`);
               } else if (data.type === "done") {
                 completed[mode] = true;
+                update(prev => prev ? { ...prev, complete: true } : null);
                 if (mode === "rag") setRagStreaming(false);
                 else setBareStreaming(false);
               }
@@ -477,7 +495,7 @@ export default function Home() {
           }
         }
       }
-      if (!completed.rag || !completed.bare) throw new Error("Generation stream ended unexpectedly");
+      if (!completed.rag || !completed.bare) throw new RequestError("Generation ended unexpectedly. Answers may be incomplete; please try again.");
     } finally {
       await reader.cancel().catch(() => { });
     }
@@ -485,6 +503,10 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (queryTooLong) {
+      setError(`Question must be at most ${MAX_QUERY_LENGTH} characters.`);
+      return;
+    }
     if (loading || getRemainingRequests() < requestsNeeded) {
       setError("You have reached the session limit. Please try again in a few minutes.");
       return;
@@ -520,7 +542,6 @@ export default function Home() {
       }
 
       if (modelOption === "webllm" && !webllmReady && !(await startWebLLM())) {
-        setError("Could not load WebLLM. Check the model loading error and try again.");
         return;
       }
 
@@ -545,7 +566,7 @@ export default function Home() {
 
         if (!retrieveRes.ok) {
           const error = await retrieveRes.json().catch(() => null);
-          throw new Error(error?.error || "Retrieval API error");
+          throw new RequestError(typeof error?.error === "string" ? error.error : "Retrieval failed. Please try again.");
         }
         const retrieveData = await retrieveRes.json();
         const chunks: Chunk[] = retrieveData.chunks;
@@ -573,12 +594,16 @@ export default function Home() {
           temperature: 0,
           stream: true,
         });
+        let ragFinishReason: string | null = null;
         for await (const chunk of ragStream) {
           const token = chunk.choices[0]?.delta?.content;
+          ragFinishReason = chunk.choices[0]?.finish_reason ?? ragFinishReason;
           if (token) {
             setRagResult(prev => prev ? { ...prev, answer: prev.answer + token } : null);
           }
         }
+        if (ragFinishReason !== "stop") throw new RequestError("RAG: Generation ended before the answer was complete. Please try again.");
+        setRagResult(prev => prev ? { ...prev, complete: true } : null);
         setRagStreaming(false);
 
         // Bare LLM with streaming
@@ -589,16 +614,22 @@ export default function Home() {
           temperature: 0,
           stream: true,
         });
+        let bareFinishReason: string | null = null;
         for await (const chunk of bareStream) {
           const token = chunk.choices[0]?.delta?.content;
+          bareFinishReason = chunk.choices[0]?.finish_reason ?? bareFinishReason;
           if (token) {
             setBareResult(prev => prev ? { ...prev, answer: prev.answer + token } : null);
           }
         }
+        if (bareFinishReason !== "stop") throw new RequestError("Bare: Generation ended before the answer was complete. Please try again.");
+        setBareResult(prev => prev ? { ...prev, complete: true } : null);
         setBareStreaming(false);
       }
     } catch (err) {
-      setError("Something went wrong. Please try again later.");
+      setError(err instanceof RequestError ? err.message : "Something went wrong. Please try again later.");
+      setRagResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
+      setBareResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       if (err instanceof Error) {
         console.error(err.message);
       }
@@ -696,6 +727,8 @@ export default function Home() {
                   }}
                   placeholder={DefaultQuery}
                   aria-label="Search Canadian aviation regulations"
+                  aria-invalid={queryTooLong}
+                  aria-describedby="question-length"
                   className="min-w-0 flex-1 bg-transparent px-3 py-3.5 text-sm text-gray-700 outline-none placeholder-gray-400 dark:text-gray-200 dark:placeholder-gray-500"
                 />
                 <ComboboxButton
@@ -740,7 +773,7 @@ export default function Home() {
           <button
             ref={submitButtonRef}
             type="submit"
-            disabled={loading || webllmLoading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady)) || remainingRequests < requestsNeeded}
+            disabled={queryTooLong || loading || webllmLoading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady)) || remainingRequests < requestsNeeded}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
@@ -751,12 +784,19 @@ export default function Home() {
           </button>
         </div>
 
+        <p id="question-length" role={queryTooLong ? "alert" : undefined} className={`text-xs mb-3 ${queryTooLong ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
+          Question must be at most {MAX_QUERY_LENGTH} characters.
+        </p>
+
         <div className="flex items-center gap-4">
           <label htmlFor="model-select" className="text-xs text-gray-500 dark:text-gray-400">Model:</label>
           <select
             id="model-select"
             value={modelOption}
-            onChange={(e) => setModelOption(e.target.value as ModelOption)}
+            onChange={(e) => {
+              setModelOption(e.target.value as ModelOption);
+              setWebllmError("");
+            }}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
             <option value="gpt-5.4-mini">GPT-5.4-mini</option>
@@ -772,7 +812,7 @@ export default function Home() {
               <span aria-live="polite">{webllmStatus.length > 50 ? webllmStatus.slice(0, 50) + "..." : webllmStatus}</span>
             </span>
           )}
-          {webllmError && (
+          {modelOption === "webllm" && webllmError && (
             <span role="alert" className="text-xs text-red-600 dark:text-red-400">
               {webllmError}
             </span>
@@ -800,6 +840,7 @@ export default function Home() {
               {remainingRequests === 0
                 ? "You have reached the session limits. Please wait until it resets."
                 : "Not enough requests remain for this comparison."}
+              {sessionResetSeconds !== null && ` Resets in ${formatResetCountdown(sessionResetSeconds)}.`}
             </>
           )}
         </p>

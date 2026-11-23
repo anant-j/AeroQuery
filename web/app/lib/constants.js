@@ -6,6 +6,11 @@ export const SESSION_LIMIT_EVENT = "aeroquery-session-requests";
 export const WEBLLM_MODEL = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 export const REQUEST_LIMIT_TTL = 2 * 60 * 1000; // 2 minutes
 
+export function isQueryTooLong(query) {
+  const submitted = query.trim().replace(/^[\p{White_Space}\u001c-\u001f]+|[\p{White_Space}\u001c-\u001f]+$/gu, "");
+  return Array.from(submitted).length > MAX_QUERY_LENGTH;
+}
+
 export function getTurnstileSiteKey() {
   return process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 }

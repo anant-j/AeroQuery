@@ -103,7 +103,7 @@ def _validate_query(query):
     if not query:
         raise ApiError("query is required", 400)
     if len(query) > MAX_QUERY_LENGTH:
-        raise ApiError(f"query must be shorter than {MAX_QUERY_LENGTH} characters", 400)
+        raise ApiError(f"query must be at most {MAX_QUERY_LENGTH} characters", 400)
     return query
 
 

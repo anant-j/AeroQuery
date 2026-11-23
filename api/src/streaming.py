@@ -95,6 +95,13 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
                     failure_stage=None if successful else "generation_stream",
                     error_type=None if successful else "IncompleteStream",
                 )
+            if not completed or finish_reason != "stop":
+                controller.enqueue(encoder.encode(_sse_event({
+                    "type": "error",
+                    "error": "Generation ended before the answer was complete. Please try again.",
+                })))
+                controller.close()
+                return
             controller.enqueue(encoder.encode(_sse_event({"type": "done"})))
             controller.close()
         except Exception as error:

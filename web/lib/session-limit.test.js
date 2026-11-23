@@ -40,6 +40,23 @@ test("starts a two-minute window and reports its countdown when full", () => {
   }
 });
 
+test("reports the reset countdown with one request remaining", () => {
+  const originalNow = Date.now;
+  let now = 1_000_000;
+  Date.now = () => now;
+  global.window = { localStorage: { getItem: () => JSON.stringify({ count: MAX_SESSION_REQUESTS - 1, expiresAt: 1_002_000 }) } };
+  try {
+    assert.equal(remainingSessionRequests(), 1);
+    assert.equal(sessionRequestResetSeconds(), 2);
+    now += 2_000;
+    assert.equal(sessionRequestResetSeconds(), null);
+    assert.equal(remainingSessionRequests(), MAX_SESSION_REQUESTS);
+  } finally {
+    Date.now = originalNow;
+    delete global.window;
+  }
+});
+
 test("fails closed when storage is malformed or unavailable", () => {
   global.window = { localStorage: { getItem: () => "-1" } };
   assert.equal(remainingSessionRequests(), 0);

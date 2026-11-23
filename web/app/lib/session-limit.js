@@ -28,7 +28,7 @@ export function remainingSessionRequests() {
 export function sessionRequestResetSeconds() {
   try {
     const state = readRequestLimit(window.localStorage);
-    if (!state || state.count < MAX_SESSION_REQUESTS) return null;
+    if (!state || state.count === 0) return null;
     return Math.ceil((state.expiresAt - Date.now()) / 1000);
   } catch {
     return null;

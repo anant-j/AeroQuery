@@ -109,6 +109,14 @@ with patch.dict(sys.modules, {"js": js, "pyodide": types.ModuleType("pyodide"), 
 
 
 class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
+    def test_query_length_allows_1500_unicode_characters(self):
+        query = "🛩" * security.MAX_QUERY_LENGTH
+        self.assertEqual(security._validate_query(f"\u0085 {query} \u0085"), query)
+        with self.assertRaises(worker.ApiError) as error:
+            security._validate_query(query + "🛩")
+        self.assertEqual(error.exception.status, 400)
+        self.assertIn("at most 1500", str(error.exception))
+
     async def test_json_body_size_and_content_type_are_enforced(self):
         async def read_body(parts, content_type="application/json"):
             items = iter([*(types.SimpleNamespace(done=False, value=types.SimpleNamespace(to_bytes=lambda part=part: part)) for part in parts), types.SimpleNamespace(done=True)])
@@ -354,7 +362,8 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                 items = iter([types.SimpleNamespace(done=False, value=types.SimpleNamespace(to_bytes=lambda: "".join(lines).encode())), types.SimpleNamespace(done=True)])
                 reader = types.SimpleNamespace(read=AsyncMock(side_effect=lambda: next(items)))
                 upstream = types.SimpleNamespace(ok=True, body=types.SimpleNamespace(getReader=lambda: reader))
-                controller = types.SimpleNamespace(enqueue=lambda value: None, close=lambda: None, error=lambda error: self.fail(str(error)))
+                events = []
+                controller = types.SimpleNamespace(enqueue=events.append, close=lambda: None, error=lambda error: self.fail(str(error)))
                 with (
                     patch.object(streaming, "_azure_chat", AsyncMock(return_value=(upstream, "model"))) as chat,
                     patch.object(streaming, "_js_options", lambda value: value),
@@ -366,6 +375,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                     await response.body["start"](controller)
                 cached = await worker._cache_get(env, "stream")
                 self.assertEqual(cached is not None, should_cache)
+                self.assertEqual(json.loads(events[-1][6:])["type"], "done" if should_cache else "error")
                 if cached:
                     replay = worker._cached_stream(cached)
                     self.assertIn('"token":"answer"', replay.body)
@@ -423,7 +433,8 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             reader = types.SimpleNamespace(read=AsyncMock(side_effect=items))
             upstream = types.SimpleNamespace(ok=True, body=types.SimpleNamespace(getReader=lambda: reader))
             errors = []
-            controller = types.SimpleNamespace(enqueue=lambda value: None, close=lambda: None, error=errors.append)
+            events = []
+            controller = types.SimpleNamespace(enqueue=events.append, close=lambda: None, error=errors.append)
             with (
                 patch.object(streaming, "_azure_chat", AsyncMock(return_value=(upstream, "model"))),
                 patch.object(streaming, "_js_options", lambda value: value),
@@ -444,6 +455,8 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             ))
             self.assertEqual(row[7], 5)
             self.assertEqual(len(errors), 1 if case == "error" else 0)
+            if case != "error":
+                self.assertEqual(json.loads(events[-1][6:])["type"], "done" if case == "success" else "error")
 
     async def test_validated_request_failures_are_logged(self):
         entry = worker.Default()
