@@ -30,10 +30,10 @@ def _question_sha(query, mode):
     return hashlib.sha256(json.dumps([query, mode], ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
-def _cache_key(env, path, query, use_rag):
+def _cache_key(env, path, query, use_rag, model=None):
     settings = [
         CACHE_VERSION, path, query, use_rag,
-        getattr(env, "AZURE_OPENAI_DEPLOYMENT", "") or getattr(env, "LLM_MODEL", "") or "gpt-5.4-mini",
+        model or getattr(env, "AZURE_OPENAI_DEPLOYMENT", "") or getattr(env, "LLM_MODEL", "") or "gpt-5.4-mini",
         getattr(env, "AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large"),
         getattr(env, "AZURE_OPENAI_ENDPOINT", ""),
         getattr(env, "PINECONE_INDEX_HOST", ""), NAMESPACE, RERANK_MODEL,

@@ -14,7 +14,7 @@ def _sse_event(event):
 
 
 async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, correlation_id=None):
-    response, _ = await _azure_chat(env, messages, stream=True)
+    response, _ = await _azure_chat(env, messages, stream=True, model=model)
     if not response.ok:
         raise ApiError("Azure Foundry generation failed", 502)
 

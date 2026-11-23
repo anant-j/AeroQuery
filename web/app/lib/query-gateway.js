@@ -4,10 +4,11 @@
  * @param {string} workerKey
  * @param {string} sessionToken
  * @param {string} query
+ * @param {"gpt-5.4-mini" | "gpt-5.4-nano"} model
  * @param {AbortSignal} signal
  * @param {typeof fetch} fetcher
  */
-export function streamComparison(apiUrl, workerKey, sessionToken, query, signal, fetcher = fetch) {
+export function streamComparison(apiUrl, workerKey, sessionToken, query, model, signal, fetcher = fetch) {
   const abort = new AbortController();
   const encoder = new TextEncoder();
   const states = ["rag", "bare"].map((mode) => ({
@@ -30,7 +31,7 @@ export function streamComparison(apiUrl, workerKey, sessionToken, query, signal,
             "x-aeroquery-key": workerKey,
             "Authorization": `Bearer ${sessionToken}`,
           },
-          body: JSON.stringify({ query, use_rag: state.mode === "rag" }),
+          body: JSON.stringify({ query, model, use_rag: state.mode === "rag" }),
           cache: "no-store",
           signal: abort.signal,
         });

@@ -58,8 +58,8 @@ def _azure_headers(env):
     return {"Authorization": f"Bearer {api_key}"}
 
 
-async def _azure_chat(env, messages, stream=False):
-    model = (
+async def _azure_chat(env, messages, stream=False, model=None):
+    model = model or (
         getattr(env, "AZURE_OPENAI_DEPLOYMENT", "")
         or getattr(env, "LLM_MODEL", "")
         or "gpt-5.4-mini"

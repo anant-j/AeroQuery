@@ -272,8 +272,20 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         key = worker._cache_key(env, "/stream", "question", True)
         self.assertNotEqual(key, worker._cache_key(env, "/stream", "question", False))
         self.assertNotEqual(key, worker._cache_key(env, "/stream", "Question", True))
+        self.assertNotEqual(key, worker._cache_key(env, "/stream", "question", True, "gpt-5.4-nano"))
         env.AZURE_OPENAI_DEPLOYMENT = "model-b"
         self.assertNotEqual(key, worker._cache_key(env, "/stream", "question", True))
+
+    async def test_generation_model_is_restricted_and_allows_nano_deployment_override(self):
+        env = types.SimpleNamespace(AZURE_OPENAI_DEPLOYMENT="mini-deployment")
+        self.assertEqual(worker._generation_model(env, None), "mini-deployment")
+        self.assertEqual(worker._generation_model(env, "gpt-5.4-mini"), "mini-deployment")
+        self.assertEqual(worker._generation_model(env, "gpt-5.4-nano"), "gpt-5.4-nano")
+        env.AZURE_OPENAI_NANO_DEPLOYMENT = "nano-deployment"
+        self.assertEqual(worker._generation_model(env, "gpt-5.4-nano"), "nano-deployment")
+        with self.assertRaises(worker.ApiError) as error:
+            worker._generation_model(env, "arbitrary-model")
+        self.assertEqual(error.exception.status, 400)
 
     async def test_repeated_retrieval_uses_cache_and_still_logs(self):
         entry = worker.Default()
@@ -331,12 +343,13 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                 upstream = types.SimpleNamespace(ok=True, body=types.SimpleNamespace(getReader=lambda: reader))
                 controller = types.SimpleNamespace(enqueue=lambda value: None, close=lambda: None, error=lambda error: self.fail(str(error)))
                 with (
-                    patch.object(streaming, "_azure_chat", AsyncMock(return_value=(upstream, "model"))),
+                    patch.object(streaming, "_azure_chat", AsyncMock(return_value=(upstream, "model"))) as chat,
                     patch.object(streaming, "_js_options", lambda value: value),
                     patch.object(streaming, "TextEncoder", types.SimpleNamespace(new=lambda: types.SimpleNamespace(encode=lambda value: value))),
                     patch.object(streaming, "ReadableStream", types.SimpleNamespace(new=lambda options: options)),
                 ):
                     response = await worker._stream_generation(env, [], "model", cache_key="stream")
+                    chat.assert_awaited_once_with(env, [], stream=True, model="model")
                     await response.body["start"](controller)
                 cached = await worker._cache_get(env, "stream")
                 self.assertEqual(cached is not None, should_cache)

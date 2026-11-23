@@ -191,7 +191,7 @@ declare global {
   }
 }
 
-type ModelOption = "openai" | "webllm";
+type ModelOption = "gpt-5.4-mini" | "gpt-5.4-nano" | "webllm";
 
 interface Source {
   section: string;
@@ -329,7 +329,7 @@ export default function Home() {
   const [benchmarkMetric, setBenchmarkMetric] = useState(BenchmarkMetrics[0]);
   const suggestionNavigated = useRef(false);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
-  const [modelOption, setModelOption] = useState<ModelOption>("openai");
+  const [modelOption, setModelOption] = useState<ModelOption>("gpt-5.4-mini");
   const [loading, setLoading] = useState(false);
   const [ragResult, setRagResult] = useState<AskResponse | null>(null);
   const [bareResult, setBareResult] = useState<AskResponse | null>(null);
@@ -340,7 +340,7 @@ export default function Home() {
   const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
   const isLocalhost = useSyncExternalStore(subscribeToLocalhost, getIsLocalhost, () => false);
   const sessionResetSeconds = useSyncExternalStore(subscribeToSessionReset, sessionRequestResetSeconds, () => null);
-  const requestsNeeded = modelOption === "openai" ? 2 : 1;
+  const requestsNeeded = modelOption === "webllm" ? 1 : 2;
 
   // WebLLM state
   const [webllmReady, setWebllmReady] = useState(false);
@@ -430,11 +430,11 @@ export default function Home() {
     }
   }, [webllmReady]);
 
-  async function readComparisonStream(query: string, sessionToken: string) {
+  async function readComparisonStream(query: string, sessionToken: string, model: Exclude<ModelOption, "webllm">) {
     // Keep the existing session budget: a comparison uses two backend requests.
     reserveSessionRequest();
     reserveSessionRequest();
-    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, new AbortController().signal).getReader();
+    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, model, new AbortController().signal).getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     const upstreamBuffers = { rag: "", bare: "" };
@@ -528,14 +528,14 @@ export default function Home() {
 
       if (!sessionRef.current) throw new Error("Verification is unavailable.");
       const sessionToken = await sessionRef.current();
-      if (modelOption === "openai") {
+      if (modelOption !== "webllm") {
         // Initialize results with empty answers for streaming
         setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
         setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
         setRagStreaming(true);
         setBareStreaming(true);
 
-        await readComparisonStream(effectiveQuery, sessionToken);
+        await readComparisonStream(effectiveQuery, sessionToken, modelOption);
       } else {
         // WebLLM: retrieve chunks from server, generate locally with streaming
         reserveSessionRequest();
@@ -752,7 +752,8 @@ export default function Home() {
             onChange={(e) => setModelOption(e.target.value as ModelOption)}
             className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
           >
-            <option value="openai">GPT-5.4-mini</option>
+            <option value="gpt-5.4-mini">GPT-5.4-mini</option>
+            <option value="gpt-5.4-nano">GPT-5.4-Nano</option>
             <option value="webllm" disabled={!webllmReady}>WebLLM (Llama 3.2 1B)</option>
           </select>
           {!webllmReady && (

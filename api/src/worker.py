@@ -15,6 +15,19 @@ from security import _issue_session, _read_json_body, _validate_query, _verify_s
 from streaming import _cached_stream, _stream_generation
 
 
+def _generation_model(env, requested_model):
+    configured_model = (
+        getattr(env, "AZURE_OPENAI_DEPLOYMENT", "")
+        or getattr(env, "LLM_MODEL", "")
+        or "gpt-5.4-mini"
+    )
+    if requested_model is None or requested_model == "gpt-5.4-mini":
+        return configured_model
+    if requested_model == "gpt-5.4-nano":
+        return getattr(env, "AZURE_OPENAI_NANO_DEPLOYMENT", "") or requested_model
+    raise ApiError("Unsupported model", 400)
+
+
 class Default(WorkerEntrypoint):
     async def fetch(self, request):
         origin = request.headers.get("origin", "")
@@ -86,8 +99,9 @@ class Default(WorkerEntrypoint):
             if not isinstance(use_rag, bool):
                 raise ApiError("use_rag must be a boolean", 400)
 
+            model = _generation_model(self.env, body.get("model")) if path == "/stream" else None
             mode = "webllm" if path == "/retrieve" else "openai_rag" if use_rag else "openai_bare"
-            cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False)
+            cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False, model)
             cached = await _cache_get(self.env, cache_key)
             stage = "question_logging"
             await _log_question(self.env, query, mode, _question_sha(query, mode), correlation_id, cached is not None)
@@ -123,11 +137,6 @@ class Default(WorkerEntrypoint):
                 )},
             ]
 
-            model = (
-                getattr(self.env, "AZURE_OPENAI_DEPLOYMENT", "")
-                or getattr(self.env, "LLM_MODEL", "")
-                or "gpt-5.4-mini"
-            )
             stage = "generation"
             return await _stream_generation(self.env, messages, model, sources, agent, cache_key, correlation_id)
         except ApiError as error:
