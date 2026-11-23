@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from retrieval.search import search
+from retrieval.search import NAMESPACE, search
 from generation.prompt import build_prompt
 
 load_dotenv()
@@ -9,12 +9,13 @@ load_dotenv()
 LLM_MODEL = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 
 
-def ask(query, top_k=10, namespace="canada", model=None, use_rerank=True, base_url=None):
+def ask(query, top_k=10, namespace=NAMESPACE, model=None, use_rerank=True, base_url=None):
     # 1. Retrieve relevant chunks
     chunks = search(query, top_k=top_k, namespace=namespace, use_rerank=use_rerank)
 
     # 2. Build prompt with context
-    messages = build_prompt(query, chunks)
+    top_score = max((chunk.get("rerank_score", chunk.get("score", 0)) for chunk in chunks), default=0)
+    messages = build_prompt(query, chunks, context_sufficient=bool(chunks) and top_score >= 0.1)
 
     # 3. Generate answer
     if base_url:

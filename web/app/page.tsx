@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore }
 import ReactMarkdown from "react-markdown";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
+import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, normalizeQuery, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession } from "./lib/worker-session.js";
@@ -197,7 +197,6 @@ interface AskResponse {
   answer: string;
   model: string;
   tokens: number;
-  use_rag: boolean;
   complete?: boolean;
   incomplete?: boolean;
   sources?: Source[];
@@ -511,7 +510,7 @@ export default function Home() {
       setError("You have reached the session limit. Please try again in a few minutes.");
       return;
     }
-    const effectiveQuery = query.trim() || DefaultQuery;
+    const effectiveQuery = normalizeQuery(query) || DefaultQuery;
 
     setLoading(true);
     setError("");
@@ -528,7 +527,6 @@ export default function Home() {
           answer: "Hardcoded localhost response for the RAG comparison. No API request was made.",
           model: "Local mock",
           tokens: 0,
-          use_rag: true,
           sources: [],
         });
         setBareResult({
@@ -536,7 +534,6 @@ export default function Home() {
           answer: "Hardcoded localhost response for the non-RAG comparison. No API request was made.",
           model: "Local mock",
           tokens: 0,
-          use_rag: false,
         });
         return;
       }
@@ -549,8 +546,8 @@ export default function Home() {
       const sessionToken = await sessionRef.current();
       if (modelOption !== "webllm") {
         // Initialize results with empty answers for streaming
-        setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: true, sources: [] });
-        setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, use_rag: false });
+        setRagResult({ query: effectiveQuery, answer: "", model: "", tokens: 0, sources: [] });
+        setBareResult({ query: effectiveQuery, answer: "", model: "", tokens: 0 });
         setRagStreaming(true);
         setBareStreaming(true);
 
@@ -584,7 +581,7 @@ export default function Home() {
 
         // RAG with streaming (WebLLM is single-threaded, run sequentially)
         setRagResult({
-          query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: true,
+          query: effectiveQuery, answer: "", model: webllmModel, tokens: 0,
           sources: chunks,
         });
         setRagStreaming(true);
@@ -607,7 +604,7 @@ export default function Home() {
         setRagStreaming(false);
 
         // Bare LLM with streaming
-        setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0, use_rag: false });
+        setBareResult({ query: effectiveQuery, answer: "", model: webllmModel, tokens: 0 });
         setBareStreaming(true);
         const bareStream = await engineRef.current!.chat.completions.create({
           messages: bareMessages,

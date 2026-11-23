@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { streamComparison } from "../app/lib/query-gateway.js";
-import { isQueryTooLong } from "../app/lib/constants.js";
+import { isQueryTooLong, normalizeQuery } from "../app/lib/constants.js";
 
 async function events(stream) {
   const text = await new Response(stream).text();
@@ -11,6 +11,8 @@ async function events(stream) {
 test("question length uses trimmed Unicode code points like the API", () => {
   assert.equal(isQueryTooLong(`  ${"🛩".repeat(1500)}  `), false);
   assert.equal(isQueryTooLong(`\u0085 ${"a".repeat(1500)} \u0085`), false);
+  assert.equal(normalizeQuery(`\u0085 ${"a".repeat(1500)} \u0085`), "a".repeat(1500));
+  assert.equal(normalizeQuery("\u0085".repeat(32768)), "");
   assert.equal(isQueryTooLong("🛩".repeat(1501)), true);
   assert.equal(isQueryTooLong("a".repeat(1501)), true);
 });

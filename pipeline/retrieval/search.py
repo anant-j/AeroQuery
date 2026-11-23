@@ -8,7 +8,7 @@ load_dotenv()
 
 # On Azure Foundry (v1 API), the embedding "model" is the deployment name.
 EMBEDDING_MODEL = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
-NAMESPACE = "canada"
+NAMESPACE = "canada-car-2026-06-17"
 RERANK_MODEL = "rerank-v4.0-pro"
 
 
