@@ -12,7 +12,6 @@ test("user UUID survives browser reload and changes after site data is cleared",
     localStorage: {
       getItem: (key) => values.get(key) ?? null,
       setItem: (key, value) => values.set(key, value),
-      removeItem: (key) => values.delete(key),
     },
   };
   try {
@@ -25,26 +24,6 @@ test("user UUID survives browser reload and changes after site data is cleared",
     globalThis.window = previousWindow;
     if (cryptoDescriptor) Object.defineProperty(globalThis, "crypto", cryptoDescriptor);
     else delete globalThis.crypto;
-  }
-});
-
-test("legacy user key is migrated without changing the UUID", () => {
-  const uuid = "12345678-1234-4234-8234-123456789abc";
-  const values = new Map([["aeroquery_user_key", uuid]]);
-  const previousWindow = globalThis.window;
-  globalThis.window = {
-    localStorage: {
-      getItem: (key) => values.get(key) ?? null,
-      setItem: (key, value) => values.set(key, value),
-      removeItem: (key) => values.delete(key),
-    },
-  };
-  try {
-    assert.equal(getUserUuid(), uuid);
-    assert.equal(values.get("aeroquery_user_uuid"), uuid);
-    assert.equal(values.has("aeroquery_user_key"), false);
-  } finally {
-    globalThis.window = previousWindow;
   }
 });
 

@@ -101,8 +101,7 @@ class Default(WorkerEntrypoint):
                 raise ApiError("Too many session requests. Please wait a minute and try again.", 429)
             query = _validate_query(body.get("query"))
 
-            # Accept the previous field while older browser clients are still cached.
-            user_uuid = body.get("user_uuid", body.get("user_key"))
+            user_uuid = body.get("user_uuid")
             if user_uuid is not None:
                 try:
                     if not isinstance(user_uuid, str) or str(uuid.UUID(user_uuid)) != user_uuid:
@@ -132,8 +131,6 @@ class Default(WorkerEntrypoint):
             logged = True
             if cached is not None:
                 source_metadata = cached.get("source_metadata")
-                if source_metadata is None:
-                    source_metadata = _source_metadata(cached.get("sources", cached.get("chunks", [])))
                 await _finish_question(
                     self.env, correlation_id, outcome="success", http_status=200,
                     duration_ms=round((time.monotonic() - started) * 1000),

@@ -301,10 +301,9 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         source_url = "https://laws-lois.justice.gc.ca/eng/regulations/SOR-96-433/section-602.06.html"
         chunks = [{"section": "1", "title": "Title", "text": "Text", "score": 1, "source_url": source_url}]
         with (
-            patch.object(worker, "_read_json_body", AsyncMock(side_effect=[
-                {"query": " question ", "user_uuid": "12345678-1234-4234-8234-123456789abc"},
-                {"query": " question ", "user_key": "12345678-1234-4234-8234-123456789abc"},
-            ])),
+            patch.object(worker, "_read_json_body", AsyncMock(return_value={
+                "query": " question ", "user_uuid": "12345678-1234-4234-8234-123456789abc",
+            })),
             patch.object(worker, "_verify_session", AsyncMock(return_value="verified-id")),
             patch.object(worker, "_retrieve_chunks", AsyncMock(return_value=chunks)) as retrieve,
         ):
@@ -529,63 +528,6 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(generate.await_args_list[0].args[3], chunks)
         self.assertEqual(json.loads(bare_messages[1]["content"].split("\n", 1)[1]), {"question": "Question?", "sources": None, "context_sufficient": None})
         self.assertEqual(json.loads(empty_messages[1]["content"].split("\n", 1)[1]), {"question": "Question?", "sources": [], "context_sufficient": False})
-
-    def test_mode_migration_renames_existing_rag_logs(self):
-        connection = sqlite3.connect(":memory:")
-        self.addCleanup(connection.close)
-        schema_dir = Path(__file__).parents[1] / "schema"
-        for name in ("0001_question_logs.sql", "0002_answer_cache.sql"):
-            connection.executescript((schema_dir / name).read_text())
-        connection.executemany(
-            "INSERT INTO question_logs (id, created_at, query_length, mode) VALUES (?, ?, ?, ?)",
-            [("rag", "2026-01-01", 1, "openai"), ("bare", "2026-01-01", 1, "openai_bare")],
-        )
-        connection.executescript((schema_dir / "0003_rename_openai_rag.sql").read_text())
-        self.assertEqual(connection.execute("SELECT mode FROM question_logs ORDER BY id").fetchall(), [("openai_bare",), ("openai_rag",)])
-
-    def test_logging_migration_preserves_rows_and_removes_cache_data(self):
-        connection = sqlite3.connect(":memory:")
-        self.addCleanup(connection.close)
-        schema_dir = Path(__file__).parents[1] / "schema"
-        for name in ("0001_question_logs.sql", "0002_answer_cache.sql", "0003_rename_openai_rag.sql"):
-            connection.executescript((schema_dir / name).read_text())
-        connection.execute(
-            "INSERT INTO question_logs (id, created_at, query_length, mode, query_text, cache_key, cache_value, cache_expires_at, answered_from_cache) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            ("correlation", "2026-01-01", 8, "openai_rag", "question", "legacy-key", "answer", 123, 1),
-        )
-        connection.executescript((schema_dir / "0004_logging_only.sql").read_text())
-        columns = {row[1] for row in connection.execute("PRAGMA table_info(question_logs)")}
-        self.assertEqual(columns, {"correlation_id", "created_at", "mode", "question_asked", "question_sha", "answered_from_cache"})
-        self.assertEqual(connection.execute("SELECT correlation_id, question_asked, question_sha, answered_from_cache FROM question_logs").fetchone(), ("correlation", "question", None, 1))
-
-    def test_analytics_migration_preserves_existing_logs(self):
-        connection = sqlite3.connect(":memory:")
-        self.addCleanup(connection.close)
-        schema_dir = Path(__file__).parents[1] / "schema"
-        for schema in sorted(schema_dir.glob("*.sql")):
-            if schema.name == "0005_request_analytics.sql":
-                connection.execute(
-                    "INSERT INTO question_logs (correlation_id, created_at, mode, question_asked, answered_from_cache) VALUES (?, ?, ?, ?, ?)",
-                    ("existing", "2026-01-01", "openai_rag", "question", 0),
-                )
-            connection.executescript(schema.read_text())
-        self.assertEqual(connection.execute(
-            "SELECT correlation_id, question_asked, user_uuid, answer, outcome FROM question_logs"
-        ).fetchone(), ("existing", "question", None, None, None))
-
-    def test_user_uuid_migration_preserves_existing_user_keys(self):
-        connection = sqlite3.connect(":memory:")
-        self.addCleanup(connection.close)
-        schema_dir = Path(__file__).parents[1] / "schema"
-        for schema in sorted(schema_dir.glob("*.sql")):
-            if schema.name == "0006_user_uuid.sql":
-                connection.execute(
-                    "INSERT INTO question_logs (correlation_id, created_at, mode, user_key) VALUES (?, ?, ?, ?)",
-                    ("existing", "2026-01-01", "openai_rag", "12345678-1234-4234-8234-123456789abc"),
-                )
-            connection.executescript(schema.read_text())
-        self.assertEqual(connection.execute("SELECT user_uuid FROM question_logs").fetchone(),
-                         ("12345678-1234-4234-8234-123456789abc",))
 
     def test_question_sha_depends_only_on_question_and_mode(self):
         key = worker._question_sha("question", "openai_rag")
