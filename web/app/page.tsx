@@ -324,7 +324,7 @@ export default function Home() {
   const [benchmarkMetric, setBenchmarkMetric] = useState(BenchmarkMetrics[0]);
   const suggestionNavigated = useRef(false);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
-  const [modelOption, setModelOption] = useState<ModelOption>("gpt-5.4-nano");
+  const [modelOption, setModelOption] = useState<ModelOption>("gpt-5.4-mini");
   const [loading, setLoading] = useState(false);
   const [ragResult, setRagResult] = useState<AskResponse | null>(null);
   const [bareResult, setBareResult] = useState<AskResponse | null>(null);
