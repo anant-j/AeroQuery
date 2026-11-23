@@ -547,6 +547,7 @@ class CarEvaluationTests(unittest.TestCase):
             generated_before, scored_before = len(generated), len(scored)
             run_eval.run_eval(results_root=destination, **options)
             self.assertEqual((len(generated), len(scored)), (generated_before, scored_before))
+            self.assertEqual(json.loads(manifest_path.read_text()), manifest)
             with patch.object(run_eval, "PROTOCOL_VERSION", run_eval.PROTOCOL_VERSION + 1):
                 with self.assertRaisesRegex(ValueError, "current protocol version"):
                     run_eval.run_eval(**reuse)
