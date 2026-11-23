@@ -6,16 +6,15 @@ from common import _js_options
 from constants import CACHE_VERSION, DEFAULT_CACHE_TTL_SECONDS, NAMESPACE, RERANK_MODEL
 
 
-async def _log_question(env, query, mode, question_sha, correlation_id, answered_from_cache=False, *, user_uuid=None, endpoint=None, model=None, prompt_sha=None, corpus_version=None):
+async def _log_question(env, query, mode, question_sha, answered_from_cache=False, *, user_uuid=None, endpoint=None, model=None, prompt_sha=None, corpus_version=None):
     now = datetime.now(timezone.utc)
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
-    log_event = {"event": "question_received", "correlation_id": correlation_id, "mode": mode, "answered_from_cache": answered_from_cache}
+    log_event = {"event": "question_received", "mode": mode, "answered_from_cache": answered_from_cache}
     try:
-        await env.DB.prepare(
-            "INSERT INTO question_logs (correlation_id, created_at, mode, question_asked, question_sha, answered_from_cache, user_uuid, endpoint, model, prompt_sha, corpus_version, outcome) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        row = await env.DB.prepare(
+            "INSERT INTO question_logs (created_at, mode, question_asked, question_sha, answered_from_cache, user_uuid, endpoint, model, prompt_sha, corpus_version, outcome) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING rowid AS log_rowid"
         ).bind(
-            correlation_id,
             now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             mode,
             query_text,
@@ -27,10 +26,14 @@ async def _log_question(env, query, mode, question_sha, correlation_id, answered
             prompt_sha,
             corpus_version,
             "pending",
-        ).run()
+        ).first()
+        if row is None:
+            raise RuntimeError("Question log insert returned no row")
         print(json.dumps(log_event))
+        return int(row.log_rowid)
     except Exception as error:
-        print(json.dumps({"event": "question_log_failed", "correlation_id": correlation_id, "error_type": type(error).__name__}))
+        print(json.dumps({"event": "question_log_failed", "error_type": type(error).__name__}))
+        return None
 
 
 def _source_metadata(chunks):
@@ -40,23 +43,24 @@ def _source_metadata(chunks):
     ]
 
 
-async def _finish_question(env, correlation_id, *, outcome, http_status, duration_ms, answer=None, failure_stage=None,
+async def _finish_question(env, log_rowid, *, outcome, http_status, duration_ms, answer=None, failure_stage=None,
                            error_type=None, retrieval_ms=None, generation_ms=None, sources=None, usage=None, finish_reason=None):
     usage = usage or {}
     try:
-        await env.DB.prepare(
-            "UPDATE question_logs SET outcome = ?, http_status = ?, duration_ms = ?, answer = ?, failure_stage = ?, "
-            "error_type = ?, retrieval_ms = ?, generation_ms = ?, sources_json = ?, input_tokens = ?, "
-            "output_tokens = ?, total_tokens = ?, finish_reason = ? WHERE correlation_id = ?"
-        ).bind(
-            outcome, http_status, duration_ms, answer, failure_stage, error_type, retrieval_ms, generation_ms,
-            json.dumps(sources) if sources is not None else None,
-            usage.get("prompt_tokens"), usage.get("completion_tokens"), usage.get("total_tokens"),
-            finish_reason, correlation_id,
-        ).run()
+        if log_rowid is not None:
+            await env.DB.prepare(
+                "UPDATE question_logs SET outcome = ?, http_status = ?, duration_ms = ?, answer = ?, failure_stage = ?, "
+                "error_type = ?, retrieval_ms = ?, generation_ms = ?, sources_json = ?, input_tokens = ?, "
+                "output_tokens = ?, total_tokens = ?, finish_reason = ? WHERE rowid = ?"
+            ).bind(
+                outcome, http_status, duration_ms, answer, failure_stage, error_type, retrieval_ms, generation_ms,
+                json.dumps(sources) if sources is not None else None,
+                usage.get("prompt_tokens"), usage.get("completion_tokens"), usage.get("total_tokens"),
+                finish_reason, log_rowid,
+            ).run()
     except Exception as error:
-        print(json.dumps({"event": "question_log_update_failed", "correlation_id": correlation_id, "error_type": type(error).__name__}))
-    print(json.dumps({"event": "question_completed", "correlation_id": correlation_id, "outcome": outcome,
+        print(json.dumps({"event": "question_log_update_failed", "error_type": type(error).__name__}))
+    print(json.dumps({"event": "question_completed", "outcome": outcome,
                       "http_status": http_status, "duration_ms": duration_ms, "failure_stage": failure_stage,
                       "error_type": error_type}))
 

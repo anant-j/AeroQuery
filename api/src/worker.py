@@ -51,9 +51,9 @@ class Default(WorkerEntrypoint):
         return response
 
     async def _handle_request(self, request, origin):
-        correlation_id = uuid.uuid4().hex
         started = time.monotonic()
-        logged = False
+        log_rowid = None
+        question_log_attempted = False
         retrieval_ms = None
         source_metadata = None
         stage = "authentication"
@@ -122,17 +122,17 @@ class Default(WorkerEntrypoint):
                 cached.get("prompt_sha") if cached is not None
                 else hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest()
             ) if path == "/stream" else None
-            await _log_question(
-                self.env, query, mode, _question_sha(query, mode), correlation_id, cached is not None,
+            log_rowid = await _log_question(
+                self.env, query, mode, _question_sha(query, mode), cached is not None,
                 user_uuid=user_uuid, endpoint=path, model=cached.get("model", model) if cached else model,
                 prompt_sha=prompt_sha,
                 corpus_version=NAMESPACE if path == "/retrieve" or use_rag else None,
             )
-            logged = True
+            question_log_attempted = True
             if cached is not None:
                 source_metadata = cached.get("source_metadata")
                 await _finish_question(
-                    self.env, correlation_id, outcome="success", http_status=200,
+                    self.env, log_rowid, outcome="success", http_status=200,
                     duration_ms=round((time.monotonic() - started) * 1000),
                     answer=cached.get("answer"), sources=source_metadata,
                     usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0} if path == "/stream" else None,
@@ -150,7 +150,7 @@ class Default(WorkerEntrypoint):
                 result = {"query": query, "chunks": _public_chunks(chunks)}
                 await _cache_put(self.env, cache_key, {**result, "source_metadata": source_metadata})
                 await _finish_question(
-                    self.env, correlation_id, outcome="success", http_status=200,
+                    self.env, log_rowid, outcome="success", http_status=200,
                     duration_ms=round((time.monotonic() - started) * 1000),
                     retrieval_ms=retrieval_ms, sources=source_metadata,
                 )
@@ -183,13 +183,13 @@ class Default(WorkerEntrypoint):
 
             stage = "generation"
             return await _stream_generation(
-                self.env, messages, model, sources, agent, cache_key, correlation_id,
-                log_context={"started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata,
+                self.env, messages, model, sources, agent, cache_key,
+                log_context={"log_rowid": log_rowid, "started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata,
                              "prompt_sha": prompt_sha},
             )
         except ApiError as error:
-            if logged:
-                await _finish_question(self.env, correlation_id, outcome="error", http_status=error.status,
+            if question_log_attempted:
+                await _finish_question(self.env, log_rowid, outcome="error", http_status=error.status,
                                        duration_ms=round((time.monotonic() - started) * 1000),
                                        failure_stage=stage, error_type=type(error).__name__,
                                        retrieval_ms=retrieval_ms, sources=source_metadata)
@@ -197,12 +197,11 @@ class Default(WorkerEntrypoint):
         except Exception as error:
             print(json.dumps({
                 "event": "request_failed",
-                "correlation_id": correlation_id,
                 "stage": stage,
                 "error_type": type(error).__name__,
             }))
-            if logged:
-                await _finish_question(self.env, correlation_id, outcome="error", http_status=502,
+            if question_log_attempted:
+                await _finish_question(self.env, log_rowid, outcome="error", http_status=502,
                                        duration_ms=round((time.monotonic() - started) * 1000),
                                        failure_stage=stage, error_type=type(error).__name__,
                                        retrieval_ms=retrieval_ms, sources=source_metadata)

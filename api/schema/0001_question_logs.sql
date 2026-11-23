@@ -1,5 +1,4 @@
 CREATE TABLE IF NOT EXISTS question_logs (
-    correlation_id TEXT PRIMARY KEY,
     created_at TEXT NOT NULL,
     mode TEXT NOT NULL,
     question_asked TEXT,

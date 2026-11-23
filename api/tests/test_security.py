@@ -7,7 +7,7 @@ import tomllib
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 
 class WorkerEntrypoint:
@@ -49,7 +49,8 @@ class Database:
 
             async def first(self):
                 row = database.connection.execute(sql, self.values).fetchone()
-                return types.SimpleNamespace(cache_value=row[0]) if row else None
+                database.connection.commit()
+                return types.SimpleNamespace(log_rowid=row[0]) if row else None
 
             async def run(self):
                 database.connection.execute(sql, self.values)
@@ -407,7 +408,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         env = types.SimpleNamespace(DB=Database(), AEROQUERY_ANSWER_CACHE=Cache(), QUESTIONS_LOG_QUERY_TEXT="true")
         self.addCleanup(env.DB.connection.close)
         for case in ("success", "incomplete", "error"):
-            await worker._log_question(env, "question", "openai_rag", "sha", case, model="model")
+            log_rowid = await worker._log_question(env, "question", "openai_rag", "sha", model="model")
             lines = [
                 'data: {"choices":[{"delta":{"content":"answer"},"finish_reason":null}]}\n',
                 'data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n',
@@ -429,13 +430,13 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                 patch.object(streaming, "ReadableStream", types.SimpleNamespace(new=lambda options: options)),
             ):
                 response = await streaming._stream_generation(
-                    env, [], "model", correlation_id=case,
-                    log_context={"started": streaming.time.monotonic(), "retrieval_ms": 5, "sources": [{"section": "1"}]},
+                    env, [], "model",
+                    log_context={"log_rowid": log_rowid, "started": streaming.time.monotonic(), "retrieval_ms": 5, "sources": [{"section": "1"}]},
                 )
                 await response.body["start"](controller)
             row = env.DB.connection.execute(
                 "SELECT answer, outcome, input_tokens, output_tokens, total_tokens, failure_stage, error_type, retrieval_ms "
-                "FROM question_logs WHERE correlation_id = ?", (case,),
+                "FROM question_logs WHERE rowid = ?", (log_rowid,),
             ).fetchone()
             self.assertEqual(row[:5], ("answer", case, 10, 2, 12))
             self.assertEqual(row[5:7], (None, None) if case == "success" else (
@@ -535,19 +536,39 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotEqual(key, worker._question_sha("question", "openai_bare"))
         self.assertNotEqual(key, worker._question_sha("Question", "openai_rag"))
 
-    async def test_question_log_matches_database_id_and_respects_text_setting(self):
+    async def test_question_log_respects_text_setting(self):
         for enabled in ("true", "false"):
-            statement = types.SimpleNamespace(bind=lambda *args: types.SimpleNamespace(run=AsyncMock()))
-            bound_values = []
-            statement.bind = lambda *args: (bound_values.extend(args) or types.SimpleNamespace(run=AsyncMock()))
-            env = types.SimpleNamespace(DB=types.SimpleNamespace(prepare=lambda sql: statement), QUESTIONS_LOG_QUERY_TEXT=enabled)
+            env = types.SimpleNamespace(DB=Database(), QUESTIONS_LOG_QUERY_TEXT=enabled)
+            self.addCleanup(env.DB.connection.close)
             with patch("builtins.print") as output:
-                await worker._log_question(env, "test question", "openai_rag", "sha", "correlation")
+                rowid = await worker._log_question(env, "test question", "openai_rag", "sha")
             event = json.loads(output.call_args.args[0])
-            self.assertEqual(event["correlation_id"], bound_values[0])
+            self.assertEqual(event["event"], "question_received")
             self.assertNotIn("test question", output.call_args.args[0])
-            self.assertNotIn("query_text", event)
-            self.assertEqual(bound_values[3], "test question" if enabled == "true" else None)
+            self.assertEqual(env.DB.connection.execute("SELECT question_asked FROM question_logs WHERE rowid = ?", (rowid,)).fetchone()[0],
+                             "test question" if enabled == "true" else None)
+
+    async def test_simultaneous_question_logs_update_the_correct_rows(self):
+        env = types.SimpleNamespace(DB=Database(), QUESTIONS_LOG_QUERY_TEXT="true")
+        self.addCleanup(env.DB.connection.close)
+        first = await worker._log_question(env, "question", "openai_rag", "sha")
+        second = await worker._log_question(env, "question", "openai_rag", "sha")
+        self.assertNotEqual(first, second)
+        await persistence._finish_question(env, second, outcome="success", http_status=200, duration_ms=1, answer="second")
+        await persistence._finish_question(env, first, outcome="success", http_status=200, duration_ms=1, answer="first")
+        self.assertEqual(env.DB.connection.execute("SELECT answer FROM question_logs ORDER BY rowid").fetchall(),
+                         [("first",), ("second",)])
+
+    async def test_failed_log_insert_is_reported_without_attempting_an_update(self):
+        prepare = Mock(side_effect=RuntimeError("database down"))
+        env = types.SimpleNamespace(DB=types.SimpleNamespace(prepare=prepare))
+        with patch("builtins.print") as output:
+            rowid = await worker._log_question(env, "question", "openai_rag", "sha")
+            await persistence._finish_question(env, rowid, outcome="success", http_status=200, duration_ms=1)
+        self.assertIsNone(rowid)
+        self.assertEqual([json.loads(call.args[0])["event"] for call in output.call_args_list],
+                         ["question_log_failed", "question_completed"])
+        prepare.assert_called_once()
 
     async def test_unauthorized_requests_are_rejected(self):
         entry = worker.Default()
@@ -577,7 +598,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             request.url = "https://example.test/api/stream"
             self.assertEqual((await entry.fetch(request)).body, "stream")
             self.assertEqual(log_question.await_args.args[:4], (entry.env, "test", "openai_bare", worker._question_sha("test", "openai_bare")))
-            self.assertFalse(log_question.await_args.args[5])
+            self.assertFalse(log_question.await_args.args[4])
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ def _sse_event(event):
     return f"data: {json.dumps(event, separators=(',', ':'))}\n\n"
 
 
-async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, correlation_id=None, log_context=None):
+async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, log_context=None):
     generation_started = time.monotonic()
     response, _ = await _azure_chat(env, messages, stream=True, model=model)
     if not response.ok:
@@ -87,7 +87,7 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
             if log_context:
                 successful = completed and finish_reason == "stop"
                 await _finish_question(
-                    env, correlation_id, outcome="success" if successful else "incomplete", http_status=200,
+                    env, log_context["log_rowid"], outcome="success" if successful else "incomplete", http_status=200,
                     duration_ms=round((time.monotonic() - log_context["started"]) * 1000),
                     generation_ms=round((time.monotonic() - generation_started) * 1000),
                     retrieval_ms=log_context["retrieval_ms"], sources=log_context["sources"],
@@ -98,10 +98,10 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
             controller.enqueue(encoder.encode(_sse_event({"type": "done"})))
             controller.close()
         except Exception as error:
-            print(json.dumps({"event": "generation_stream_failed", "correlation_id": correlation_id, "error_type": type(error).__name__}))
+            print(json.dumps({"event": "generation_stream_failed", "error_type": type(error).__name__}))
             if log_context:
                 await _finish_question(
-                    env, correlation_id, outcome="error", http_status=200,
+                    env, log_context["log_rowid"], outcome="error", http_status=200,
                     duration_ms=round((time.monotonic() - log_context["started"]) * 1000),
                     generation_ms=round((time.monotonic() - generation_started) * 1000),
                     retrieval_ms=log_context["retrieval_ms"], sources=log_context["sources"],
