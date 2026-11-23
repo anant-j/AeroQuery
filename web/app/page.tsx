@@ -754,7 +754,7 @@ export default function Home() {
           >
             <option value="gpt-5.4-mini">GPT-5.4-mini</option>
             <option value="gpt-5.4-nano">GPT-5.4-Nano</option>
-            <option value="webllm" disabled={!webllmReady}>WebLLM (Llama 3.2 1B)</option>
+            <option value="webllm" disabled={!webllmReady}>Llama 3.2 1B (WebLLM On-Device)</option>
           </select>
           {!webllmReady && (
             <button
