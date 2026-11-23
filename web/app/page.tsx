@@ -973,6 +973,10 @@ export default function Home() {
       </div>
 
       <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
+        <p className="mb-3">
+          Privacy: Questions and cloud-generated answers may be logged with a browser identifier; logs are scheduled for deletion after 30 days.
+          Results may be cached for 24 hours, and questions are processed by external service providers. Avoid sharing personal or sensitive information.
+        </p>
         Built by <a href="https://www.linkedin.com/in/anant-j" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">Anant Jain</a> · AI Engineer · Canadian Pilot (PPL) · {" "}
         <a href="https://github.com/anant-j/AeroQuery" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a>
       </footer>
