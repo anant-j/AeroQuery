@@ -84,12 +84,6 @@ const BenchmarkMetrics = [
     ],
   },
 ];
-const FactualRagComparisons = [
-  { model: "GPT-5.4 nano", difference: "+0.153", interval: "+0.0739 to +0.2306" },
-  { model: "GPT-5.4 mini", difference: "+0.140", interval: "+0.0655 to +0.2132" },
-  { model: "GPT-5.4", difference: "+0.042", interval: "-0.0213 to +0.1076" },
-  { model: "Llama 3.2 1B", difference: "+0.166", interval: "+0.1142 to +0.2180" },
-];
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
 
 function getRemainingRequests() {
