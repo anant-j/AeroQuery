@@ -402,7 +402,8 @@ export default function Home() {
   }, [turnstileReady, getTurnstileToken]);
 
   const startWebLLM = useCallback(async () => {
-    if (webllmStartedRef.current || webllmReady) return;
+    if (webllmReady) return true;
+    if (webllmStartedRef.current) return false;
     webllmStartedRef.current = true;
     setWebllmError("");
     setWebllmLoading(true);
@@ -421,12 +422,14 @@ export default function Home() {
       engineRef.current = engine;
       setWebllmReady(true);
       setWebllmLoading(false);
+      return true;
     } catch (error) {
       console.error("WebLLM initialization failed", error);
       setWebllmError(error instanceof Error ? error.message : "Unknown WebLLM error");
       setWebllmStatus("Load failed");
       setWebllmLoading(false);
       webllmStartedRef.current = false;
+      return false;
     }
   }, [webllmReady]);
 
@@ -523,6 +526,11 @@ export default function Home() {
           tokens: 0,
           use_rag: false,
         });
+        return;
+      }
+
+      if (modelOption === "webllm" && !webllmReady && !(await startWebLLM())) {
+        setError("Could not load WebLLM. Check the model loading error and try again.");
         return;
       }
 
@@ -733,14 +741,14 @@ export default function Home() {
           <button
             ref={submitButtonRef}
             type="submit"
-            disabled={loading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady || (modelOption === "webllm" && !webllmReady))) || remainingRequests < requestsNeeded}
+            disabled={loading || webllmLoading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady)) || remainingRequests < requestsNeeded}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
-              ? "Asking..."
+              ? webllmLoading ? `Loading model ${webllmProgress}%` : "Asking..."
               : remainingRequests === 0
                 ? sessionResetSeconds === null ? "Limit reached" : `Resets in ${formatResetCountdown(sessionResetSeconds)}`
-                : "Ask"}
+                : modelOption === "webllm" && !webllmReady ? "Load Model" : "Ask"}
           </button>
         </div>
 
@@ -754,18 +762,8 @@ export default function Home() {
           >
             <option value="gpt-5.4-mini">GPT-5.4-mini</option>
             <option value="gpt-5.4-nano">GPT-5.4-Nano</option>
-            <option value="webllm" disabled={!webllmReady}>Llama 3.2 1B (WebLLM On-Device)</option>
+            <option value="webllm">Llama 3.2 1B (WebLLM On-Device)</option>
           </select>
-          {!webllmReady && (
-            <button
-              type="button"
-              onClick={startWebLLM}
-              disabled={webllmLoading}
-              className="text-xs border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-gray-700 dark:text-gray-200 disabled:opacity-50"
-            >
-              {webllmLoading ? `Loading ${webllmProgress}%` : webllmError ? "Retry WebLLM" : "Load WebLLM"}
-            </button>
-          )}
           {webllmLoading && (
             <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
               <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24" aria-hidden="true">
