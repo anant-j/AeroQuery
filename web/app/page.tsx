@@ -16,7 +16,7 @@ const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").rep
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
 const DefaultQueries = new Map<string, string>([
   ["How long do I need to wait after drinking alcohol before piloting an aircraft?", "The correct answer according to the latest regulations is: 12 hours."],
-  ["above what cabin pressure altitude must all flight crew members wear supplemental oxygen continuously?", "The correct answer according to the latest regulations is: 13000 feet ASL"],
+  ["Above what cabin pressure altitude must all flight crew members wear supplemental oxygen continuously?", "The correct answer according to the latest regulations is: 13000 feet ASL"],
   ["If a Canadian private pilot under age 40 completes their Category 3 medical renewal exam on March 1, 2026, when does their new medical certificate expire?", "The correct answer according to the latest regulations is: end of March 31, 2031"]
 ]);
 const SuggestedQuestions = [...DefaultQueries.keys()];
