@@ -168,6 +168,15 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                     with self.assertRaises(worker.ApiError):
                         await worker._verify_turnstile(env, "token", "https://example.test", "127.0.0.1")
 
+    async def test_turnstile_rejects_test_secrets_without_calling_siteverify(self):
+        for prefix in ("1", "2", "3"):
+            env = types.SimpleNamespace(TURNSTILE_SECRET_KEY=f"{prefix}x{'0' * 31}AA")
+            with patch.object(security, "fetch", AsyncMock()) as fetch:
+                with self.assertRaises(worker.ApiError) as raised:
+                    await worker._verify_turnstile(env, "token", "https://example.test", "127.0.0.1")
+                self.assertEqual(raised.exception.status, 503)
+                fetch.assert_not_awaited()
+
     async def test_cors_preflight_and_authentication_fail_closed(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(

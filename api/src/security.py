@@ -70,9 +70,8 @@ async def _verify_session(env, authorization, origin):
 
 async def _verify_turnstile(env, token, origin, client_ip):
     secret = getattr(env, "TURNSTILE_SECRET_KEY", "")
-    allow_test = getattr(env, "TURNSTILE_ALLOW_TEST_KEYS", "false").lower() == "true"
     is_test_key = isinstance(secret, str) and secret.startswith(("1x0000000000000000000000000000000", "2x0000000000000000000000000000000", "3x0000000000000000000000000000000"))
-    if not secret or (is_test_key and not allow_test):
+    if not secret or is_test_key:
         raise ApiError("Verification is not configured", 503)
     if not isinstance(token, str) or not token or len(token) > 2048:
         raise ApiError("Verification is required", 403)
@@ -89,10 +88,8 @@ async def _verify_turnstile(env, token, origin, client_ip):
     except Exception as error:
         print(json.dumps({"event": "turnstile_unavailable", "error_type": type(error).__name__}))
         raise ApiError("Verification is unavailable", 503)
-    test_response = allow_test and is_test_key and result.get("hostname") == "example.com"
-    if not result.get("success") or (not test_response and (
-        result.get("hostname") != urlparse(origin).hostname or result.get("action") != "aeroquery"
-    )):
+    if (not result.get("success") or result.get("hostname") != urlparse(origin).hostname
+            or result.get("action") != "aeroquery"):
         raise ApiError("Verification failed", 403)
 
 
