@@ -36,8 +36,8 @@ flowchart LR
 ### Evaluation pipeline
 ```mermaid
 flowchart LR
-    A["50 Questions"] --> B["Generate Answers\n3 models × 3 configs"]
-    B --> C["RAGAS Judge\nGPT-5.4-mini via Azure"]
+    A["95 CAR Questions"] --> B["Generate Answers\n4 models × 3 configs"]
+    B --> C["RAGAS Judge\nGPT-5.4 via Azure"]
     C --> D["3–6 Metrics\nper condition"]
     D --> E["Error Analysis\nclassify failures"]
 
@@ -87,7 +87,7 @@ flowchart LR
 | Agentic workflow | LangGraph |
 | Hosted LLM | Azure OpenAI / AI Foundry GPT-5.4-mini for agent routing and answer generation |
 | Local LLM | WebLLM Llama 3.2 1B in the browser |
-| Evaluation | RAGAS; Azure GPT-5.4-mini judge, direct OpenAI embeddings, plus Azure/OpenAI/Ollama generation models |
+| Evaluation | RAGAS; Azure GPT-5.4 judge and embeddings, plus Azure/Ollama generation models |
 | Streaming | SSE for server-side generation, WebLLM SDK in-browser |
 | API | Cloudflare Python Workers |
 | Frontend | Next.js, React, TypeScript, and Tailwind CSS |
@@ -119,42 +119,41 @@ The repository is intentionally split into an offline data pipeline and a live s
 
 ## Evaluation benchmark
 
-The project includes an exploratory evaluation benchmark over a set of aviation questions, with multiple model and retrieval configurations.
+The project includes an exploratory evaluation benchmark over Canadian aviation regulations, with multiple model and retrieval configurations.
 
 ### Benchmark framing
 
-These are historical point estimates from a single run and should not be interpreted as a final or generalizable performance claim. The benchmark currently includes 75 questions across TC CAR sections, without a documented held-out split or independent human scoring process. The evaluator also uses an LLM judge and the historical results reflect earlier scoring behavior.
+These are provisional results from 95 shared questions of a 250-question machine-generated benchmark, without a documented held-out split or independent human scoring process. GPT-5.4 judged the responses, including its own. Factual correctness was rescored with question-aware claim evaluation; scores from the earlier protocol are not directly comparable.
 
 ### Representative results
 
 **Factual correctness**
 
-| Model | Bare LLM | RAG | RAG + Rerank | Improvement |
+| Model | Bare LLM | RAG | RAG + Rerank | RAG minus bare (95% CI) |
 |---|---:|---:|---:|---:|
-| GPT-5.4-mini | 0.32 | 0.40 | 0.43 | +34% |
-| GPT-3.5-turbo | 0.23 | 0.44 | 0.44 | +91% |
-| Llama 3.2 1B | 0.07 | 0.18 | 0.22 | +203% |
+| GPT-5.4-nano | 0.378 | 0.532 | 0.533 | +0.153 (+0.0739 to +0.2306) |
+| GPT-5.4-mini | 0.464 | 0.604 | 0.597 | +0.140 (+0.0655 to +0.2132) |
+| GPT-5.4 | 0.447 | 0.489 | 0.497 | +0.042 (-0.0213 to +0.1076) |
+| Llama 3.2 1B | 0.126 | 0.293 | 0.305 | +0.166 (+0.1142 to +0.2180) |
+
+Paired intervals describe uncertainty in the change on the same questions. The GPT-5.4 interval includes zero, so its factual-correctness improvement is uncertain.
 
 **Retrieval quality**
 
 | Metric | RAG | RAG + Rerank |
 |---|---:|---:|
-| Context Precision | 0.78 | 0.92 |
-| Context Recall | 0.92 | 0.92 |
+| Context Precision | 0.913 | 0.955 |
+| Context Recall | 0.989 | 1.000 |
 
-**Generation quality**
+**Reranking**
 
-| Metric | GPT-5.4-mini | GPT-3.5 | Llama 1B |
-|---|---:|---:|---:|
-| Faithfulness | 0.88 | 0.85 | 0.55 |
-| Answer Relevancy | 0.79 | 0.87 | 0.62 |
-| Semantic Similarity | 0.77 | 0.79 | 0.69 |
+Reranking improved context precision, but the paired factual-correctness intervals for reranking include zero for all four models. The [full results](pipeline/eval/results/car/all_summaries.json) include the other metrics and comparisons.
 
 ### Evaluation limitations and next steps
 
-- The 50-question set is exploratory and has not been independently human-scored; expand it and stratify by chapter, question type, and difficulty.
+- The benchmark is machine-generated and has not been independently human-scored; review it and evaluate the full set, stratified by chapter, question type, and difficulty.
 - The evaluator records failed metrics as missing values and reports valid sample counts, bootstrap intervals, and paired comparisons.
-- The checked-in result rows predate the current evaluator protocol and do not include those uncertainty and paired-comparison summaries. Re-run the evaluator before treating those newer statistics as published results.
+- LLM-based scores and faithfulness to retrieved context do not establish that an answer is legally correct or safe for aviation decisions.
 - Version the dataset, prompts, retrieval index, and model configurations for future benchmark runs.
 
 ## Environment and deployment
