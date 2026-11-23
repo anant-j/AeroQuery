@@ -793,6 +793,15 @@ export default function Home() {
           )}
         </div>
 
+        <details className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700">
+          <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400">
+            View System Prompt
+          </summary>
+          <pre className="max-h-80 overflow-y-auto whitespace-pre-wrap border-t border-gray-200 px-3 py-3 text-xs leading-relaxed text-gray-600 dark:border-gray-700 dark:text-gray-400">
+            {SYSTEM_PROMPT}
+          </pre>
+        </details>
+
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
