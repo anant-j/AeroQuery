@@ -7,7 +7,7 @@ Next.js frontend, deployed on Netlify.
 - Answers stream in with expandable source citations.
 - The page shows a snapshot of the benchmark results, hard-coded in `app/page.tsx`. Update it by hand from `../pipeline/eval/results/car`.
 
-Security: a nonce-based CSP (`proxy.ts`), Turnstile sessions, and a per-session request limit in localStorage. Rate limiting itself is enforced by the Worker.
+Security: a CSP (`next.config.ts`), Turnstile sessions, and a per-session request limit in localStorage. Rate limiting itself is enforced by the Worker.
 
 ## Run locally
 

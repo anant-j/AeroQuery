@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { connection } from "next/server";
 import { Geist, Geist_Mono } from "next/font/google";
 import { THEME_STORAGE_KEY } from "./lib/constants.js";
 import "./globals.css";
@@ -21,14 +19,11 @@ export const metadata: Metadata = {
   description: "Ask questions about Canadian aviation regulations with AI-powered retrieval",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await connection();
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
   return (
     <html
       lang="en"
@@ -36,9 +31,9 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script id="turnstile-script" nonce={nonce} src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer />
-        <script type="module" defer nonce={nonce} src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "11d46b2f74044f35b465eebcdb22ac4c"}' />
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: `
+        <script id="turnstile-script" src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer />
+        <script type="module" defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "11d46b2f74044f35b465eebcdb22ac4c"}' />
+        <script dangerouslySetInnerHTML={{ __html: `
           (function() {
             var theme;
             try {

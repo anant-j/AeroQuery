@@ -22,7 +22,7 @@ AeroQuery started as a way to answer two questions:
 - **End-to-end RAG system:** structured XML ingestion, dense retrieval, reranking, query decomposition, and grounded answers with citations, streamed over SSE.
 - **Three ways to answer:** hosted GPT-5.4-mini or GPT-5.4-nano, or **Llama 3.2 1B running entirely in the browser** via WebLLM/WebGPU, each with or without RAG.
 - **Measured, not assumed:** a 4-model × 3-configuration benchmark scored with RAGAS. It reports paired bootstrap confidence intervals, so it's clear when a gain is just noise.
-- **Built for public traffic:** Cloudflare Turnstile sessions, per-IP and per-session rate limits, an origin allowlist, a nonce-based CSP, a KV answer cache, and D1 logs that expire automatically.
+- **Built for public traffic:** Cloudflare Turnstile sessions, per-IP and per-session rate limits, an origin allowlist, a Content Security Policy, a KV answer cache, and D1 logs that expire automatically.
 
 ## Architecture
 
@@ -161,7 +161,7 @@ Full metrics: [`pipeline/eval/results/car/all_summaries.json`](pipeline/eval/res
 | Generation | Azure AI Foundry GPT-5.4-mini / nano; WebLLM Llama 3.2 1B in the browser |
 | API | Cloudflare Python Workers, KV (answer cache), D1 (question logs), rate limiting |
 | Frontend | Next.js, React, TypeScript, Tailwind CSS on Netlify |
-| Abuse protection | Cloudflare Turnstile, session JWTs, nonce-based CSP |
+| Abuse protection | Cloudflare Turnstile, session JWTs, CSP |
 | Evaluation | RAGAS, GPT-5.4 judge, Ollama for local models |
 
 ## Repository

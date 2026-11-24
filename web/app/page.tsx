@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore } from "react";
-import ReactMarkdown from "react-markdown";
+import dynamic from "next/dynamic";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, normalizeQuery, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, THEME_STORAGE_KEY, WEBLLM_MODEL } from "./lib/constants.js";
@@ -12,6 +12,7 @@ import { officialSourceUrl } from "./lib/source-url.js";
 import { formatRelativeDelta } from "./lib/benchmark-delta.js";
 import { getUserUuid, UserUuidStorageError } from "./lib/user-uuid.js";
 
+const ReactMarkdown = dynamic(() => import("react-markdown"));
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
 const WORKER_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY || "";
