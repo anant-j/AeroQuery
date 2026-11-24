@@ -164,12 +164,13 @@ function subscribeToTheme(callback: () => void) {
 }
 
 class RequestError extends Error { }
+class SessionLimitError extends Error { }
 
 function reserveSessionRequest() {
   const accepted = consumeSessionRequest();
   window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
   if (accepted === null) throw new RequestError(STORAGE_ERROR);
-  if (!accepted) throw new RequestError("You have reached the session limit. Please wait until it resets.");
+  if (!accepted) throw new SessionLimitError("You have reached the session limit. Please wait until it resets.");
 }
 
 declare global {
@@ -499,18 +500,15 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (queryTooLong) {
-      setError(`Question must be at most ${MAX_QUERY_LENGTH} characters.`);
-      return;
-    }
+    if (queryTooLong) return;
     if (loading) return;
     const remaining = getRemainingRequests();
     if (remaining === null) {
-      setError(STORAGE_ERROR);
+      window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
       return;
     }
     if (remaining < requestsNeeded) {
-      setError("You have reached the session limit. Please wait until it resets.");
+      window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
       return;
     }
     const effectiveQuery = normalizeQuery(query) || DefaultQuery;
@@ -627,7 +625,7 @@ export default function Home() {
         setBareStreaming(false);
       }
     } catch (err) {
-      setError(err instanceof RequestError || err instanceof WorkerSessionError ? err.message : "Something went wrong. Please try again later.");
+      setError(err instanceof SessionLimitError ? "" : err instanceof RequestError || err instanceof WorkerSessionError ? err.message : "Something went wrong. Please try again later.");
       setRagResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       setBareResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       if (err instanceof Error) {
@@ -700,8 +698,8 @@ export default function Home() {
       <form onSubmit={handleSubmit} className="mb-8">
         <div ref={turnstileContainer} />
         {!TURNSTILE_SITE_KEY && <p role="alert" className="mb-3 text-sm text-red-600">Verification is not configured.</p>}
-        <div className="flex items-start gap-3 mb-3">
-          <div className="relative min-w-0 flex-1">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 mb-3">
+          <div className="relative min-w-0 w-full flex-1">
             <Combobox value={query} onChange={(value: string | null) => setQuery(value ?? "")} onClose={() => { suggestionNavigated.current = false; }} immediate>
               <div className="flex items-center rounded-xl border border-gray-200 bg-white shadow-sm transition focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-gray-700 dark:bg-gray-900 dark:focus-within:border-blue-500">
                 <svg className="ml-4 h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -728,7 +726,7 @@ export default function Home() {
                   placeholder={DefaultQuery}
                   aria-label="Search Canadian aviation regulations"
                   aria-invalid={queryTooLong}
-                  aria-describedby="question-length"
+                  aria-describedby={queryTooLong ? "question-alert" : undefined}
                   className="min-w-0 flex-1 bg-transparent px-3 py-3.5 text-sm text-gray-700 outline-none placeholder-gray-400 dark:text-gray-200 dark:placeholder-gray-500"
                 />
                 <ComboboxButton
@@ -774,20 +772,24 @@ export default function Home() {
             ref={submitButtonRef}
             type="submit"
             disabled={queryTooLong || loading || webllmLoading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady)) || storageUnavailable || limitReached}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full sm:w-auto sm:shrink-0 text-white px-6 py-3 rounded-lg text-sm font-medium disabled:cursor-not-allowed ${limitReached ? "bg-red-700 dark:bg-red-800" : "bg-blue-600 hover:bg-blue-700 disabled:opacity-50"}`}
           >
             {loading
               ? webllmLoading ? `Loading model ${webllmProgress}%` : "Asking..."
               : storageUnavailable ? "Storage unavailable"
               : limitReached
-                ? sessionResetSeconds === null ? "Session limit reached" : `Resets in ${formatResetCountdown(sessionResetSeconds)}`
+                ? sessionResetSeconds === null ? "Session limit reached" : `Session limit reached · Resets in ${formatResetCountdown(sessionResetSeconds)}`
                 : modelOption === "webllm" && !webllmReady ? "Load Model" : "Ask"}
           </button>
         </div>
 
-        <p id="question-length" role={queryTooLong ? "alert" : undefined} className={`text-xs mb-3 ${queryTooLong ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400"}`}>
-          Question must be at most {MAX_QUERY_LENGTH} characters.
-        </p>
+        {(queryTooLong || storageUnavailable || error) && (
+          <div id="question-alert" role="alert" className="text-xs mb-3 space-y-1 text-red-600 dark:text-red-400">
+            {queryTooLong && <p>Question must be at most {MAX_QUERY_LENGTH} characters.</p>}
+            {storageUnavailable && <p>{STORAGE_ERROR}</p>}
+            {error && !(storageUnavailable && error === STORAGE_ERROR) && <p>{error}</p>}
+          </div>
+        )}
 
         <div className="flex items-center gap-4">
           <label htmlFor="model-select" className="text-xs text-gray-500 dark:text-gray-400">Model:</label>
@@ -835,21 +837,7 @@ export default function Home() {
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
-          {storageUnavailable ? STORAGE_ERROR : limitReached && (
-            <>
-              You have reached the session limit. Please wait until it resets.
-              {sessionResetSeconds !== null && ` Resets in ${formatResetCountdown(sessionResetSeconds)}.`}
-            </>
-          )}
-        </p>
       </form>
-
-      {error && (
-        <div role="alert" className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-lg mb-6 text-sm">
-          {error}
-        </div>
-      )}
 
       {(ragResult || bareResult) && (
         <div className="mb-10">
