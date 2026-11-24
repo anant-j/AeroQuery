@@ -803,7 +803,7 @@ export default function Home() {
           <div id="question-alert" role="alert" className="text-xs mb-3 space-y-1 text-red-600 dark:text-red-400">
             {queryTooLong && <p>Question must be at most {MAX_QUERY_LENGTH} characters.</p>}
             {storageUnavailable && <p>{STORAGE_ERROR}</p>}
-            {limitReached && <p>You have reached the session limit alert, please try again later.</p>}
+            {limitReached && <p>You have reached the session limit, please try again later.</p>}
             {error && !(storageUnavailable && error === STORAGE_ERROR) && <p>{error}</p>}
           </div>
         )}
