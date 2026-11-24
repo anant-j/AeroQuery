@@ -14,7 +14,7 @@ def _sse_event(event):
     return f"data: {json.dumps(event, separators=(',', ':'))}\n\n"
 
 
-async def _stream_generation(env, messages, model, sources=None, agent=None, cache_key=None, log_context=None):
+async def _stream_generation(env, messages, model, cache_key, sources=None, agent=None, log_context=None):
     generation_started = time.monotonic()
     response, _ = await _azure_chat(env, messages, stream=True, model=model)
     if not response.ok:
@@ -78,7 +78,7 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
                     emit_line(line)
             if buffer:
                 emit_line(buffer)
-            if cache_key and completed and finish_reason == "stop" and tokens:
+            if completed and finish_reason == "stop" and tokens:
                 await _cache_put(env, cache_key, {
                     "answer": "".join(tokens), "sources": sources, "agent": agent, "model": model,
                     "source_metadata": log_context["sources"] if log_context else None,

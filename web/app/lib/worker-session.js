@@ -1,6 +1,6 @@
 export class WorkerSessionError extends Error {}
 
-export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher = fetch, /** @type {() => string | undefined} */ getUserUuid = () => undefined) {
+export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, getUserUuid, fetcher = fetch) {
   let session;
   let pending;
   return async function getSession() {

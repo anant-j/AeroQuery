@@ -6,7 +6,7 @@ from common import _js_options
 from constants import CACHE_VERSION, DEFAULT_CACHE_TTL_SECONDS, NAMESPACE, RERANK_MODEL
 
 
-async def _log_question(env, query, mode, cache_key, answered_from_cache=False, *, user_uuid=None, session_id=None, ip_address=None, model=None, corpus_version=None):
+async def _log_question(env, query, mode, cache_key, answered_from_cache=False, *, user_uuid, session_id, ip_address, model=None, corpus_version=None):
     now = datetime.now(timezone.utc)
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
     log_event = {"event": "question_received", "mode": mode, "answered_from_cache": answered_from_cache}

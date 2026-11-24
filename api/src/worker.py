@@ -31,7 +31,7 @@ def _generation_model(env, requested_model):
 
 def _validate_user_uuid(user_uuid):
     if user_uuid is None:
-        return None
+        raise ApiError("User UUID is required", 400)
     try:
         if not isinstance(user_uuid, str) or str(uuid.UUID(user_uuid)) != user_uuid:
             raise ValueError("Invalid user UUID")
@@ -72,7 +72,7 @@ class Default(WorkerEntrypoint):
         async def notify():
             try:
                 await notifier.notifyVisit(_js_options({
-                    "userUuid": user_uuid or "",
+                    "userUuid": user_uuid,
                     "sessionId": session_id,
                     "ip": client_ip,
                     "location": location,
@@ -81,6 +81,10 @@ class Default(WorkerEntrypoint):
                 print(json.dumps({"event": "visit_notification_failed", "error_type": type(error).__name__}))
 
         self.ctx.waitUntil(notify())
+
+    def _report_invalid_auth(self, request, reason, user_uuid=None, client_ip=None):
+        print(json.dumps({"level": "warning", "event": "auth_request_invalid", "reason": reason}))
+        self._notify_visit(request, user_uuid, None, client_ip)
 
     async def _handle_request(self, request, origin):
         started = time.monotonic()
@@ -101,19 +105,21 @@ class Default(WorkerEntrypoint):
             ):
                 raise ApiError("Unauthorized", 401)
 
+            path = urlparse(request.url).path.rstrip("/")
+            if path.startswith("/api/"):
+                path = path[4:]
+
             stage = "rate_limit"
             forwarded_ip = (request.headers.get("cf-connecting-ip", "") or "").strip()
             try:
                 client_ip = ipaddress.ip_address(forwarded_ip).compressed
             except ValueError:
-                client_ip = "unknown"
+                if path == "/auth/anonymous":
+                    self._report_invalid_auth(request, "client_ip_missing")
+                raise ApiError("Client IP is missing", 400)
             rate_limit = await self.env.API_RATE_LIMITER.limit({"key": client_ip})
             if not rate_limit.success:
                 raise ApiError("Too many requests. Please wait a minute and try again.", 429)
-
-            path = urlparse(request.url).path.rstrip("/")
-            if path.startswith("/api/"):
-                path = path[4:]
 
             if request.method != "POST" or path not in ("/auth/anonymous", "/retrieve", "/stream"):
                 raise ApiError("Not found", 404)
@@ -122,16 +128,19 @@ class Default(WorkerEntrypoint):
             body = await _read_json_body(request)
             if path == "/auth/anonymous":
                 stage = "turnstile_verification"
-                user_uuid = _validate_user_uuid(body.get("user_uuid"))
+                try:
+                    user_uuid = _validate_user_uuid(body.get("user_uuid"))
+                except ApiError:
+                    self._report_invalid_auth(request, "user_uuid_invalid", client_ip=client_ip)
+                    raise
                 await _verify_turnstile(self.env, body.get("turnstile_token"), origin, client_ip)
-                anon_id = uuid.uuid4().hex
-                token, expires_at = await _issue_session(self.env, origin, anon_id)
-                self._notify_visit(request, user_uuid, anon_id, client_ip)
+                token, expires_at, session_id = await _issue_session(self.env, origin)
+                self._notify_visit(request, user_uuid, session_id, client_ip)
                 return Response.json({"token": token, "expires_at": expires_at})
             stage = "session_authentication"
-            anon_id = await _verify_session(self.env, request.headers.get("authorization", ""), origin)
+            session_id = await _verify_session(self.env, request.headers.get("authorization", ""), origin)
             stage = "session_rate_limit"
-            session_limit = await self.env.SESSION_RATE_LIMITER.limit({"key": anon_id})
+            session_limit = await self.env.SESSION_RATE_LIMITER.limit({"key": session_id})
             if not session_limit.success:
                 raise ApiError("Too many session requests. Please wait a minute and try again.", 429)
             query = _validate_query(body.get("query"))
@@ -149,7 +158,7 @@ class Default(WorkerEntrypoint):
             stage = "question_logging"
             log_rowid = await _log_question(
                 self.env, query, mode, cache_key, cached is not None,
-                user_uuid=user_uuid, session_id=anon_id, ip_address=client_ip, model=cached.get("model", model) if cached else model,
+                user_uuid=user_uuid, session_id=session_id, ip_address=client_ip, model=cached.get("model", model) if cached else model,
                 corpus_version=NAMESPACE if path == "/retrieve" or use_rag else None,
             )
             question_log_attempted = True
@@ -207,7 +216,7 @@ class Default(WorkerEntrypoint):
 
             stage = "generation"
             return await _stream_generation(
-                self.env, messages, model, sources, agent, cache_key,
+                self.env, messages, model, cache_key, sources, agent,
                 log_context={"log_rowid": log_rowid, "started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata},
             )
         except ApiError as error:

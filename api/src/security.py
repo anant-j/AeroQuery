@@ -31,15 +31,16 @@ async def _jwt_key(env):
     )
 
 
-async def _issue_session(env, origin, anon_id=None):
+async def _issue_session(env, origin):
     now = int(time.time())
+    session_id = uuid.uuid4().hex
     header = _b64url(b'{"alg":"HS256","typ":"JWT"}')
     payload = _b64url(json.dumps({
-        "anon_id": anon_id or uuid.uuid4().hex, "origin": origin, "iat": now, "exp": now + 300,
+        "session_id": session_id, "origin": origin, "iat": now, "exp": now + 300,
     }, separators=(",", ":")).encode())
     message = f"{header}.{payload}"
     signature = await crypto.subtle.sign("HMAC", await _jwt_key(env), TextEncoder.new().encode(message))
-    return f"{message}.{_b64url(Uint8Array.new(signature).to_bytes())}", now + 300
+    return f"{message}.{_b64url(Uint8Array.new(signature).to_bytes())}", now + 300, session_id
 
 
 async def _verify_session(env, authorization, origin):
@@ -61,11 +62,11 @@ async def _verify_session(env, authorization, origin):
     )
     now = int(time.time())
     if (not valid or claims.get("origin") != origin or
-        not isinstance(claims.get("anon_id"), str) or len(claims["anon_id"]) != 32 or
+        not isinstance(claims.get("session_id"), str) or len(claims["session_id"]) != 32 or
         type(claims.get("iat")) is not int or type(claims.get("exp")) is not int or
         claims["iat"] > now or claims["exp"] <= now or claims["exp"] - claims["iat"] != 300):
         raise ApiError("Invalid or expired session", 401)
-    return claims["anon_id"]
+    return claims["session_id"]
 
 
 async def _verify_turnstile(env, token, origin, client_ip):
@@ -79,7 +80,7 @@ async def _verify_turnstile(env, token, origin, client_ip):
         response = await fetch(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             method="POST", headers={"Content-Type": "application/json"},
-            body=json.dumps({"secret": secret, "response": token, **({"remoteip": client_ip} if client_ip != "unknown" else {})}),
+            body=json.dumps({"secret": secret, "response": token, "remoteip": client_ip}),
             signal=AbortSignal.timeout(5000),
         )
         if not response.ok:

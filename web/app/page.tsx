@@ -403,7 +403,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!turnstileReady || !TURNSTILE_SITE_KEY) return;
-    sessionRef.current ??= createWorkerSession(WORKER_URL, WORKER_KEY, getTurnstileToken, fetch, getUserUuid);
+    sessionRef.current ??= createWorkerSession(WORKER_URL, WORKER_KEY, getTurnstileToken, getUserUuid);
     sessionRef.current().catch((error: unknown) => {
       setError(error instanceof Error ? error.message : "Verification failed. Please try again.");
     });
@@ -978,7 +978,7 @@ export default function Home() {
           </div>
         ))}
         <p className="mb-3 text-xs text-gray-500 dark:text-gray-200">
-          Privacy: Questions and cloud-generated answers may be logged with a browser identifier; logs are scheduled for deletion after 60 days.
+          Privacy: Questions and cloud-generated answers may be logged with a browser identifier, session ID and IP address; logs are scheduled for deletion after 60 days.
           Results may be cached for 24 hours, and questions are processed by external service providers. Avoid sharing personal or sensitive information.
         </p>
       </div>
