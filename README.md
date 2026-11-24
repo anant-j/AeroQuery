@@ -1,185 +1,183 @@
 # AeroQuery
 
-AeroQuery is a research project focused on answering aviation questions grounded in Canadian aviation regulations (TC CARs), combining dense retrieval, reranking, and evaluation.
+**Retrieval-augmented question answering over the Canadian Aviation Regulations (TC CARs, SOR/96-433), with a reproducible evaluation benchmark.**
 
-The project is served as a live demo at https://aeroquery.anant-j.com.
+Live demo: **https://aeroquery.anant-j.com**
+
+> Research prototype. Not a validated aviation decision-support tool — do not use it for flight, compliance, or regulatory decisions.
 
 ## Why this project exists
 
-I am a Canadian Private Pilot Licence holder and a Software Engineer. While training for my licence, I realized that aviation regulations are hierarchical, repetitive, and difficult to navigate without context.
+I'm a Canadian Private Pilot Licence holder and a software engineer. While training for my licence, I found the CARs hard to navigate: they're hierarchical, full of cross-references, and their exceptions are often buried in other sections.
 
-At the same time, I wanted to explore how RAG systems work in production environments. I also noticed that the smaller open-source on-device models I had access to were not really trained on Canadian aviation regulations (TC CARs), but instead on American aviation regulations (FAA FAR).
+I also noticed that small open models, the kind you can run on-device, mostly learned the **American FAA FARs**, not the Canadian CARs. Ask one about Canadian fuel reserves or currency requirements and you often get a confident answer about US rules.
 
-This project is a learning and research prototype. It is not a validated aviation decision-support system and should not be relied on as operational guidance.
+AeroQuery started as a way to answer two questions:
 
-## What the system does
+1. How much does retrieval actually improve factual answers on a narrow regulatory domain, across models of different sizes?
+2. What does it take to run a RAG system as a real public app, with streaming, citations, abuse protection, caching, and privacy-aware logging?
 
-AeroQuery is a retrieval-augmented QA system for TC CAR. It ingests regulatory PDFs, chunks and embeds the content, retrieves relevant passages, reranks them, and generates answers grounded in source sections.
+## Highlights
 
-The project explores several core AI engineering questions:
-
-- How well does retrieval improve factual grounding over a bare LLM?
-- Does reranking materially improve context quality?
-- Can answer quality be evaluated in a repeatable way using LLM-based judges?
-- How do we serve these systems in a live application with citations and streaming responses?
+- **End-to-end RAG system:** structured XML ingestion, dense retrieval, reranking, query decomposition, and grounded answers with citations, streamed over SSE.
+- **Three ways to answer:** hosted GPT-5.4-mini or GPT-5.4-nano, or **Llama 3.2 1B running entirely in the browser** via WebLLM/WebGPU, each with or without RAG.
+- **Measured, not assumed:** a 4-model × 3-configuration benchmark scored with RAGAS. It reports paired bootstrap confidence intervals, so it's clear when a gain is just noise.
+- **Built for public traffic:** Cloudflare Turnstile sessions, per-IP and per-session rate limits, an origin allowlist, a nonce-based CSP, a KV answer cache, and D1 logs that expire automatically.
 
 ## Architecture
 
-### Ingestion pipeline
+The repo is split into an **offline pipeline** that builds the knowledge base and runs evaluations, and a **serving layer**: a Cloudflare Worker and a Next.js frontend.
+
 ```mermaid
 flowchart LR
-    A["📄 PDF"] --> B["Parse\nPyMuPDF"] --> C["Chunk\n512 tokens"] --> D["Embed\n3072-dim"] --> E[("Pinecone\nvector index")]
-
-    style E fill:#fff3e0,stroke:#ff9800
+    subgraph Offline["pipeline/ (offline, Docker)"]
+        X["CARs XML"] --> I["Ingest"] --> P[("Pinecone")]
+        P --> E["Evaluate"]
+    end
+    subgraph Online["Serving"]
+        B["web/<br/>Next.js on Netlify"] <--> W["api/<br/>Cloudflare Python Worker"]
+    end
+    W --> P
+    W --> AZ["Azure AI Foundry<br/>embeddings + GPT-5.4"]
+    W --> CO["Cohere Rerank"]
 ```
 
-### Evaluation pipeline
+### Ingestion
+
+The source is the official CARs XML from the Justice Laws website. Using the XML instead of a PDF keeps section numbers, headings, and tables intact.
+
 ```mermaid
 flowchart LR
-    A["95 CAR Questions"] --> B["Generate Answers\n4 models × 3 configs"]
-    B --> C["RAGAS Judge\nGPT-5.4 via Azure"]
-    C --> D["3–6 Metrics\nper condition"]
-    D --> E["Error Analysis\nclassify failures"]
+    A["SOR-96-433.xml"] --> B["Parse<br/>sections + schedules"]
+    B --> C["Clean<br/>tables, formulas, images"]
+    C --> D["Chunk<br/>≤512 tokens, section-aware"]
+    D --> E["Embed<br/>text-embedding-3-large, 3072-d"]
+    E --> F[("Pinecone<br/>new, versioned namespace")]
+```
+
+- Each chunk carries its section number, title, and official source URL, so answers can cite specific sections.
+- Each chunk is prefixed with its place in the regulations (part, subpart, section), so even a fragment of a long section keeps its context when embedded.
+- Images and complex formulas are replaced with explicit placeholders telling the reader to consult the source, rather than being dropped silently.
+- Every ingestion writes to a **new, empty namespace** (e.g. `canada-car-2026-06-17`), and the vector count is checked after upload. Re-indexing can never corrupt the live index, and evaluation results stay tied to one corpus version.
+
+The current index holds **2,045 chunks**.
+
+### Query flow (hosted models)
+
+```mermaid
+flowchart LR
+    Q["Question"] --> S["Turnstile → session JWT"]
+    S --> W["Worker /stream"]
+    W --> K{"KV cache"}
+    K -->|hit| R
+    K -->|miss, RAG| C{"Classify"}
+    K -->|miss, bare| G
+    C -->|simple| D["Retrieve"]
+    C -->|complex| E["Decompose into 2–3<br/>sub-queries → retrieve each"]
+    D & E --> GU["Relevance guard"]
+    GU --> G["GPT-5.4-mini / nano<br/>SSE stream"]
+    G --> R["Answer + citations"]
+
+    style GU fill:#fce4ec,stroke:#e91e63
+    style G fill:#fff3e0,stroke:#ff9800
+```
+
+- **Retrieve:** embed the query with Azure, fetch the top 10 chunks from Pinecone, and rerank them with Cohere `rerank-v4.0-pro` down to the top 5.
+- **Decompose:** comparison and multi-part questions (e.g. *"day vs. night VFR fuel requirements"*) are split into sub-queries. Each is retrieved separately and the results are deduplicated.
+- **Guard:** if nothing relevant comes back (no chunks, or a top rerank score below 0.1), the model is told the context is insufficient, so it doesn't improvise an answer.
+- **Generate:** the system prompt treats retrieved text as untrusted data, not instructions. It requires answers to come only from the sources, forbids invented citations, and asks the model to flag conflicting sources.
+
+### In-browser flow (WebLLM)
+
+```mermaid
+flowchart LR
+    Q["Question"] --> W["Worker /retrieve<br/>embed → Pinecone → rerank"]
+    W --> C["Top 5 chunks"]
+    C --> L["Llama 3.2 1B<br/>WebLLM on WebGPU"]
+    L --> R["Answer"]
+
+    style L fill:#e8f5e9,stroke:#4caf50
+```
+
+Retrieval runs on the Worker, but generation runs entirely on the user's GPU. This answers a practical question: can a 1B model that fits in a browser tab be useful once it has the right context?
+
+### Evaluation
+
+```mermaid
+flowchart LR
+    A["250 source-cited<br/>CAR questions"] --> B["Generate answers<br/>4 models × 3 configs"]
+    B --> C["RAGAS judge<br/>GPT-5.4"]
+    C --> D["Bootstrap CIs +<br/>paired comparisons"]
+    D --> E["Error analysis"]
 
     style C fill:#e3f2fd,stroke:#2196f3
     style E fill:#fce4ec,stroke:#e91e63
 ```
 
-### Query flow
-```mermaid
-flowchart LR
-    A["📝 Question"] --> V["Browser → Cloudflare Worker\nTurnstile session"]
-    V -->|RAG stream| B["LangGraph\nAgent"]
-    V -->|bare stream| I["Bare generation"]
-    B --> C{Route}
-    C -->|simple| D["Retrieve\n1 query"]
-    C -->|complex| E["Decompose\n→ Retrieve N"]
-    D & E --> F["Guard"]
-    F --> G["Stream\nGPT-5.4-mini"]
-    G --> H["💬 Answer\nwith citations"]
+- **Matrix:** GPT-5.4, GPT-5.4-mini, GPT-5.4-nano (Azure) and Llama 3.2 1B (Ollama), each run bare, with RAG, and with RAG + rerank.
+- **Reproducible:** a manifest records the hashes of the questions and prompts, the namespace, the reranker, and the judge model. Runs resume where they left off, and the evaluator refuses to mix results produced under different settings.
+- **Statistically honest:** failed judgments are recorded as missing rather than zero. Improvements are reported with paired bootstrap confidence intervals on the same questions.
 
-    style B fill:#e3f2fd,stroke:#2196f3
-    style G fill:#fff3e0,stroke:#ff9800
-    style F fill:#fce4ec,stroke:#e91e63
-```
+## Results (provisional)
 
-### WebLLM browser flow
-```mermaid
-flowchart LR
-    A["📝 Question"] --> B["Browser → Cloudflare Worker\nTurnstile session"]
-    B --> C["Cloudflare Worker /retrieve\nAzure Foundry → Pinecone → Cohere"]
-    C --> D["Chunks"]
-    D --> E["WebLLM\nLlama 3.2 1B\nin browser"]
-    E --> F["💬 Answer"]
-
-    style B fill:#e3f2fd,stroke:#2196f3
-    style E fill:#e8f5e9,stroke:#4caf50
-```
-
-## Solution stack
-
-| Layer | Tool |
-|---|---|
-| PDF parsing | PyMuPDF |
-| Embeddings | Azure OpenAI text-embedding-3-large deployment (3072 dims) |
-| Vector DB | Pinecone (serverless, cosine, namespaces) |
-| Reranking | Cohere rerank-v4.0-pro |
-| Agentic workflow | LangGraph |
-| Hosted LLM | Azure OpenAI / AI Foundry GPT-5.4-mini for agent routing and answer generation |
-| Local LLM | WebLLM Llama 3.2 1B in the browser |
-| Evaluation | RAGAS; Azure GPT-5.4 judge and embeddings, plus Azure/Ollama generation models |
-| Streaming | SSE for server-side generation, WebLLM SDK in-browser |
-| API | Cloudflare Python Workers |
-| Frontend | Next.js, React, TypeScript, and Tailwind CSS |
-| Deployment | Cloudflare Workers + Netlify |
-
-## Project structure
-
-```text
-api/          — live retrieval API and agent endpoints
-pipeline/    — offline ingestion, embedding, indexing, and eval
-web/         — Next.js frontend and streaming generation UI
-```
-
-The repository is intentionally split into an offline data pipeline and a live serving layer:
-
-- `pipeline/` builds the knowledge base, parses source documents, embeds them, and benchmarks model choices.
-- `api/` and `web/` serve the system to users through retrieval and generation endpoints.
-
-## Key capabilities
-
-- PDF ingestion and normalization of technical regulatory text
-- Chunking and vector indexing for retrieval over large document corpora
-- Dense retrieval + reranking for higher-quality context selection
-- Grounded answer generation with citation-aware responses
-- Query routing and decomposition using LangGraph
-- Browser-side inference with WebLLM
-- End-to-end benchmark evaluation using RAGAS-style metrics
-- Streaming responses and expandable source citations in the frontend
-
-## Evaluation benchmark
-
-The project includes an exploratory evaluation benchmark over Canadian aviation regulations, with multiple model and retrieval configurations.
-
-### Benchmark framing
-
-These are provisional results from 95 shared questions of a 250-question machine-generated benchmark, without a documented held-out split or independent human scoring process. GPT-5.4 judged the responses, including its own. Factual correctness was rescored with question-aware claim evaluation; scores from the earlier protocol are not directly comparable.
-
-### Representative results
+Results cover 95 questions from a 250-question benchmark. The questions were machine-generated and haven't been reviewed by a human yet. GPT-5.4 judged every answer, including its own.
 
 **Factual correctness**
 
-| Model | Bare LLM | RAG | RAG + Rerank | RAG minus bare (95% CI) |
+| Model | Bare | RAG | RAG + Rerank | RAG − bare (95% CI) |
 |---|---:|---:|---:|---:|
-| GPT-5.4-nano | 0.378 | 0.532 | 0.533 | +0.153 (+0.0739 to +0.2306) |
-| GPT-5.4-mini | 0.464 | 0.604 | 0.597 | +0.140 (+0.0655 to +0.2132) |
-| GPT-5.4 | 0.447 | 0.489 | 0.497 | +0.042 (-0.0213 to +0.1076) |
-| Llama 3.2 1B | 0.126 | 0.293 | 0.305 | +0.166 (+0.1142 to +0.2180) |
-
-Paired intervals describe uncertainty in the change on the same questions. The GPT-5.4 interval includes zero, so its factual-correctness improvement is uncertain.
+| GPT-5.4-nano | 0.378 | 0.532 | 0.533 | +0.153 (+0.074 to +0.231) |
+| GPT-5.4-mini | 0.464 | 0.604 | 0.597 | +0.140 (+0.066 to +0.213) |
+| GPT-5.4 | 0.447 | 0.489 | 0.497 | +0.042 (−0.021 to +0.108) |
+| Llama 3.2 1B | 0.126 | 0.293 | 0.305 | +0.166 (+0.114 to +0.218) |
 
 **Retrieval quality**
 
 | Metric | RAG | RAG + Rerank |
 |---|---:|---:|
-| Context Precision | 0.913 | 0.955 |
-| Context Recall | 0.989 | 1.000 |
+| Context precision | 0.913 | 0.955 |
+| Context recall | 0.989 | 1.000 |
 
-**Reranking**
+**Takeaways**
 
-Reranking improved context precision, but the paired factual-correctness intervals for reranking include zero for all four models. The [full results](pipeline/eval/results/car/all_summaries.json) include the other metrics and comparisons.
+- **RAG helps the smaller models the most.** With retrieval, GPT-5.4-nano beats bare GPT-5.4, and Llama 3.2 1B more than doubles its score.
+- **The largest model gains the least.** GPT-5.4's confidence interval includes zero, so its improvement is uncertain.
+- **Reranking improves the context but not the answers.** Precision goes up, but no model's factual correctness changes significantly. With strong first-stage recall, the reranker has little to fix.
 
-### Evaluation limitations and next steps
+Full metrics: [`pipeline/eval/results/car/all_summaries.json`](pipeline/eval/results/car/all_summaries.json).
 
-- The benchmark is machine-generated and has not been independently human-scored; review it and evaluate the full set, stratified by chapter, question type, and difficulty.
-- The evaluator records failed metrics as missing values and reports valid sample counts, bootstrap intervals, and paired comparisons.
-- LLM-based scores and faithfulness to retrieved context do not establish that an answer is legally correct or safe for aviation decisions.
-- Version the dataset, prompts, retrieval index, and model configurations for future benchmark runs.
+**Limitations:**
+- An LLM judge and source faithfulness don't establish that an answer is legally correct.
+- Next steps: human-review the benchmark, then evaluate all 250 questions, broken down by section and question type.
 
-## Environment and deployment
+## Tech stack
 
-Use server-managed settings for live credentials and keep them out of browser bundles. The Cloudflare Worker calls Azure AI Foundry for live embeddings and generation; direct OpenAI credentials are only used by the offline evaluation pipeline.
+| Layer | Technology |
+|---|---|
+| Source data | CARs XML (SOR/96-433) from the Justice Laws website |
+| Embeddings | Azure OpenAI `text-embedding-3-large` (3072-d) |
+| Vector DB | Pinecone serverless, cosine similarity, versioned namespaces |
+| Reranking | Cohere `rerank-v4.0-pro` |
+| Generation | Azure AI Foundry GPT-5.4-mini / nano; WebLLM Llama 3.2 1B in the browser |
+| API | Cloudflare Python Workers, KV (answer cache), D1 (question logs), rate limiting |
+| Frontend | Next.js, React, TypeScript, Tailwind CSS on Netlify |
+| Abuse protection | Cloudflare Turnstile, session JWTs, nonce-based CSP |
+| Evaluation | RAGAS, GPT-5.4 judge, Ollama for local models |
 
-```bash
-# Create web/.env.local from the variables documented in web/README.md.
-# Configure api/.dev.vars for local Worker secrets; see api/README.md.
-```
+## Repository
 
-Required runtime values include:
+| Folder | What it is |
+|---|---|
+| [`api/`](api/README.md) | Cloudflare Worker: auth, retrieval, agent, streaming generation |
+| [`web/`](web/README.md) | Next.js frontend, including in-browser WebLLM |
+| [`pipeline/`](pipeline/README.md) | Offline ingestion into Pinecone and the evaluation benchmark |
 
-- `NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL`, `NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY`, and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` for direct browser calls. The application key is public; rotate the previous private gateway key.
-- Worker `ALLOWED_ORIGINS`, Turnstile and JWT signing secrets, and Azure Foundry, Pinecone, and Cohere credentials; see `api/README.md`.
+Each folder's README covers local setup.
 
-Never expose secret values in `NEXT_PUBLIC_*` variables and never commit real credentials.
+## Privacy
 
-## Privacy and safety
-
-The Cloudflare Worker records question timestamps and mode in D1. The checked-in configuration also stores question text in D1, but not in Worker application logs. A Cron Trigger purges entries older than 30 days. Set `QUESTIONS_LOG_QUERY_TEXT` to `false` to omit question text from D1, and adjust retention to match your privacy policy.
-
-## Notes
-
-This project is intentionally framed as a research prototype and learning exercise. It is not a validated aviation decision-support system and should not be treated as operational guidance for flight, compliance, or regulatory interpretation.
+The Worker logs questions (timestamp, mode, model, sources, and by default the question text) to Cloudflare D1. A daily cron deletes rows older than 60 days. Set `QUESTIONS_LOG_QUERY_TEXT=false` to stop storing question text. No secrets are shipped to the browser: the only browser-side values are a public app key and the Turnstile site key.
 
 ## License
 
-This repository is intended for research and portfolio use. Please review the relevant project and service licenses before reuse or commercial deployment.
+See [LICENSE](LICENSE).
