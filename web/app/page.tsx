@@ -271,11 +271,6 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
         </span>
       </div>
 
-      {label === "Bare LLM" && (
-        <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">
-          Unverified model output without retrieved sources. Check official regulations.
-        </p>
-      )}
       {result.incomplete && (
         <p role="alert" className="text-xs text-red-600 dark:text-red-400 mb-3">
           This answer is incomplete. Please try again.
