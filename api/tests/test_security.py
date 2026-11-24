@@ -77,6 +77,7 @@ class Cache:
 js = types.ModuleType("js")
 js.AbortSignal = js.Object = js.ReadableStream = js.TextEncoder = object()
 js.Object = types.SimpleNamespace(fromEntries=lambda value: value)
+js.console = types.SimpleNamespace(error=Mock(), warn=Mock())
 js.Uint8Array = types.SimpleNamespace(new=lambda value: types.SimpleNamespace(to_bytes=lambda: value))
 js.TextEncoder = types.SimpleNamespace(new=lambda: types.SimpleNamespace(encode=lambda value: value.encode()))
 
@@ -608,7 +609,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
     async def test_failed_log_insert_is_reported_without_attempting_an_update(self):
         prepare = Mock(side_effect=RuntimeError("database down"))
         env = types.SimpleNamespace(DB=types.SimpleNamespace(prepare=prepare))
-        with patch("builtins.print") as output:
+        with patch.object(js.console, "error", Mock()) as output:
             rowid = await worker._log_question(env, "question", "openai_rag", "cache-key", user_uuid=USER_UUID, session_id="s" * 32, ip_address="192.0.2.1")
             await persistence._finish_question(env, rowid, outcome="success", http_status=200, duration_ms=1)
         self.assertIsNone(rowid)

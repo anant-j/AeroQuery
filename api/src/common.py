@@ -1,6 +1,6 @@
 import json
 
-from js import Object
+from js import Object, console
 from pyodide.ffi import to_js
 
 
@@ -11,7 +11,7 @@ class ApiError(Exception):
 
 
 def _log(level, event, **fields):
-    print(json.dumps({"level": level, "event": event, **fields}))
+    (console.warn if level == "warning" else console.error)(json.dumps({"event": event, **fields}))
 
 
 def _js_options(options):
