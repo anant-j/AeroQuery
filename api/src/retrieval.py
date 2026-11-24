@@ -3,7 +3,7 @@ import json
 from js import AbortSignal
 from workers import fetch
 
-from common import ApiError
+from common import ApiError, _log
 from constants import MAX_CHUNK_LENGTH, MAX_COMPLETION_TOKENS, MAX_QUERY_LENGTH, NAMESPACE, RERANK_MODEL
 
 
@@ -20,27 +20,15 @@ async def _json_request(url, payload, service, headers=None):
             signal=AbortSignal.timeout(60000),
         )
     except Exception as error:
-        print(json.dumps({
-            "event": "upstream_exception",
-            "service": service,
-            "error_type": type(error).__name__,
-        }))
+        _log("error", "upstream_exception", service=service, error_type=type(error).__name__)
         raise
     if not response.ok:
-        print(json.dumps({
-            "event": "upstream_http_error",
-            "service": service,
-            "status": response.status,
-        }))
+        _log("error", "upstream_http_error", service=service, status=response.status)
         raise ApiError("An upstream service request failed", 502)
     try:
         return await response.json()
     except Exception as error:
-        print(json.dumps({
-            "event": "upstream_response_error",
-            "service": service,
-            "error_type": type(error).__name__,
-        }))
+        _log("error", "upstream_response_error", service=service, error_type=type(error).__name__)
         raise
 
 
@@ -77,11 +65,7 @@ async def _azure_chat(env, messages, stream=False, model=None):
             signal=AbortSignal.timeout(60000),
         )
     except Exception as error:
-        print(json.dumps({
-            "event": "upstream_exception",
-            "service": "azure_chat",
-            "error_type": type(error).__name__,
-        }))
+        _log("error", "upstream_exception", service="azure_chat", error_type=type(error).__name__)
         raise
     return response, model
 

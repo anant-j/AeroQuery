@@ -590,11 +590,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         for enabled in ("true", "false"):
             env = types.SimpleNamespace(DB=Database(), QUESTIONS_LOG_QUERY_TEXT=enabled)
             self.addCleanup(env.DB.connection.close)
-            with patch("builtins.print") as output:
-                rowid = await worker._log_question(env, "test question", "openai_rag", "cache-key", user_uuid=USER_UUID, session_id="s" * 32, ip_address="192.0.2.1")
-            event = json.loads(output.call_args.args[0])
-            self.assertEqual(event["event"], "question_received")
-            self.assertNotIn("test question", output.call_args.args[0])
+            rowid = await worker._log_question(env, "test question", "openai_rag", "cache-key", user_uuid=USER_UUID, session_id="s" * 32, ip_address="192.0.2.1")
             self.assertEqual(env.DB.connection.execute("SELECT question_asked FROM question_logs WHERE rowid = ?", (rowid,)).fetchone()[0],
                              "test question" if enabled == "true" else None)
 
@@ -617,7 +613,7 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             await persistence._finish_question(env, rowid, outcome="success", http_status=200, duration_ms=1)
         self.assertIsNone(rowid)
         self.assertEqual([json.loads(call.args[0])["event"] for call in output.call_args_list],
-                         ["question_log_failed", "question_completed"])
+                         ["question_log_failed"])
         prepare.assert_called_once()
 
     async def test_unauthorized_requests_are_rejected(self):

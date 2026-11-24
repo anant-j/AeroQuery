@@ -2,14 +2,13 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
-from common import _js_options
+from common import _js_options, _log
 from constants import CACHE_VERSION, DEFAULT_CACHE_TTL_SECONDS, NAMESPACE, RERANK_MODEL
 
 
 async def _log_question(env, query, mode, cache_key, answered_from_cache=False, *, user_uuid, session_id, ip_address, model=None, corpus_version=None):
     now = datetime.now(timezone.utc)
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
-    log_event = {"event": "question_received", "mode": mode, "answered_from_cache": answered_from_cache}
     try:
         row = await env.DB.prepare(
             "INSERT INTO question_logs (created_at, mode, question_asked, cache_key, answered_from_cache, user_uuid, session_id, ip_address, model, corpus_version, outcome) "
@@ -29,10 +28,9 @@ async def _log_question(env, query, mode, cache_key, answered_from_cache=False, 
         ).first()
         if row is None:
             raise RuntimeError("Question log insert returned no row")
-        print(json.dumps(log_event))
         return int(row.log_rowid)
     except Exception as error:
-        print(json.dumps({"event": "question_log_failed", "error_type": type(error).__name__}))
+        _log("error", "question_log_failed", error_type=type(error).__name__)
         return None
 
 
@@ -59,10 +57,7 @@ async def _finish_question(env, log_rowid, *, outcome, http_status, duration_ms,
                 finish_reason, log_rowid,
             ).run()
     except Exception as error:
-        print(json.dumps({"event": "question_log_update_failed", "error_type": type(error).__name__}))
-    print(json.dumps({"event": "question_completed", "outcome": outcome,
-                      "http_status": http_status, "duration_ms": duration_ms, "failure_stage": failure_stage,
-                      "error_type": error_type}))
+        _log("error", "question_log_update_failed", error_type=type(error).__name__)
 
 
 def _cache_key(env, path, query, use_rag, model=None):
@@ -90,7 +85,7 @@ async def _cache_get(env, key):
         value = await env.AEROQUERY_ANSWER_CACHE.get(key)
         return json.loads(value) if value is not None else None
     except Exception as error:
-        print(json.dumps({"event": "cache_read_failed", "error_type": type(error).__name__}))
+        _log("error", "cache_read_failed", error_type=type(error).__name__)
         return None
 
 
@@ -101,4 +96,4 @@ async def _cache_put(env, key, value):
     try:
         await env.AEROQUERY_ANSWER_CACHE.put(key, json.dumps(value), _js_options({"expirationTtl": max(60, ttl)}))
     except Exception as error:
-        print(json.dumps({"event": "cache_write_failed", "error_type": type(error).__name__}))
+        _log("error", "cache_write_failed", error_type=type(error).__name__)

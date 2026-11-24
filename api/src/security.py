@@ -9,7 +9,7 @@ from js import AbortSignal, TextEncoder, Uint8Array, crypto
 from pyodide.ffi import to_js
 from workers import fetch
 
-from common import ApiError, _js_options
+from common import ApiError, _js_options, _log
 from constants import MAX_BODY_BYTES, MAX_QUERY_LENGTH
 
 
@@ -87,7 +87,7 @@ async def _verify_turnstile(env, token, origin, client_ip):
             raise ValueError("Siteverify failed")
         result = await response.json()
     except Exception as error:
-        print(json.dumps({"event": "turnstile_unavailable", "error_type": type(error).__name__}))
+        _log("error", "turnstile_unavailable", error_type=type(error).__name__)
         raise ApiError("Verification is unavailable", 503)
     if (not result.get("success") or result.get("hostname") != urlparse(origin).hostname
             or result.get("action") != "aeroquery"):

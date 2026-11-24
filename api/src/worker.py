@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from workers import Response, WorkerEntrypoint
 
-from common import ApiError, _js_options
+from common import ApiError, _js_options, _log
 from constants import NAMESPACE, SYSTEM_PROMPT
 from persistence import _cache_get, _cache_key, _cache_put, _finish_question, _log_question, _source_metadata
 from retrieval import _public_chunks, _retrieve_chunks, _run_agent
@@ -78,12 +78,12 @@ class Default(WorkerEntrypoint):
                     "location": location,
                 }))
             except Exception as error:
-                print(json.dumps({"event": "visit_notification_failed", "error_type": type(error).__name__}))
+                _log("error", "visit_notification_failed", error_type=type(error).__name__)
 
         self.ctx.waitUntil(notify())
 
     def _report_invalid_auth(self, request, reason, user_uuid=None, client_ip=None):
-        print(json.dumps({"level": "warning", "event": "auth_request_invalid", "reason": reason}))
+        _log("warning", "auth_request_invalid", reason=reason)
         self._notify_visit(request, user_uuid, None, client_ip)
 
     async def _handle_request(self, request, origin):
@@ -220,6 +220,8 @@ class Default(WorkerEntrypoint):
                 log_context={"log_rowid": log_rowid, "started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata},
             )
         except ApiError as error:
+            if error.status >= 500:
+                _log("error", "request_failed", stage=stage, status=error.status)
             if question_log_attempted:
                 await _finish_question(self.env, log_rowid, outcome="error", http_status=error.status,
                                        duration_ms=round((time.monotonic() - started) * 1000),
@@ -227,11 +229,7 @@ class Default(WorkerEntrypoint):
                                        retrieval_ms=retrieval_ms, sources=source_metadata)
             return Response.json({"error": str(error)}, status=error.status)
         except Exception as error:
-            print(json.dumps({
-                "event": "request_failed",
-                "stage": stage,
-                "error_type": type(error).__name__,
-            }))
+            _log("error", "request_failed", stage=stage, error_type=type(error).__name__)
             if question_log_attempted:
                 await _finish_question(self.env, log_rowid, outcome="error", http_status=502,
                                        duration_ms=round((time.monotonic() - started) * 1000),
