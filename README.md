@@ -15,7 +15,7 @@ I also noticed that small open models, the kind you can run on-device, mostly le
 AeroQuery started as a way to answer two questions:
 
 1. How much does retrieval actually improve factual answers on a narrow regulatory domain, across models of different sizes?
-2. What does it take to run a RAG system as a real public app, with streaming, citations, abuse protection, caching, and privacy-aware logging?
+2. What does it take to run a RAG system as a real public app, with streaming, citations, abuse protection, caching and re-ranking?
 
 ## Highlights
 
