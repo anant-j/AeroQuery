@@ -263,7 +263,7 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
   return (
     <div className={`border rounded-lg p-5 ${accent}`}>
       <div className="flex items-center gap-2 mb-3">
-        <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
+        <span className={`text-xs px-2 py-1 rounded font-medium ${label === "RAG + Rerank" ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"}`}>
           {label}
         </span>
         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -866,7 +866,7 @@ export default function Home() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {ragResult && (
-              <ResultCard result={ragResult} label="RAG" accent="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30" streaming={ragStreaming} />
+              <ResultCard result={ragResult} label="RAG + Rerank" accent="border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/30" streaming={ragStreaming} />
             )}
             {bareResult && (
               <ResultCard result={bareResult} label="Bare LLM" accent="border-yellow-200 dark:border-yellow-800 bg-yellow-50/30 dark:bg-yellow-950/30" streaming={bareStreaming} />
