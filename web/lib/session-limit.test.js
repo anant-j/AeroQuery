@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MAX_SESSION_REQUESTS, consumeSessionRequest, remainingSessionRequests, sessionRequestResetSeconds } from "../app/lib/session-limit.js";
+import { MAX_SESSION_REQUESTS, consumeSessionRequest, recoverSessionRequestStorage, remainingSessionRequests, sessionRequestResetSeconds } from "../app/lib/session-limit.js";
 
 test("limits requests in browser storage", () => {
   const values = new Map();
@@ -126,4 +126,42 @@ test("fails closed when storage is malformed or unavailable", () => {
   global.window = { localStorage: { getItem: () => null, setItem: () => { throw new Error("unavailable"); } } };
   assert.equal(consumeSessionRequest(), null);
   delete global.window;
+});
+
+test("repairs only invalid request-limit data and preserves valid limits", () => {
+  const key = "aeroquery.sessionRequests";
+  const values = new Map([[key, "invalid"], ["unrelated", "keep"]]);
+  global.window = { localStorage: {
+    getItem: (name) => values.get(name) ?? null,
+    setItem: (name, value) => values.set(name, value),
+    removeItem: (name) => values.delete(name),
+  } };
+  try {
+    assert.equal(recoverSessionRequestStorage(), true);
+    assert.equal(remainingSessionRequests(), MAX_SESSION_REQUESTS);
+    assert.equal(values.get("unrelated"), "keep");
+    for (let count = 0; count < 10; count++) assert.equal(consumeSessionRequest(), true);
+    assert.equal(recoverSessionRequestStorage(), true);
+    assert.equal(remainingSessionRequests(), 14);
+  } finally {
+    delete global.window;
+  }
+});
+
+test("reports failure when request-limit storage cannot be recovered", () => {
+  const originalError = console.error;
+  console.error = () => {};
+  global.window = { localStorage: { getItem: () => { throw new Error("blocked"); } } };
+  try {
+    assert.equal(recoverSessionRequestStorage(), false);
+    global.window = { localStorage: {
+      getItem: () => "invalid",
+      setItem: () => { throw new Error("read-only"); },
+    } };
+    assert.equal(recoverSessionRequestStorage(), false);
+    assert.equal(remainingSessionRequests(), null);
+  } finally {
+    console.error = originalError;
+    delete global.window;
+  }
 });

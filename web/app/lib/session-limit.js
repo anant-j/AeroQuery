@@ -27,6 +27,29 @@ function readRequestLimit(storage) {
   };
 }
 
+export function recoverSessionRequestStorage() {
+  try {
+    const storage = window.localStorage;
+    let state;
+    try {
+      state = readRequestLimit(storage);
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error;
+      state = null;
+    }
+    if (!state) {
+      state = { count: 0, expiresAt: Date.now() + REQUEST_LIMIT_TTL, hourlyRequests: [] };
+    }
+    const value = JSON.stringify(state);
+    storage.setItem(STORAGE_KEY, value);
+    if (storage.getItem(STORAGE_KEY) !== value) throw new Error("Could not verify request limit storage");
+    return true;
+  } catch (error) {
+    console.error("Could not recover request limit storage", error);
+    return false;
+  }
+}
+
 export function remainingSessionRequests() {
   try {
     const state = readRequestLimit(window.localStorage);

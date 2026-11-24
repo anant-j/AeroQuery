@@ -4,13 +4,13 @@ import React, { useState, useRef, useCallback, useEffect, useSyncExternalStore }
 import ReactMarkdown from "react-markdown";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
-import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, normalizeQuery, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
-import { consumeSessionRequest, MAX_SESSION_REQUESTS, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
+import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, normalizeQuery, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, THEME_STORAGE_KEY, WEBLLM_MODEL } from "./lib/constants.js";
+import { consumeSessionRequest, MAX_SESSION_REQUESTS, recoverSessionRequestStorage, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession, WorkerSessionError } from "./lib/worker-session.js";
 import { officialSourceUrl } from "./lib/source-url.js";
 import { formatRelativeDelta } from "./lib/benchmark-delta.js";
-import { getUserUuid } from "./lib/user-uuid.js";
+import { getUserUuid, UserUuidStorageError } from "./lib/user-uuid.js";
 
 const TURNSTILE_SITE_KEY = getTurnstileSiteKey();
 const WORKER_URL = (process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL || "").replace(/\/+$/, "");
@@ -85,7 +85,7 @@ const BenchmarkMetrics = [
   },
 ];
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
-const STORAGE_ERROR = "Browser storage is unavailable or invalid. Enable browser storage and refresh; if the problem persists, clear this site's data.";
+const STORAGE_ERROR = "Aeroquery is not supported in this environment. Please contact me at anant.j2409@gmail.com for support";
 
 function getRemainingRequests() {
   return remainingSessionRequests();
@@ -107,11 +107,16 @@ function subscribeToLocalhost() {
 }
 
 function subscribeToSessionRequests(callback: () => void) {
-  window.addEventListener(SESSION_LIMIT_EVENT, callback);
-  window.addEventListener("storage", callback);
+  const onChange = () => {
+    if (getRemainingRequests() === null) recoverSessionRequestStorage();
+    callback();
+  };
+  window.addEventListener(SESSION_LIMIT_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  onChange();
   return () => {
-    window.removeEventListener(SESSION_LIMIT_EVENT, callback);
-    window.removeEventListener("storage", callback);
+    window.removeEventListener(SESSION_LIMIT_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
   };
 }
 
@@ -167,7 +172,8 @@ class RequestError extends Error { }
 class SessionLimitError extends Error { }
 
 function reserveSessionRequest() {
-  const accepted = consumeSessionRequest();
+  let accepted = consumeSessionRequest();
+  if (accepted === null && recoverSessionRequestStorage()) accepted = consumeSessionRequest();
   window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
   if (accepted === null) throw new RequestError(STORAGE_ERROR);
   if (!accepted) throw new SessionLimitError("You have reached the session limit. Please wait until it resets.");
@@ -625,7 +631,7 @@ export default function Home() {
         setBareStreaming(false);
       }
     } catch (err) {
-      setError(err instanceof SessionLimitError ? "" : err instanceof RequestError || err instanceof WorkerSessionError ? err.message : "Something went wrong. Please try again later.");
+      setError(err instanceof SessionLimitError ? "" : err instanceof UserUuidStorageError ? STORAGE_ERROR : err instanceof RequestError || err instanceof WorkerSessionError ? err.message : "Something went wrong. Please try again later.");
       setRagResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       setBareResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       if (err instanceof Error) {
@@ -643,7 +649,17 @@ export default function Home() {
   const toggleTheme = () => {
     const next = !isDark;
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, next ? "dark" : "light");
+    } catch {
+      try {
+        localStorage.removeItem(THEME_STORAGE_KEY);
+        localStorage.setItem(THEME_STORAGE_KEY, next ? "dark" : "light");
+      } catch (error) {
+        console.error("Could not save theme preference", error);
+        setError(STORAGE_ERROR);
+      }
+    }
     window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   };
 
