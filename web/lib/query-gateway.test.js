@@ -24,7 +24,7 @@ test("comparison sends two authenticated requests and multiplexes their SSE byte
   const fetcher = async (url, options) => {
     requests.push({ url, options });
     const rag = JSON.parse(options.body).use_rag;
-    const bytes = new TextEncoder().encode(`data: {"type":"token","token":"${rag ? "é" : "bare"}"}\n\ndata: {"type":"done"}\n\n`);
+    const bytes = new TextEncoder().encode(`data: {"type":"token","token":"${rag ? "é" : "bare"}"}\n\ndata: ${JSON.stringify({ type: "usage", tokens: rag ? 0 : 12, model: "model", ...(rag && { cached: true }) })}\n\ndata: {"type":"done"}\n\n`);
     return new Response(new ReadableStream({
       start(controller) {
         const split = rag ? bytes.indexOf(195) + 1 : 7;
@@ -49,6 +49,10 @@ test("comparison sends two authenticated requests and multiplexes their SSE byte
     const text = result.filter((event) => event.mode === mode).map((event) => event.chunk).join("");
     assert.match(text, new RegExp(`"token":"${token}"`));
     assert.match(text, /"type":"done"/);
+    const usage = text.split("\n").filter((line) => line.startsWith("data: ")).map((line) => JSON.parse(line.slice(6))).find((event) => event.type === "usage");
+    assert.deepEqual(usage, mode === "rag"
+      ? { type: "usage", tokens: 0, model: "model", cached: true }
+      : { type: "usage", tokens: 12, model: "model" });
   }
 });
 

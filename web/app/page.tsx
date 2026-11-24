@@ -203,6 +203,7 @@ interface AskResponse {
   answer: string;
   model: string;
   tokens: number;
+  cached?: boolean;
   complete?: boolean;
   incomplete?: boolean;
   sources?: Source[];
@@ -266,7 +267,7 @@ function ResultCard({ result, label, accent, streaming }: { result: AskResponse;
           {label}
         </span>
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          {result.model}{result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
+          {result.model}{result.cached ? " · Returned from cache" : result.tokens > 0 ? ` · ${result.tokens} tokens` : ""}
         </span>
       </div>
 
@@ -487,7 +488,7 @@ export default function Home() {
               } else if (data.type === "sources" && mode === "rag") {
                 setRagResult(prev => prev ? { ...prev, sources: data.sources, agent: data.agent } : null);
               } else if (data.type === "usage") {
-                update(prev => prev ? { ...prev, tokens: data.tokens, model: data.model } : null);
+                update(prev => prev ? { ...prev, tokens: data.tokens, model: data.model, cached: data.cached === true } : null);
               } else if (data.type === "error") {
                 throw new RequestError(`${mode === "rag" ? "RAG" : "Bare"}: ${typeof data.error === "string" ? data.error : "Generation failed. Please try again."}`);
               } else if (data.type === "done") {

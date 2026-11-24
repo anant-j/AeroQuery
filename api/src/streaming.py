@@ -130,7 +130,7 @@ def _cached_stream(value):
     if value.get("sources"):
         events.append({"type": "sources", "sources": value["sources"], "model": value["model"], "agent": value.get("agent")})
     events.append({"type": "token", "token": value["answer"]})
-    events.append({"type": "usage", "tokens": 0, "model": value["model"]})
+    events.append({"type": "usage", "tokens": 0, "model": value["model"], "cached": True})
     events.append({"type": "done"})
     return Response("".join(_sse_event(event) for event in events), headers={
         "Content-Type": "text/event-stream",

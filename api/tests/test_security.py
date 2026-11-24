@@ -388,6 +388,10 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
                 if cached:
                     replay = worker._cached_stream(cached)
                     self.assertIn('"token":"answer"', replay.body)
+                    replay_events = [json.loads(line[6:]) for line in replay.body.splitlines() if line.startswith("data: ")]
+                    self.assertEqual(next(event for event in replay_events if event["type"] == "usage"), {
+                        "type": "usage", "tokens": 0, "model": "model", "cached": True,
+                    })
                     self.assertIn('"type":"done"', replay.body)
                     env.AEROQUERY_ANSWER_CACHE.values.clear()
 
@@ -464,6 +468,8 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
             ))
             self.assertEqual(row[7], 5)
             self.assertEqual(len(errors), 1 if case == "error" else 0)
+            usage_event = next(json.loads(event[6:]) for event in events if b'"type":"usage"' in event)
+            self.assertEqual(usage_event, {"type": "usage", "tokens": 12, "model": "model"})
             if case != "error":
                 self.assertEqual(json.loads(events[-1][6:])["type"], "done" if case == "success" else "error")
 
