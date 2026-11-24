@@ -30,7 +30,7 @@ API_DISABLED = "false"
 QUESTIONS_RETENTION_DAYS = "60"
 QUESTIONS_LOG_QUERY_TEXT = "true"
 CACHE_TTL_SECONDS = "86400"
-ALLOWED_ORIGINS = "https://aeroquery.anant-j.com, https://www.aeroquery.anant-j.com, https://www.aeroquery.netlify.app, https://aeroquery.netlify.app, https://devserver-dev--aeroquery.netlify.app"
+ALLOWED_ORIGINS = "https://aeroquery.anant-j.com, https://www.aeroquery.anant-j.com, https://www.aeroquery.netlify.app, https://aeroquery.netlify.app, https://dev--aeroquery.netlify.app"
 
 [secrets]
 required = [
