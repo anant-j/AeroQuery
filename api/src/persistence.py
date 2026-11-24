@@ -6,14 +6,14 @@ from common import _js_options
 from constants import CACHE_VERSION, DEFAULT_CACHE_TTL_SECONDS, NAMESPACE, RERANK_MODEL
 
 
-async def _log_question(env, query, mode, cache_key, answered_from_cache=False, *, user_uuid=None, model=None, corpus_version=None):
+async def _log_question(env, query, mode, cache_key, answered_from_cache=False, *, user_uuid=None, session_id=None, ip_address=None, model=None, corpus_version=None):
     now = datetime.now(timezone.utc)
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
     log_event = {"event": "question_received", "mode": mode, "answered_from_cache": answered_from_cache}
     try:
         row = await env.DB.prepare(
-            "INSERT INTO question_logs (created_at, mode, question_asked, cache_key, answered_from_cache, user_uuid, model, corpus_version, outcome) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING rowid AS log_rowid"
+            "INSERT INTO question_logs (created_at, mode, question_asked, cache_key, answered_from_cache, user_uuid, session_id, ip_address, model, corpus_version, outcome) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING rowid AS log_rowid"
         ).bind(
             now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             mode,
@@ -21,6 +21,8 @@ async def _log_question(env, query, mode, cache_key, answered_from_cache=False, 
             cache_key,
             int(answered_from_cache),
             user_uuid,
+            session_id,
+            ip_address,
             model,
             corpus_version,
             "pending",

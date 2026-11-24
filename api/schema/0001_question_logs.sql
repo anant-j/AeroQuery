@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS question_logs (
     cache_key TEXT,
     answered_from_cache INTEGER NOT NULL DEFAULT 0,
     user_uuid TEXT,
+    session_id TEXT,
+    ip_address TEXT,
     answer TEXT,
     outcome TEXT,
     http_status INTEGER,
@@ -25,3 +27,5 @@ CREATE INDEX IF NOT EXISTS question_logs_created_at_idx
     ON question_logs (created_at);
 CREATE INDEX IF NOT EXISTS question_logs_user_uuid_idx
     ON question_logs (user_uuid);
+CREATE INDEX IF NOT EXISTS question_logs_session_id_idx
+    ON question_logs (session_id);

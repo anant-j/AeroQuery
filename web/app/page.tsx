@@ -403,7 +403,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!turnstileReady || !TURNSTILE_SITE_KEY) return;
-    sessionRef.current ??= createWorkerSession(WORKER_URL, WORKER_KEY, getTurnstileToken);
+    sessionRef.current ??= createWorkerSession(WORKER_URL, WORKER_KEY, getTurnstileToken, fetch, getUserUuid);
     sessionRef.current().catch((error: unknown) => {
       setError(error instanceof Error ? error.message : "Verification failed. Please try again.");
     });

@@ -31,11 +31,11 @@ async def _jwt_key(env):
     )
 
 
-async def _issue_session(env, origin):
+async def _issue_session(env, origin, anon_id=None):
     now = int(time.time())
     header = _b64url(b'{"alg":"HS256","typ":"JWT"}')
     payload = _b64url(json.dumps({
-        "anon_id": uuid.uuid4().hex, "origin": origin, "iat": now, "exp": now + 300,
+        "anon_id": anon_id or uuid.uuid4().hex, "origin": origin, "iat": now, "exp": now + 300,
     }, separators=(",", ":")).encode())
     message = f"{header}.{payload}"
     signature = await crypto.subtle.sign("HMAC", await _jwt_key(env), TextEncoder.new().encode(message))

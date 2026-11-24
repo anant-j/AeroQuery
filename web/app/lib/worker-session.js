@@ -1,6 +1,6 @@
 export class WorkerSessionError extends Error {}
 
-export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher = fetch) {
+export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher = fetch, /** @type {() => string | undefined} */ getUserUuid = () => undefined) {
   let session;
   let pending;
   return async function getSession() {
@@ -21,7 +21,7 @@ export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher =
         const response = await fetcher(`${apiUrl}/auth/anonymous`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-aeroquery-key": apiKey },
-          body: JSON.stringify({ turnstile_token: token }),
+          body: JSON.stringify({ turnstile_token: token, user_uuid: getUserUuid() }),
           cache: "no-store",
         });
         if (!response.ok) {

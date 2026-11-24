@@ -59,3 +59,8 @@ namespace_id = "913847211"
 	[ratelimits.simple]
 	limit = 24
 	period = 60
+
+[[services]]
+binding = "DISCORD_BOT"
+service = "anant-discord-bot"
+entrypoint = "AeroQueryNotifier"

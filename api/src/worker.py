@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from workers import Response, WorkerEntrypoint
 
-from common import ApiError
+from common import ApiError, _js_options
 from constants import NAMESPACE, SYSTEM_PROMPT
 from persistence import _cache_get, _cache_key, _cache_put, _finish_question, _log_question, _source_metadata
 from retrieval import _public_chunks, _retrieve_chunks, _run_agent
@@ -27,6 +27,17 @@ def _generation_model(env, requested_model):
     if requested_model == "gpt-5.4-nano":
         return getattr(env, "AZURE_OPENAI_NANO_DEPLOYMENT", "") or requested_model
     raise ApiError("Unsupported model", 400)
+
+
+def _validate_user_uuid(user_uuid):
+    if user_uuid is None:
+        return None
+    try:
+        if not isinstance(user_uuid, str) or str(uuid.UUID(user_uuid)) != user_uuid:
+            raise ValueError("Invalid user UUID")
+    except ValueError:
+        raise ApiError("Invalid user UUID", 400)
+    return user_uuid
 
 
 class Default(WorkerEntrypoint):
@@ -50,6 +61,26 @@ class Default(WorkerEntrypoint):
         response.js_object.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Aeroquery-Key")
         response.js_object.headers.set("Cache-Control", "no-store")
         return response
+
+    def _notify_visit(self, request, user_uuid, session_id, client_ip):
+        notifier = getattr(self.env, "DISCORD_BOT", None)
+        if notifier is None:
+            return
+        cf = getattr(getattr(request, "js_object", None), "cf", None)
+        location = {key: str(getattr(cf, key, "") or "") for key in ("city", "region", "country", "asOrganization")}
+
+        async def notify():
+            try:
+                await notifier.notifyVisit(_js_options({
+                    "userUuid": user_uuid or "",
+                    "sessionId": session_id,
+                    "ip": client_ip,
+                    "location": location,
+                }))
+            except Exception as error:
+                print(json.dumps({"event": "visit_notification_failed", "error_type": type(error).__name__}))
+
+        self.ctx.waitUntil(notify())
 
     async def _handle_request(self, request, origin):
         started = time.monotonic()
@@ -91,8 +122,11 @@ class Default(WorkerEntrypoint):
             body = await _read_json_body(request)
             if path == "/auth/anonymous":
                 stage = "turnstile_verification"
+                user_uuid = _validate_user_uuid(body.get("user_uuid"))
                 await _verify_turnstile(self.env, body.get("turnstile_token"), origin, client_ip)
-                token, expires_at = await _issue_session(self.env, origin)
+                anon_id = uuid.uuid4().hex
+                token, expires_at = await _issue_session(self.env, origin, anon_id)
+                self._notify_visit(request, user_uuid, anon_id, client_ip)
                 return Response.json({"token": token, "expires_at": expires_at})
             stage = "session_authentication"
             anon_id = await _verify_session(self.env, request.headers.get("authorization", ""), origin)
@@ -102,13 +136,7 @@ class Default(WorkerEntrypoint):
                 raise ApiError("Too many session requests. Please wait a minute and try again.", 429)
             query = _validate_query(body.get("query"))
 
-            user_uuid = body.get("user_uuid")
-            if user_uuid is not None:
-                try:
-                    if not isinstance(user_uuid, str) or str(uuid.UUID(user_uuid)) != user_uuid:
-                        raise ValueError("Invalid user UUID")
-                except ValueError:
-                    raise ApiError("Invalid user UUID", 400)
+            user_uuid = _validate_user_uuid(body.get("user_uuid"))
 
             use_rag = body.get("use_rag", False)
             if not isinstance(use_rag, bool):
@@ -121,7 +149,7 @@ class Default(WorkerEntrypoint):
             stage = "question_logging"
             log_rowid = await _log_question(
                 self.env, query, mode, cache_key, cached is not None,
-                user_uuid=user_uuid, model=cached.get("model", model) if cached else model,
+                user_uuid=user_uuid, session_id=anon_id, ip_address=client_ip, model=cached.get("model", model) if cached else model,
                 corpus_version=NAMESPACE if path == "/retrieve" or use_rag else None,
             )
             question_log_attempted = True
@@ -205,6 +233,5 @@ class Default(WorkerEntrypoint):
         worker_env = self.env
         retention_days = max(1, int(getattr(worker_env, "QUESTIONS_RETENTION_DAYS", "30")))
         cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
-        await worker_env.DB.prepare(
-            "DELETE FROM question_logs WHERE created_at < ?"
-        ).bind(cutoff.isoformat(timespec="milliseconds").replace("+00:00", "Z")).run()
+        cutoff_text = cutoff.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        await worker_env.DB.prepare("DELETE FROM question_logs WHERE created_at < ?").bind(cutoff_text).run()
