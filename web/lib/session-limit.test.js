@@ -57,8 +57,44 @@ test("reports the reset countdown with one request remaining", () => {
   }
 });
 
+test("enforces 60 requests in a rolling hour across two-minute windows", () => {
+  const values = new Map();
+  const originalNow = Date.now;
+  const start = 10_000_000;
+  let now = start;
+  Date.now = () => now;
+  global.window = { localStorage: { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } };
+  try {
+    assert.equal(consumeSessionRequest(), true);
+    now += 10_000;
+    for (let count = 0; count < 23; count++) assert.equal(consumeSessionRequest(), true);
+    now = start + 130_000;
+    for (let count = 0; count < 24; count++) assert.equal(consumeSessionRequest(), true);
+    now = start + 250_000;
+    for (let count = 0; count < 12; count++) assert.equal(consumeSessionRequest(), true);
+    assert.equal(remainingSessionRequests(), 0);
+    assert.equal(consumeSessionRequest(), false);
+    assert.equal(sessionRequestResetSeconds(), 3360);
+
+    now = start + 3_600_000;
+    assert.equal(remainingSessionRequests(), 1);
+    assert.equal(sessionRequestResetSeconds(1), null);
+    assert.equal(sessionRequestResetSeconds(2), 10);
+    now += 10_000;
+    assert.equal(remainingSessionRequests(), 24);
+    assert.equal(sessionRequestResetSeconds(2), null);
+    for (let count = 0; count < 24; count++) assert.equal(consumeSessionRequest(), true);
+    assert.equal(consumeSessionRequest(), false);
+  } finally {
+    Date.now = originalNow;
+    delete global.window;
+  }
+});
+
 test("fails closed when storage is malformed or unavailable", () => {
   global.window = { localStorage: { getItem: () => "-1" } };
+  assert.equal(remainingSessionRequests(), 0);
+  global.window = { localStorage: { getItem: () => JSON.stringify({ count: 0, expiresAt: Date.now() + 1_000, hourlyRequests: ["invalid"] }) } };
   assert.equal(remainingSessionRequests(), 0);
   global.window = { localStorage: { getItem: () => { throw new Error("unavailable"); } } };
   assert.equal(consumeSessionRequest(), false);

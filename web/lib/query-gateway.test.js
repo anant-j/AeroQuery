@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { streamComparison } from "../app/lib/query-gateway.js";
 import { isQueryTooLong, normalizeQuery } from "../app/lib/constants.js";
 
+const USER_UUID = "12345678-1234-4234-8234-123456789abc";
+
 async function events(stream) {
   const text = await new Response(stream).text();
   return text.split("\n").filter((line) => line.startsWith("data: ")).map((line) => JSON.parse(line.slice(6)));
@@ -32,7 +34,7 @@ test("comparison sends two authenticated requests and multiplexes their SSE byte
       },
     }));
   };
-  const result = await events(streamComparison("https://worker.test", "key", "127.0.0.1", "question", "gpt-5.4-nano", new AbortController().signal, fetcher, "12345678-1234-4234-8234-123456789abc"));
+  const result = await events(streamComparison("https://worker.test", "key", "127.0.0.1", "question", "gpt-5.4-nano", new AbortController().signal, USER_UUID, fetcher));
   assert.equal(requests.length, 2);
   assert.deepEqual(requests.map(({ options }) => JSON.parse(options.body).use_rag).sort(), [false, true]);
   for (const { url, options } of requests) {
@@ -41,7 +43,7 @@ test("comparison sends two authenticated requests and multiplexes their SSE byte
     assert.equal(options.headers.Authorization, "Bearer 127.0.0.1");
     assert.equal(JSON.parse(options.body).query, "question");
     assert.equal(JSON.parse(options.body).model, "gpt-5.4-nano");
-    assert.equal(JSON.parse(options.body).user_uuid, "12345678-1234-4234-8234-123456789abc");
+    assert.equal(JSON.parse(options.body).user_uuid, USER_UUID);
   }
   for (const [mode, token] of [["rag", "é"], ["bare", "bare"]]) {
     const text = result.filter((event) => event.mode === mode).map((event) => event.chunk).join("");
@@ -54,7 +56,7 @@ test("a backend error is surfaced with its stream identity", async () => {
   const fetcher = async (_url, options) => JSON.parse(options.body).use_rag
     ? Response.json({ error: "Rate limited" }, { status: 429 })
     : new Response('data: {"type":"done"}\n\n');
-  const result = await events(streamComparison("https://worker.test", "key", "ip", "question", "gpt-5.4-mini", new AbortController().signal, fetcher));
+  const result = await events(streamComparison("https://worker.test", "key", "ip", "question", "gpt-5.4-mini", new AbortController().signal, USER_UUID, fetcher));
   assert.ok(result.some((event) => event.mode === "rag" && event.error === "Rate limited"));
   assert.ok(result.some((event) => event.mode === "bare" && event.chunk.includes('"done"')));
 });
@@ -66,7 +68,7 @@ test("a slow backend does not block the other stream", async () => {
     if (JSON.parse(options.body).use_rag) await slow;
     return new Response('data: {"type":"done"}\n\n');
   };
-  const reader = streamComparison("https://worker.test", "key", "ip", "question", "gpt-5.4-mini", new AbortController().signal, fetcher).getReader();
+  const reader = streamComparison("https://worker.test", "key", "ip", "question", "gpt-5.4-mini", new AbortController().signal, USER_UUID, fetcher).getReader();
   const first = await reader.read();
   assert.match(new TextDecoder().decode(first.value), /"mode":"bare"/);
   release();
@@ -81,7 +83,7 @@ test("cancelling the response aborts both backend requests", async () => {
       options.signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
     });
   };
-  const stream = streamComparison("https://worker.test", "key", "ip", "question", "gpt-5.4-mini", new AbortController().signal, fetcher);
+  const stream = streamComparison("https://worker.test", "key", "ip", "question", "gpt-5.4-mini", new AbortController().signal, USER_UUID, fetcher);
   await stream.cancel();
   assert.equal(signals.length, 2);
   assert.ok(signals.every((signal) => signal.aborted));

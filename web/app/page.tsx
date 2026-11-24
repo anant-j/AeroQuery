@@ -120,6 +120,7 @@ function subscribeToSessionRequests(callback: () => void) {
 
 function subscribeToSessionReset(callback: () => void) {
   let interval: number | null = null;
+  let previousRemaining = getRemainingRequests();
   const updateInterval = () => {
     if (sessionRequestResetSeconds() === null) {
       if (interval !== null) window.clearInterval(interval);
@@ -128,15 +129,20 @@ function subscribeToSessionReset(callback: () => void) {
       interval = window.setInterval(() => {
         const seconds = sessionRequestResetSeconds();
         callback();
-        if (seconds === null) {
-          if (interval !== null) window.clearInterval(interval);
-          interval = null;
+        const remaining = getRemainingRequests();
+        if (remaining !== previousRemaining || seconds === null) {
+          previousRemaining = remaining;
           window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
+        }
+        if (seconds === null && interval !== null) {
+          window.clearInterval(interval);
+          interval = null;
         }
       }, 1000);
     }
   };
   const onChange = () => {
+    previousRemaining = getRemainingRequests();
     callback();
     updateInterval();
   };
@@ -160,7 +166,7 @@ function subscribeToTheme(callback: () => void) {
   return () => window.removeEventListener(THEME_CHANGE_EVENT, callback);
 }
 
-class RequestError extends Error {}
+class RequestError extends Error { }
 
 function reserveSessionRequest() {
   let accepted = false;
@@ -170,7 +176,7 @@ function reserveSessionRequest() {
     accepted = false;
   }
   window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
-  if (!accepted) throw new RequestError("Session request limit reached or session storage is unavailable.");
+  if (!accepted) throw new RequestError("Browser request limit reached or browser storage is unavailable.");
 }
 
 declare global {
@@ -342,8 +348,8 @@ export default function Home() {
   const explanation = ragResult?.answer.trim() ? DefaultQueries.get(ragResult.query)?.trim() : undefined;
   const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
   const isLocalhost = useSyncExternalStore(subscribeToLocalhost, getIsLocalhost, () => false);
-  const sessionResetSeconds = useSyncExternalStore(subscribeToSessionReset, sessionRequestResetSeconds, () => null);
   const requestsNeeded = modelOption === "webllm" ? 1 : 2;
+  const sessionResetSeconds = useSyncExternalStore(subscribeToSessionReset, () => sessionRequestResetSeconds(requestsNeeded), () => null);
   const queryTooLong = isQueryTooLong(query);
 
   // WebLLM state
@@ -441,7 +447,7 @@ export default function Home() {
     // Keep the existing session budget: a comparison uses two backend requests.
     reserveSessionRequest();
     reserveSessionRequest();
-    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, model, new AbortController().signal, fetch, getUserUuid()).getReader();
+    const reader = streamComparison(WORKER_URL, WORKER_KEY, sessionToken, query, model, new AbortController().signal, getUserUuid()).getReader();
     const decoder = new TextDecoder();
     let buffer = "";
     const upstreamBuffers = { rag: "", bare: "" };
@@ -507,7 +513,7 @@ export default function Home() {
       return;
     }
     if (loading || getRemainingRequests() < requestsNeeded) {
-      setError("You have reached the session limit. Please try again in a few minutes.");
+      setError("You have reached the browser request limit. Please wait until it resets.");
       return;
     }
     const effectiveQuery = normalizeQuery(query) || DefaultQuery;
@@ -835,7 +841,7 @@ export default function Home() {
           {remainingRequests < requestsNeeded && (
             <>
               {remainingRequests === 0
-                ? "You have reached the session limits. Please wait until it resets."
+                ? "You have reached a browser request limit. Please wait until it resets."
                 : "Not enough requests remain for this comparison."}
               {sessionResetSeconds !== null && ` Resets in ${formatResetCountdown(sessionResetSeconds)}.`}
             </>
@@ -970,13 +976,13 @@ export default function Home() {
             ))}
           </div>
         ))}
+        <p className="mb-3 text-xs text-gray-500 dark:text-gray-200">
+          Privacy: Questions and cloud-generated answers may be logged with a browser identifier; logs are scheduled for deletion after 60 days.
+          Results may be cached for 24 hours, and questions are processed by external service providers. Avoid sharing personal or sensitive information.
+        </p>
       </div>
 
       <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
-        <p className="mb-3">
-          Privacy: Questions and cloud-generated answers may be logged with a browser identifier; logs are scheduled for deletion after 30 days.
-          Results may be cached for 24 hours, and questions are processed by external service providers. Avoid sharing personal or sensitive information.
-        </p>
         Built by <a href="https://www.linkedin.com/in/anant-j" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">Anant Jain</a> · AI Engineer · Canadian Pilot (PPL) · {" "}
         <a href="https://github.com/anant-j/AeroQuery" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a>
       </footer>

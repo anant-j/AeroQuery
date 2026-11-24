@@ -6,10 +6,10 @@
  * @param {string} query
  * @param {"gpt-5.4-mini" | "gpt-5.4-nano"} model
  * @param {AbortSignal} signal
+ * @param {string} userUuid
  * @param {typeof fetch} fetcher
- * @param {string | null} userUuid
  */
-export function streamComparison(apiUrl, workerKey, sessionToken, query, model, signal, fetcher = fetch, userUuid = null) {
+export function streamComparison(apiUrl, workerKey, sessionToken, query, model, signal, userUuid, fetcher = fetch) {
   const abort = new AbortController();
   const encoder = new TextEncoder();
   const states = ["rag", "bare"].map((mode) => ({
