@@ -926,7 +926,7 @@ export default function Home() {
         </p>
         <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
           The benchmark is machine-generated and not fully human-reviewed. These scores are not proof that answers are safe or legally correct.
-          The question-aware factual scorer reduces some false zeros, but its judgments still need validation against the regulations.
+          Any judgments/answers require manual validation against the regulations.
         </p>
       </section>
 
@@ -980,7 +980,8 @@ export default function Home() {
 
       <footer className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
         Built by <a href="https://www.linkedin.com/in/anant-j" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">Anant Jain</a> · AI Engineer · Canadian Pilot (PPL) · {" "}
-        <a href="https://github.com/anant-j/AeroQuery" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="https://github.com/anant-j/AeroQuery" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">GitHub</a> · {" "}
+        <a href="https://linkedin.com/in/anant-j" className="underline hover:text-blue-400" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </footer>
     </main>
   );
