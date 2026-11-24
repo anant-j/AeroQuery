@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import type { MLCEngine } from "@mlc-ai/web-llm";
 import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, normalizeQuery, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
-import { consumeSessionRequest, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
+import { consumeSessionRequest, MAX_SESSION_REQUESTS, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
 import { createWorkerSession, WorkerSessionError } from "./lib/worker-session.js";
 import { officialSourceUrl } from "./lib/source-url.js";
@@ -336,7 +336,7 @@ export default function Home() {
   const [ragStreaming, setRagStreaming] = useState(false);
   const [bareStreaming, setBareStreaming] = useState(false);
   const explanation = ragResult?.answer.trim() ? DefaultQueries.get(ragResult.query)?.trim() : undefined;
-  const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
+  const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => MAX_SESSION_REQUESTS);
   const isLocalhost = useSyncExternalStore(subscribeToLocalhost, getIsLocalhost, () => false);
   const requestsNeeded = modelOption === "webllm" ? 1 : 2;
   const storageUnavailable = remainingRequests === null;
@@ -778,15 +778,16 @@ export default function Home() {
               ? webllmLoading ? `Loading model ${webllmProgress}%` : "Asking..."
               : storageUnavailable ? "Storage unavailable"
               : limitReached
-                ? sessionResetSeconds === null ? "Session limit reached" : `Session limit reached · Resets in ${formatResetCountdown(sessionResetSeconds)}`
+                ? sessionResetSeconds === null ? "Session limit reached" : `Try again in: ${formatResetCountdown(sessionResetSeconds)}`
                 : modelOption === "webllm" && !webllmReady ? "Load Model" : "Ask"}
           </button>
         </div>
 
-        {(queryTooLong || storageUnavailable || error) && (
+        {(queryTooLong || storageUnavailable || limitReached || error) && (
           <div id="question-alert" role="alert" className="text-xs mb-3 space-y-1 text-red-600 dark:text-red-400">
             {queryTooLong && <p>Question must be at most {MAX_QUERY_LENGTH} characters.</p>}
             {storageUnavailable && <p>{STORAGE_ERROR}</p>}
+            {limitReached && <p>You have reached the session limit alert, please try again later.</p>}
             {error && !(storageUnavailable && error === STORAGE_ERROR) && <p>{error}</p>}
           </div>
         )}
