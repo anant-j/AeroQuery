@@ -233,5 +233,6 @@ class Default(WorkerEntrypoint):
         worker_env = self.env
         retention_days = max(1, int(getattr(worker_env, "QUESTIONS_RETENTION_DAYS", "30")))
         cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
-        cutoff_text = cutoff.isoformat(timespec="milliseconds").replace("+00:00", "Z")
-        await worker_env.DB.prepare("DELETE FROM question_logs WHERE created_at < ?").bind(cutoff_text).run()
+        await worker_env.DB.prepare(
+            "DELETE FROM question_logs WHERE created_at < ?"
+        ).bind(cutoff.isoformat(timespec="milliseconds").replace("+00:00", "Z")).run()
