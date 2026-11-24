@@ -116,10 +116,14 @@ test("countdown waits for both limits and the requested number of slots", () => 
 
 test("fails closed when storage is malformed or unavailable", () => {
   global.window = { localStorage: { getItem: () => "-1" } };
-  assert.equal(remainingSessionRequests(), 0);
+  assert.equal(remainingSessionRequests(), null);
+  assert.equal(consumeSessionRequest(), null);
   global.window = { localStorage: { getItem: () => JSON.stringify({ count: 0, expiresAt: Date.now() + 1_000, hourlyRequests: ["invalid"] }) } };
-  assert.equal(remainingSessionRequests(), 0);
+  assert.equal(remainingSessionRequests(), null);
   global.window = { localStorage: { getItem: () => { throw new Error("unavailable"); } } };
-  assert.equal(consumeSessionRequest(), false);
+  assert.equal(remainingSessionRequests(), null);
+  assert.equal(consumeSessionRequest(), null);
+  global.window = { localStorage: { getItem: () => null, setItem: () => { throw new Error("unavailable"); } } };
+  assert.equal(consumeSessionRequest(), null);
   delete global.window;
 });

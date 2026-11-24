@@ -1,3 +1,5 @@
+export class WorkerSessionError extends Error {}
+
 export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher = fetch) {
   let session;
   let pending;
@@ -24,7 +26,7 @@ export function createWorkerSession(apiUrl, apiKey, getTurnstileToken, fetcher =
         });
         if (!response.ok) {
           const result = await response.json().catch(() => null);
-          throw new Error(result?.error || "Verification failed.");
+          throw new WorkerSessionError(typeof result?.error === "string" ? result.error : "Verification failed.");
         }
         const result = await response.json();
         if (typeof result.token !== "string" || !result.token ||

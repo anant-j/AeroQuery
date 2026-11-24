@@ -30,9 +30,9 @@ function readRequestLimit(storage) {
 export function remainingSessionRequests() {
   try {
     const state = readRequestLimit(window.localStorage);
-    return state ? Math.min(MAX_SESSION_REQUESTS - state.count, MAX_HOURLY_REQUESTS - state.hourlyRequests.length) : 0;
+    return state ? Math.min(MAX_SESSION_REQUESTS - state.count, MAX_HOURLY_REQUESTS - state.hourlyRequests.length) : null;
   } catch {
-    return 0;
+    return null;
   }
 }
 
@@ -55,7 +55,8 @@ export function consumeSessionRequest() {
   try {
     const storage = window.localStorage;
     const state = readRequestLimit(storage);
-    if (!state || state.count >= MAX_SESSION_REQUESTS || state.hourlyRequests.length >= MAX_HOURLY_REQUESTS) return false;
+    if (!state) return null;
+    if (state.count >= MAX_SESSION_REQUESTS || state.hourlyRequests.length >= MAX_HOURLY_REQUESTS) return false;
     storage.setItem(STORAGE_KEY, JSON.stringify({
       count: state.count + 1,
       expiresAt: state.expiresAt,
@@ -63,6 +64,6 @@ export function consumeSessionRequest() {
     }));
     return true;
   } catch {
-    return false;
+    return null;
   }
 }

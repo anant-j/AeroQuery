@@ -564,6 +564,14 @@ class CarEvaluationTests(unittest.TestCase):
         )))
         with self.assertRaises(run_eval.GenerationLimitError):
             run_eval.generate(client, run_eval.LOCAL_MODEL, [], local=True, max_tokens=1024)
+        with self.assertRaises(run_eval.GenerationLimitError):
+            run_eval.generate(client, "hosted", [])
+        response.choices[0].finish_reason = "content_filter"
+        with self.assertRaisesRegex(ValueError, "did not finish normally"):
+            run_eval.generate(client, "hosted", [])
+        response.choices[0].finish_reason = "stop"
+        response.usage = SimpleNamespace(total_tokens=5)
+        self.assertEqual(run_eval.generate(client, "hosted", []), ("unfinished", 5))
 
         calls = []
 

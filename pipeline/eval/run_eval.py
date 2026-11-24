@@ -236,7 +236,7 @@ def generate(client, model, messages, local=False, max_tokens=None, temperature=
     response = client.chat.completions.create(**kwargs)
     if not response.choices or not response.choices[0].message.content:
         raise ValueError(f"{model} returned an empty answer")
-    if max_tokens is not None and response.choices[0].finish_reason != "stop":
+    if response.choices[0].finish_reason != "stop":
         if response.choices[0].finish_reason == "length":
             raise GenerationLimitError(f"{model} reached the output token limit")
         raise ValueError(f"{model} did not finish normally: {response.choices[0].finish_reason}")

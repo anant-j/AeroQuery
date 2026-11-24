@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createWorkerSession } from "../app/lib/worker-session.js";
+import { createWorkerSession, WorkerSessionError } from "../app/lib/worker-session.js";
 
 test("exchanges once, shares pending verification, and refreshes an expired session", async () => {
   let calls = 0;
@@ -33,8 +33,17 @@ test("failed exchanges surface errors and can be retried", async () => {
     return calls === 1 ? Response.json({ error: "Verification failed" }, { status: 403 })
       : Response.json({ token: "jwt", expires_at: Math.floor(Date.now() / 1000) + 60 });
   });
-  await assert.rejects(session(), /Verification failed/);
+  await assert.rejects(session(), { name: "Error", message: "Verification failed", constructor: WorkerSessionError });
   assert.equal(await session(), "jwt");
+});
+
+test("preserves the service unavailable message on repeated session requests", async () => {
+  const session = createWorkerSession("https://worker.test", "key", async () => "token", async () =>
+    Response.json({ error: "Service temporarily unavailable. Please try again later." }, { status: 503 }));
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await assert.rejects(session(), (error) =>
+      error instanceof WorkerSessionError && error.message === "Service temporarily unavailable. Please try again later.");
+  }
 });
 
 test("refuses to send tokens or keys over insecure non-local URLs", async () => {

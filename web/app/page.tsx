@@ -7,7 +7,7 @@ import type { MLCEngine } from "@mlc-ai/web-llm";
 import { formatComparisonMessage, getTurnstileSiteKey, isQueryTooLong, MAX_QUERY_LENGTH, normalizeQuery, SESSION_LIMIT_EVENT, SYSTEM_PROMPT, WEBLLM_MODEL } from "./lib/constants.js";
 import { consumeSessionRequest, remainingSessionRequests, sessionRequestResetSeconds } from "./lib/session-limit.js";
 import { streamComparison } from "./lib/query-gateway.js";
-import { createWorkerSession } from "./lib/worker-session.js";
+import { createWorkerSession, WorkerSessionError } from "./lib/worker-session.js";
 import { officialSourceUrl } from "./lib/source-url.js";
 import { formatRelativeDelta } from "./lib/benchmark-delta.js";
 import { getUserUuid } from "./lib/user-uuid.js";
@@ -85,13 +85,10 @@ const BenchmarkMetrics = [
   },
 ];
 const THEME_CHANGE_EVENT = "aeroquery-theme-change";
+const STORAGE_ERROR = "Browser storage is unavailable or invalid. Enable browser storage and refresh; if the problem persists, clear this site's data.";
 
 function getRemainingRequests() {
-  try {
-    return remainingSessionRequests();
-  } catch {
-    return 0;
-  }
+  return remainingSessionRequests();
 }
 
 function formatResetCountdown(seconds: number) {
@@ -169,14 +166,10 @@ function subscribeToTheme(callback: () => void) {
 class RequestError extends Error { }
 
 function reserveSessionRequest() {
-  let accepted = false;
-  try {
-    accepted = consumeSessionRequest();
-  } catch {
-    accepted = false;
-  }
+  const accepted = consumeSessionRequest();
   window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
-  if (!accepted) throw new RequestError("Session limit reached or browser storage is unavailable.");
+  if (accepted === null) throw new RequestError(STORAGE_ERROR);
+  if (!accepted) throw new RequestError("You have reached the session limit. Please wait until it resets.");
 }
 
 declare global {
@@ -345,6 +338,8 @@ export default function Home() {
   const remainingRequests = useSyncExternalStore(subscribeToSessionRequests, getRemainingRequests, () => 0);
   const isLocalhost = useSyncExternalStore(subscribeToLocalhost, getIsLocalhost, () => false);
   const requestsNeeded = modelOption === "webllm" ? 1 : 2;
+  const storageUnavailable = remainingRequests === null;
+  const limitReached = remainingRequests !== null && remainingRequests < requestsNeeded;
   const sessionResetSeconds = useSyncExternalStore(subscribeToSessionReset, () => sessionRequestResetSeconds(requestsNeeded), () => null);
   const queryTooLong = isQueryTooLong(query);
 
@@ -508,7 +503,13 @@ export default function Home() {
       setError(`Question must be at most ${MAX_QUERY_LENGTH} characters.`);
       return;
     }
-    if (loading || getRemainingRequests() < requestsNeeded) {
+    if (loading) return;
+    const remaining = getRemainingRequests();
+    if (remaining === null) {
+      setError(STORAGE_ERROR);
+      return;
+    }
+    if (remaining < requestsNeeded) {
       setError("You have reached the session limit. Please wait until it resets.");
       return;
     }
@@ -626,7 +627,7 @@ export default function Home() {
         setBareStreaming(false);
       }
     } catch (err) {
-      setError(err instanceof RequestError ? err.message : "Something went wrong. Please try again later.");
+      setError(err instanceof RequestError || err instanceof WorkerSessionError ? err.message : "Something went wrong. Please try again later.");
       setRagResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       setBareResult(prev => prev && !prev.complete ? prev.answer ? { ...prev, incomplete: true } : null : prev);
       if (err instanceof Error) {
@@ -772,12 +773,13 @@ export default function Home() {
           <button
             ref={submitButtonRef}
             type="submit"
-            disabled={queryTooLong || loading || webllmLoading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady)) || remainingRequests < requestsNeeded}
+            disabled={queryTooLong || loading || webllmLoading || (!isLocalhost && (!TURNSTILE_SITE_KEY || !turnstileReady)) || storageUnavailable || limitReached}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
               ? webllmLoading ? `Loading model ${webllmProgress}%` : "Asking..."
-              : remainingRequests < requestsNeeded
+              : storageUnavailable ? "Storage unavailable"
+              : limitReached
                 ? sessionResetSeconds === null ? "Session limit reached" : `Resets in ${formatResetCountdown(sessionResetSeconds)}`
                 : modelOption === "webllm" && !webllmReady ? "Load Model" : "Ask"}
           </button>
@@ -834,7 +836,7 @@ export default function Home() {
           Runs the same question with and without RAG so you can compare the answers side by side.
         </p>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
-          {remainingRequests < requestsNeeded && (
+          {storageUnavailable ? STORAGE_ERROR : limitReached && (
             <>
               You have reached the session limit. Please wait until it resets.
               {sessionResetSeconds !== null && ` Resets in ${formatResetCountdown(sessionResetSeconds)}.`}
