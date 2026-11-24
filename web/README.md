@@ -1,47 +1,35 @@
 # AeroQuery Web
 
-A Next.js app (deployed on Netlify) for asking questions to an LLM about Canadian aviation regulations (TC CARs).
+Next.js frontend, deployed on Netlify.
 
-## What it does
+- Ask questions with GPT-5.4-mini, GPT-5.4-nano, or Llama 3.2 1B running in the browser (WebLLM). Each can run with or without RAG.
+- The browser calls the [API Worker](../api/README.md) directly, after getting a session token via Cloudflare Turnstile.
+- Answers stream in with expandable source citations.
+- The page shows a snapshot of the benchmark results, hard-coded in `app/page.tsx`. Update it by hand from `../pipeline/eval/results/car`.
 
-- Chat UI that compares answer modes: either using a local model in the browser (WebLLM, Llama 3.2 1B) or a hosted Azure OpenAI model, each with or without RAG.
-- Server routes `app/api/retrieve` and `app/api/stream` validate the request (origin check, Cloudflare Turnstile, session limits) and proxy to the Cloudflare Worker in [../api](../api), which does retrieval and generation.
-
-### Security
-- Cloudflare Tunnstile
-- `proxy.ts` sets a nonce-based CSP
-- `netlify/edge-functions/api-rate-limit.ts` rate-limits API routes.
-- In session rate-limit using browser localStorage 
+Security: a nonce-based CSP (`proxy.ts`), Turnstile sessions, and a per-session request limit in localStorage. Rate limiting itself is enforced by the Worker.
 
 ## Run locally
 
-Requires Node 20+ and the API worker running (see [../api/README.md](../api/README.md)).
+Requires Node 20+ and the API Worker running locally.
 
 ```bash
 cd web
 npm install
 ```
 
-Create `.env.local`:
+`.env.local`:
 
 ```
-CLOUDFLARE_WORKER_API_URL=http://127.0.0.1:8787
-CLOUDFLARE_WORKER_KEY=<same value as API_WORKER_KEY>
-ALLOWED_ORIGINS=http://localhost:3000
+NEXT_PUBLIC_CLOUDFLARE_WORKER_API_URL=http://127.0.0.1:8787
+NEXT_PUBLIC_CLOUDFLARE_WORKER_KEY=<same as the Worker's API_WORKER_KEY>
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=...
-TURNSTILE_SECRET_KEY=...
 ```
 
-In development, Turnstile test keys are accepted. The worker URL must be HTTPS unless it is localhost.
+All three values are public; never put secrets in `NEXT_PUBLIC_*` variables.
 
 ```bash
-npm run dev
+npm run dev     # http://localhost:3000
+npm test        # unit tests for lib helpers
+npm run lint
 ```
-
-Open http://localhost:3000.
-
-## Scripts
-
-- `npm run build` / `npm start`: production build and server
-- `npm run lint`: ESLint
-- `npm test`: security helper tests

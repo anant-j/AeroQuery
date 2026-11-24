@@ -1,48 +1,36 @@
 # AeroQuery API
 
-Cloudflare Python Worker that powers retrieval and generation for AeroQuery (Canadian TC CAR regulations).
+Cloudflare Python Worker that handles auth, retrieval, and streaming generation.
 
-## What it does
+## Endpoints
 
-All endpoints are `POST` with a JSON body `{ "query": string, "use_rag"?: boolean }`.
+All are `POST` with a JSON body. Every request needs the `x-aeroquery-key` header (the public app key) and an allowed `Origin`.
 
-| Path | Purpose |
-| --- | --- |
-| `/retrieve` | Embed query, search Pinecone, rerank with Cohere; returns top chunks (used by the in-browser WebLLM mode). |
-| `/stream` | Streams an Azure OpenAI answer over SSE. With `use_rag: true` it runs the agent and grounds the answer in retrieved sections; otherwise answers without context. |
+| Path | Body | Returns |
+|---|---|---|
+| `/auth/anonymous` | `{ turnstile_token }` | `{ token, expires_at }`, a short-lived session JWT |
+| `/retrieve` | `{ query }` | Top 5 reranked chunks (used by WebLLM mode) |
+| `/stream` | `{ query, use_rag?, model? }` | SSE answer stream; `model` is `gpt-5.4-mini` (default) or `gpt-5.4-nano` |
 
-Pipeline: Azure OpenAI embeddings -> Pinecone (namespace `canada`) -> Cohere `rerank-v4.0-pro` -> Azure OpenAI chat.
+`/retrieve` and `/stream` also require `Authorization: Bearer <session token>`.
 
-## Security and limits
+With `use_rag: true`, the agent first classifies the query as simple or complex. Complex queries are split into 2–3 sub-queries. It then retrieves chunks and runs a relevance guard before generating the answer.
 
-- Requests need the `x-aeroquery-key` header matching `API_WORKER_KEY` (min 32 chars) [for instance generated via `openssl rand -hex 32`].
-- Per-IP rate limit of 30 requests/minute (client IP forwarded via `x-aeroquery-client-ip`).
-- Max query length 1500 chars, max body 32 KB.
-- Questions are logged to D1 (`question_logs`, schema in `schema/`); a daily cron deletes rows older than `QUESTIONS_RETENTION_DAYS` (default 30). Set `QUESTIONS_LOG_QUERY_TEXT` to `false` to avoid storing query text.
+## Limits and storage
+
+- Rate limits: 60 requests/min per IP and 24/min per session. Queries are capped at 1,500 characters and request bodies at 32 KB.
+- Answers are cached in KV (`AEROQUERY_ANSWER_CACHE`) for 24 hours.
+- Questions are logged to D1 (`question_logs`); a daily cron deletes rows older than `QUESTIONS_RETENTION_DAYS`.
+- Set `API_DISABLED = "true"` in `wrangler.toml` and redeploy to switch the API off.
 
 ## Run locally
 
-Requires Python 3.13, [uv](https://docs.astral.sh/uv/), and Node (for Wrangler).
+Requires Python 3.13, [uv](https://docs.astral.sh/uv/), and Node.
 
 ```bash
 cd api
 uv sync
-```
-
-Create `.dev.vars` with the secrets:
-
-```
-API_WORKER_KEY=<32+ char random string>
-AZURE_OPENAI_API_KEY=...
-AZURE_OPENAI_ENDPOINT=...
-PINECONE_API_KEY=...
-PINECONE_INDEX_HOST=...
-COHERE_API_KEY=...
-```
-
-Optional: `AZURE_OPENAI_DEPLOYMENT` (default `gpt-5.4-mini`), `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` (default `text-embedding-3-large`).
-
-```bash
+cp .dev.vars.example .dev.vars   # fill in secrets
 uv run pywrangler d1 migrations apply aeroquery-questions --local
 uv run pywrangler dev
 ```
@@ -52,7 +40,6 @@ Tests: `uv run python -m unittest discover tests`
 ## Deploy
 
 ```bash
+npx wrangler secret put <NAME>   # once for each secret in wrangler.toml [secrets]
 uv run pywrangler deploy
 ```
-
-Set each secret with `npx wrangler secret put <NAME>`.
