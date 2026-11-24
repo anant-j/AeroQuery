@@ -6,24 +6,22 @@ from common import _js_options
 from constants import CACHE_VERSION, DEFAULT_CACHE_TTL_SECONDS, NAMESPACE, RERANK_MODEL
 
 
-async def _log_question(env, query, mode, question_sha, answered_from_cache=False, *, user_uuid=None, endpoint=None, model=None, prompt_sha=None, corpus_version=None):
+async def _log_question(env, query, mode, cache_key, answered_from_cache=False, *, user_uuid=None, model=None, corpus_version=None):
     now = datetime.now(timezone.utc)
     query_text = query if getattr(env, "QUESTIONS_LOG_QUERY_TEXT", "false").lower() == "true" else None
     log_event = {"event": "question_received", "mode": mode, "answered_from_cache": answered_from_cache}
     try:
         row = await env.DB.prepare(
-            "INSERT INTO question_logs (created_at, mode, question_asked, question_sha, answered_from_cache, user_uuid, endpoint, model, prompt_sha, corpus_version, outcome) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING rowid AS log_rowid"
+            "INSERT INTO question_logs (created_at, mode, question_asked, cache_key, answered_from_cache, user_uuid, model, corpus_version, outcome) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING rowid AS log_rowid"
         ).bind(
             now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             mode,
             query_text,
-            question_sha,
+            cache_key,
             int(answered_from_cache),
             user_uuid,
-            endpoint,
             model,
-            prompt_sha,
             corpus_version,
             "pending",
         ).first()
@@ -51,11 +49,11 @@ async def _finish_question(env, log_rowid, *, outcome, http_status, duration_ms,
             await env.DB.prepare(
                 "UPDATE question_logs SET outcome = ?, http_status = ?, duration_ms = ?, answer = ?, failure_stage = ?, "
                 "error_type = ?, retrieval_ms = ?, generation_ms = ?, sources_json = ?, input_tokens = ?, "
-                "output_tokens = ?, total_tokens = ?, finish_reason = ? WHERE rowid = ?"
+                "output_tokens = ?, finish_reason = ? WHERE rowid = ?"
             ).bind(
                 outcome, http_status, duration_ms, answer, failure_stage, error_type, retrieval_ms, generation_ms,
                 json.dumps(sources) if sources is not None else None,
-                usage.get("prompt_tokens"), usage.get("completion_tokens"), usage.get("total_tokens"),
+                usage.get("prompt_tokens"), usage.get("completion_tokens"),
                 finish_reason, log_rowid,
             ).run()
     except Exception as error:
@@ -63,10 +61,6 @@ async def _finish_question(env, log_rowid, *, outcome, http_status, duration_ms,
     print(json.dumps({"event": "question_completed", "outcome": outcome,
                       "http_status": http_status, "duration_ms": duration_ms, "failure_stage": failure_stage,
                       "error_type": error_type}))
-
-
-def _question_sha(query, mode):
-    return hashlib.sha256(json.dumps([query, mode], ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
 def _cache_key(env, path, query, use_rag, model=None):

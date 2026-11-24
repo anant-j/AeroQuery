@@ -1,4 +1,3 @@
-import hashlib
 import hmac
 import ipaddress
 import json
@@ -11,7 +10,7 @@ from workers import Response, WorkerEntrypoint
 
 from common import ApiError
 from constants import NAMESPACE, SYSTEM_PROMPT
-from persistence import _cache_get, _cache_key, _cache_put, _finish_question, _log_question, _question_sha, _source_metadata
+from persistence import _cache_get, _cache_key, _cache_put, _finish_question, _log_question, _source_metadata
 from retrieval import _public_chunks, _retrieve_chunks, _run_agent
 from security import _issue_session, _read_json_body, _validate_query, _verify_session, _verify_turnstile
 from streaming import _cached_stream, _stream_generation
@@ -120,14 +119,9 @@ class Default(WorkerEntrypoint):
             cache_key = _cache_key(self.env, path, query, use_rag if path == "/stream" else False, model)
             cached = await _cache_get(self.env, cache_key)
             stage = "question_logging"
-            prompt_sha = (
-                cached.get("prompt_sha") if cached is not None
-                else hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest()
-            ) if path == "/stream" else None
             log_rowid = await _log_question(
-                self.env, query, mode, _question_sha(query, mode), cached is not None,
-                user_uuid=user_uuid, endpoint=path, model=cached.get("model", model) if cached else model,
-                prompt_sha=prompt_sha,
+                self.env, query, mode, cache_key, cached is not None,
+                user_uuid=user_uuid, model=cached.get("model", model) if cached else model,
                 corpus_version=NAMESPACE if path == "/retrieve" or use_rag else None,
             )
             question_log_attempted = True
@@ -137,7 +131,7 @@ class Default(WorkerEntrypoint):
                     self.env, log_rowid, outcome="success", http_status=200,
                     duration_ms=round((time.monotonic() - started) * 1000),
                     answer=cached.get("answer"), sources=source_metadata,
-                    usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0} if path == "/stream" else None,
+                    usage={"prompt_tokens": 0, "completion_tokens": 0} if path == "/stream" else None,
                 )
                 return _cached_stream(cached) if path == "/stream" else Response.json({
                     key: value for key, value in cached.items() if key != "source_metadata"
@@ -186,8 +180,7 @@ class Default(WorkerEntrypoint):
             stage = "generation"
             return await _stream_generation(
                 self.env, messages, model, sources, agent, cache_key,
-                log_context={"log_rowid": log_rowid, "started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata,
-                             "prompt_sha": prompt_sha},
+                log_context={"log_rowid": log_rowid, "started": started, "retrieval_ms": retrieval_ms, "sources": source_metadata},
             )
         except ApiError as error:
             if question_log_attempted:

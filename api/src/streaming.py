@@ -82,7 +82,6 @@ async def _stream_generation(env, messages, model, sources=None, agent=None, cac
                 await _cache_put(env, cache_key, {
                     "answer": "".join(tokens), "sources": sources, "agent": agent, "model": model,
                     "source_metadata": log_context["sources"] if log_context else None,
-                    "prompt_sha": log_context.get("prompt_sha") if log_context else None,
                 })
             if log_context:
                 successful = completed and finish_reason == "stop"

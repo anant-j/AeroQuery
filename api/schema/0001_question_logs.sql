@@ -2,10 +2,9 @@ CREATE TABLE IF NOT EXISTS question_logs (
     created_at TEXT NOT NULL,
     mode TEXT NOT NULL,
     question_asked TEXT,
-    question_sha TEXT,
+    cache_key TEXT,
     answered_from_cache INTEGER NOT NULL DEFAULT 0,
     user_uuid TEXT,
-    endpoint TEXT,
     answer TEXT,
     outcome TEXT,
     http_status INTEGER,
@@ -15,12 +14,10 @@ CREATE TABLE IF NOT EXISTS question_logs (
     retrieval_ms INTEGER,
     generation_ms INTEGER,
     model TEXT,
-    prompt_sha TEXT,
     corpus_version TEXT,
     sources_json TEXT,
     input_tokens INTEGER,
     output_tokens INTEGER,
-    total_tokens INTEGER,
     finish_reason TEXT
 );
 
