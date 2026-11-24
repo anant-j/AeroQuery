@@ -41,6 +41,8 @@ class Default(WorkerEntrypoint):
 
         if request.method == "OPTIONS":
             response = Response(None, status=204)
+        elif getattr(self.env, "API_DISABLED", "false") != "false":
+            response = Response.json({"error": "Service temporarily unavailable. Please try again later."}, status=503)
         else:
             response = await self._handle_request(request, origin)
         response.js_object.headers.set("Access-Control-Allow-Origin", origin)

@@ -176,7 +176,7 @@ function reserveSessionRequest() {
     accepted = false;
   }
   window.dispatchEvent(new Event(SESSION_LIMIT_EVENT));
-  if (!accepted) throw new RequestError("Browser request limit reached or browser storage is unavailable.");
+  if (!accepted) throw new RequestError("Session limit reached or browser storage is unavailable.");
 }
 
 declare global {
@@ -514,7 +514,7 @@ export default function Home() {
       return;
     }
     if (loading || getRemainingRequests() < requestsNeeded) {
-      setError("You have reached the browser request limit. Please wait until it resets.");
+      setError("You have reached the session limit. Please wait until it resets.");
       return;
     }
     const effectiveQuery = normalizeQuery(query) || DefaultQuery;
@@ -782,8 +782,8 @@ export default function Home() {
           >
             {loading
               ? webllmLoading ? `Loading model ${webllmProgress}%` : "Asking..."
-              : remainingRequests === 0
-                ? sessionResetSeconds === null ? "Limit reached" : `Resets in ${formatResetCountdown(sessionResetSeconds)}`
+              : remainingRequests < requestsNeeded
+                ? sessionResetSeconds === null ? "Session limit reached" : `Resets in ${formatResetCountdown(sessionResetSeconds)}`
                 : modelOption === "webllm" && !webllmReady ? "Load Model" : "Ask"}
           </button>
         </div>
@@ -841,9 +841,7 @@ export default function Home() {
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2" aria-live="polite">
           {remainingRequests < requestsNeeded && (
             <>
-              {remainingRequests === 0
-                ? "You have reached a browser request limit. Please wait until it resets."
-                : "Not enough requests remain for this comparison."}
+              You have reached the session limit. Please wait until it resets.
               {sessionResetSeconds !== null && ` Resets in ${formatResetCountdown(sessionResetSeconds)}.`}
             </>
           )}

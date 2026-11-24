@@ -9,6 +9,8 @@ preview_urls = false
 enabled = true
 
 [vars]
+# Set to "true" and deploy to stop API requests; set to "false" and deploy to restore service.
+API_DISABLED = "false"
 QUESTIONS_RETENTION_DAYS = "60"
 QUESTIONS_LOG_QUERY_TEXT = "true"
 CACHE_TTL_SECONDS = "86400"

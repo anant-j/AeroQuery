@@ -91,6 +91,29 @@ test("enforces 60 requests in a rolling hour across two-minute windows", () => {
   }
 });
 
+test("countdown waits for both limits and the requested number of slots", () => {
+  const originalNow = Date.now;
+  const now = 10_000_000;
+  Date.now = () => now;
+  let state;
+  global.window = { localStorage: { getItem: () => JSON.stringify(state) } };
+  try {
+    state = {
+      count: 24,
+      expiresAt: now + 90_000,
+      hourlyRequests: [now - 3_580_000, now - 3_540_000, ...Array(58).fill(now)],
+    };
+    assert.equal(sessionRequestResetSeconds(1), 90);
+    assert.equal(sessionRequestResetSeconds(2), 90);
+    state.expiresAt = now + 10_000;
+    assert.equal(sessionRequestResetSeconds(1), 20);
+    assert.equal(sessionRequestResetSeconds(2), 60);
+  } finally {
+    Date.now = originalNow;
+    delete global.window;
+  }
+});
+
 test("fails closed when storage is malformed or unavailable", () => {
   global.window = { localStorage: { getItem: () => "-1" } };
   assert.equal(remainingSessionRequests(), 0);

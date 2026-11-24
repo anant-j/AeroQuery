@@ -200,6 +200,32 @@ class WorkerSecurityTests(unittest.IsolatedAsyncioTestCase):
         entry.env.API_RATE_LIMITER.limit.assert_awaited_with({"key": "192.0.2.1"})
         entry.env.SESSION_RATE_LIMITER.limit.assert_not_awaited()
 
+    async def test_kill_switch_blocks_requests_before_processing_and_preserves_cors(self):
+        entry = worker.Default()
+        entry.env = types.SimpleNamespace(ALLOWED_ORIGINS="https://example.test", API_DISABLED="true")
+        request = types.SimpleNamespace(
+            method="OPTIONS", url="https://worker.test/api/stream", headers={"origin": "https://example.test"},
+        )
+        response = await entry.fetch(request)
+        self.assertEqual(response.status, 204)
+        self.assertEqual(response.headers["Access-Control-Allow-Origin"], "https://example.test")
+
+        with patch.object(entry, "_handle_request", AsyncMock()) as handle:
+            request.method = "POST"
+            for path in ("/auth/anonymous", "/api/retrieve", "/api/stream"):
+                request.url = f"https://worker.test{path}"
+                response = await entry.fetch(request)
+                self.assertEqual(response.status, 503)
+                self.assertEqual(response.body, {"error": "Service temporarily unavailable. Please try again later."})
+                self.assertEqual(response.headers["Access-Control-Allow-Origin"], "https://example.test")
+            handle.assert_not_awaited()
+            entry.env.API_DISABLED = "invalid"
+            self.assertEqual((await entry.fetch(request)).status, 503)
+            entry.env.API_DISABLED = "false"
+            handle.return_value = Response.json({"ok": True})
+            self.assertEqual((await entry.fetch(request)).status, 200)
+            handle.assert_awaited_once()
+
     async def test_auth_exchange_and_protected_request(self):
         entry = worker.Default()
         entry.env = types.SimpleNamespace(
